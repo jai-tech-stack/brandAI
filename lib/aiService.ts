@@ -1,0 +1,310 @@
+// Autonomous AI Service for BloomboxAI
+// Supports multiple AI providers for true autonomous operation
+
+interface AIImageGenerationOptions {
+  prompt: string
+  brandColors?: string[]
+  style?: string
+  size?: '1024x1024' | '1024x1792' | '1792x1024'
+}
+
+interface AIImageResult {
+  imageUrl: string
+  provider: string
+  model: string
+}
+
+// AI-powered image generation using multiple providers
+export async function generateImageWithAI(options: AIImageGenerationOptions): Promise<AIImageResult> {
+  const { prompt, brandColors, style, size = '1024x1024' } = options
+
+  // Build enhanced prompt with brand constraints
+  let enhancedPrompt = prompt
+  
+  if (brandColors && brandColors.length > 0) {
+    const colorList = brandColors.slice(0, 3).join(', ')
+    enhancedPrompt += ` Use these exact brand colors: ${colorList}.`
+  }
+  
+  if (style) {
+    enhancedPrompt += ` Design style: ${style}.`
+  }
+  
+  enhancedPrompt += ' Professional quality, on-brand design, perfect brand consistency, high resolution, modern design.'
+
+  // Try OpenAI DALL-E 3 first (most reliable)
+  if (process.env.OPENAI_API_KEY) {
+    try {
+      const response = await fetch('https://api.openai.com/v1/images/generations', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          model: 'dall-e-3',
+          prompt: enhancedPrompt,
+          size: size,
+          quality: 'standard',
+          n: 1,
+        }),
+      })
+
+      if (response.ok) {
+        const data = await response.json()
+        if (data.data && data.data[0] && data.data[0].url) {
+          return {
+            imageUrl: data.data[0].url,
+            provider: 'OpenAI',
+            model: 'dall-e-3',
+          }
+        }
+      }
+    } catch (error) {
+      console.error('OpenAI DALL-E error:', error)
+    }
+  }
+
+  // Fallback to Stability AI
+  if (process.env.STABILITY_API_KEY) {
+    try {
+      const response = await fetch('https://api.stability.ai/v2beta/stable-image/generate/core', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${process.env.STABILITY_API_KEY}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          prompt: enhancedPrompt,
+          output_format: 'png',
+          aspect_ratio: size === '1024x1024' ? '1:1' : size === '1024x1792' ? '9:16' : '16:9',
+        }),
+      })
+
+      if (response.ok) {
+        const blob = await response.blob()
+        // In production, upload blob to storage and return URL
+        // For now, create object URL
+        const imageUrl = URL.createObjectURL(blob)
+        return {
+          imageUrl,
+          provider: 'Stability AI',
+          model: 'stable-image-core',
+        }
+      }
+    } catch (error) {
+      console.error('Stability AI error:', error)
+    }
+  }
+
+  // Fallback to Replicate (supports multiple models)
+  if (process.env.REPLICATE_API_TOKEN) {
+    try {
+      const response = await fetch('https://api.replicate.com/v1/predictions', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Token ${process.env.REPLICATE_API_TOKEN}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          version: 'ac732df83cea7fff18b8472768c88ada041dee21bd8a0a8c9ee69fa4b9a6046f', // Flux model
+          input: {
+            prompt: enhancedPrompt,
+            aspect_ratio: size === '1024x1024' ? '1:1' : size === '1024x1792' ? '9:16' : '16:9',
+          },
+        }),
+      })
+
+      if (response.ok) {
+        const data = await response.json()
+        // Poll for completion
+        let prediction = data
+        while (prediction.status === 'starting' || prediction.status === 'processing') {
+          await new Promise(resolve => setTimeout(resolve, 1000))
+          const statusResponse = await fetch(`https://api.replicate.com/v1/predictions/${prediction.id}`, {
+            headers: {
+              'Authorization': `Token ${process.env.REPLICATE_API_TOKEN}`,
+            },
+          })
+          prediction = await statusResponse.json()
+        }
+        
+        if (prediction.output && prediction.output[0]) {
+          return {
+            imageUrl: prediction.output[0],
+            provider: 'Replicate',
+            model: 'flux',
+          }
+        }
+      }
+    } catch (error) {
+      console.error('Replicate error:', error)
+    }
+  }
+
+  // If no AI service available, throw error (don't return mock)
+  throw new Error('No AI image generation service configured. Please set OPENAI_API_KEY, STABILITY_API_KEY, or REPLICATE_API_TOKEN in environment variables.')
+}
+
+// AI-powered brand analysis
+export async function analyzeBrandWithAI(html: string, colors: string[], fonts: string[]): Promise<{
+  style: string
+  brandPersonality: string
+  recommendations: string[]
+}> {
+  // Use OpenAI for brand analysis if available
+  if (process.env.OPENAI_API_KEY) {
+    try {
+      const analysisPrompt = `Analyze this brand based on:
+- Colors: ${colors.join(', ')}
+- Fonts: ${fonts.join(', ')}
+- Website content: ${html.substring(0, 2000)}
+
+Provide:
+1. Brand style (3-4 words)
+2. Brand personality (2-3 words)
+3. Design recommendations (2-3 short recommendations)
+
+Format as JSON: { "style": "...", "brandPersonality": "...", "recommendations": ["...", "..."] }`
+
+      const response = await fetch('https://api.openai.com/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          model: 'gpt-4',
+          messages: [
+            {
+              role: 'system',
+              content: 'You are a brand identity expert. Analyze brands and provide concise, professional insights.',
+            },
+            {
+              role: 'user',
+              content: analysisPrompt,
+            },
+          ],
+          temperature: 0.7,
+          max_tokens: 300,
+        }),
+      })
+
+      if (response.ok) {
+        const data = await response.json()
+        const content = data.choices[0]?.message?.content
+        if (content) {
+          try {
+            // Try to parse JSON from the response
+            let jsonContent = content.trim()
+            // Remove markdown code blocks if present
+            if (jsonContent.startsWith('```')) {
+              jsonContent = jsonContent.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim()
+            }
+            const analysis = JSON.parse(jsonContent)
+            return {
+              style: analysis.style || 'Modern, Clean, Professional',
+              brandPersonality: analysis.brandPersonality || 'Professional',
+              recommendations: analysis.recommendations || ['Maintain consistent color usage', 'Use brand fonts across all assets'],
+            }
+          } catch (e) {
+            console.warn('Failed to parse AI analysis JSON:', e)
+            // Try to extract style from text if JSON parsing fails
+            const styleMatch = content.match(/style["\s:]+([^",\n]+)/i)
+            const personalityMatch = content.match(/personality["\s:]+([^",\n]+)/i)
+            if (styleMatch || personalityMatch) {
+              return {
+                style: styleMatch?.[1]?.trim() || 'Modern, Clean, Professional',
+                brandPersonality: personalityMatch?.[1]?.trim() || 'Professional',
+                recommendations: ['Maintain consistent color usage', 'Use brand fonts across all assets'],
+              }
+            }
+          }
+        }
+      } else {
+        const errorData = await response.json().catch(() => ({}))
+        console.warn('OpenAI API error:', response.status, errorData)
+      }
+    } catch (error: any) {
+      console.error('AI brand analysis error:', error.message || error)
+      // Re-throw to let caller handle fallback
+      throw error
+    }
+  }
+
+  // Fallback to rule-based analysis
+  return {
+    style: 'Modern, Clean, Professional',
+    brandPersonality: 'Professional',
+    recommendations: ['Maintain consistent color usage', 'Use brand fonts across all assets'],
+  }
+}
+
+// Autonomous prompt enhancement with AI
+export async function enhancePromptWithAI(userPrompt: string, brandKit: any): Promise<string> {
+  if (process.env.OPENAI_API_KEY) {
+    try {
+      const enhancementPrompt = `Enhance this design prompt for brand asset generation:
+
+User Prompt: "${userPrompt}"
+
+Brand Context:
+- Colors: ${brandKit.colors?.join(', ') || 'Not specified'}
+- Typography: ${brandKit.typography?.join(', ') || 'Not specified'}
+- Style: ${brandKit.style || 'Not specified'}
+
+Create an enhanced prompt that:
+1. Maintains the user's intent
+2. Incorporates brand colors, fonts, and style
+3. Ensures perfect brand consistency
+4. Is optimized for AI image generation
+
+Return only the enhanced prompt, no explanations.`
+
+      const response = await fetch('https://api.openai.com/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          model: 'gpt-4',
+          messages: [
+            {
+              role: 'system',
+              content: 'You are an expert at creating prompts for AI image generation that maintain brand consistency.',
+            },
+            {
+              role: 'user',
+              content: enhancementPrompt,
+            },
+          ],
+          temperature: 0.7,
+          max_tokens: 200,
+        }),
+      })
+
+      if (response.ok) {
+        const data = await response.json()
+        const enhanced = data.choices[0]?.message?.content?.trim()
+        if (enhanced) {
+          return enhanced
+        }
+      }
+    } catch (error) {
+      console.error('AI prompt enhancement error:', error)
+    }
+  }
+
+  // Fallback to rule-based enhancement
+  let enhanced = userPrompt
+  if (brandKit.colors?.length > 0) {
+    enhanced += ` Use brand colors: ${brandKit.colors.slice(0, 3).join(', ')}.`
+  }
+  if (brandKit.style) {
+    enhanced += ` Style: ${brandKit.style}.`
+  }
+  enhanced += ' Ensure perfect brand consistency and professional quality.'
+  return enhanced
+}
+
