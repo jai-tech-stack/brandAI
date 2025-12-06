@@ -2,14 +2,8 @@ import { generateImageWithAI } from '../aiService'
 import { BrandText, ColorPalette } from '../analyzer/extractorTypes'
 import { BrandSystem } from './generatorTypes'
 
-// Potrace removed - was causing canvas dependency issues
-// Sharp is optional (may not work in serverless)
-let sharp: any = null
-try {
-  sharp = require('sharp')
-} catch (e) {
-  // Sharp not available
-}
+// Potrace and Sharp removed - were causing canvas dependency issues
+// All image processing is handled by AI services (DALL-E, etc.)
 
 /**
  * Generate logo variations using DALL-E 3

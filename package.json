@@ -7,10 +7,15 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "postinstall": "npx playwright install chromium --with-deps || true"
+    "postinstall": "npx playwright install chromium --with-deps || true",
+    "preinstall": "node scripts/block-canvas.js || true"
   },
   "overrides": {
-    "canvas": false
+    "canvas": "npm:@empty/package@1.0.0",
+    "**/canvas": "npm:@empty/package@1.0.0"
+  },
+  "resolutions": {
+    "canvas": "npm:@empty/package@1.0.0"
   },
   "dependencies": {
     "next": "^14.0.4",
