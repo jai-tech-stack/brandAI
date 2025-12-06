@@ -24,6 +24,16 @@ export async function analyzeWebsite(
   const finalConfig = { ...DEFAULT_CONFIG, ...config }
   let browser: Browser | null = null
 
+  // Check if Playwright is available (may not be on serverless)
+  let playwrightAvailable = true
+  try {
+    await chromium.launch({ headless: true }).then(b => b.close()).catch(() => {
+      playwrightAvailable = false
+    })
+  } catch {
+    playwrightAvailable = false
+  }
+
   try {
     // Normalize URL
     let normalizedUrl = url.trim()
@@ -34,7 +44,12 @@ export async function analyzeWebsite(
     const validUrl = new URL(normalizedUrl)
     const baseUrl = validUrl.origin
 
-    // Launch browser
+    // Launch browser (if Playwright is available)
+    if (!playwrightAvailable) {
+      // Fallback to fetch-based analysis
+      return await analyzeWebsiteFallback(validUrl.toString(), finalConfig)
+    }
+
     browser = await chromium.launch({
       headless: true,
     })
@@ -112,6 +127,68 @@ export async function analyzeWebsite(
       await browser.close()
     }
     throw error
+  }
+}
+
+/**
+ * Fallback analyzer using fetch (for serverless environments)
+ */
+async function analyzeWebsiteFallback(
+  url: string,
+  config: AnalyzerConfig
+): Promise<WebsiteAnalysis> {
+  try {
+    const response = await fetch(url, {
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+      },
+      signal: AbortSignal.timeout(15000),
+    })
+
+    if (!response.ok) {
+      throw new Error(`Failed to fetch website: ${response.status}`)
+    }
+
+    const html = await response.text()
+    const baseUrl = new URL(url).origin
+
+    // Extract elements using regex (no DOM parsing)
+    const colors = await extractColors(html)
+    const fonts = extractFonts(html)
+    const text = extractCopy(html)
+    const images = extractImages(html, baseUrl)
+
+    // Extract metadata
+    const titleMatch = html.match(/<title[^>]*>([\s\S]*?)<\/title>/i)
+    const title = titleMatch ? titleMatch[1].trim() : undefined
+
+    const metaDescMatch = html.match(/<meta\s+name=["']description["']\s+content=["']([^"']+)["']/i)
+    const metaDescription = metaDescMatch ? metaDescMatch[1] : undefined
+
+    const ogImageMatch = html.match(/<meta\s+property=["']og:image["']\s+content=["']([^"']+)["']/i)
+    const ogImage = ogImageMatch ? ogImageMatch[1] : undefined
+
+    return {
+      url,
+      colors,
+      fonts,
+      text: {
+        ...text,
+        title,
+        metaDescription,
+      },
+      images,
+      screenshotUrl: '', // No screenshot in fallback mode
+      analyzedAt: new Date().toISOString(),
+      metadata: {
+        title,
+        description: metaDescription,
+        ogImage,
+      },
+    }
+  } catch (error: any) {
+    throw new Error(`Fallback analysis failed: ${error.message}`)
   }
 }
 

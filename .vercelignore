@@ -1,8 +1,8 @@
-# Vercel ignore file
-.env
-.env.local
-.env*.local
 node_modules
 .next
-.vercel
-
+.env
+.env.local
+.DS_Store
+*.log
+playwright-report
+test-results
