@@ -7,38 +7,38 @@ import SocialTags from './SocialTags'
 const features = [
   {
     icon: Globe,
-    title: 'Automatic Brand Extraction',
-    description: 'Autonomous AI agent analyzes websites to extract logo, colors, typography, and style automatically',
+    title: 'Full Brand System Extraction',
+    description: 'Autonomous AI agent extracts complete brand identity—logo, colors, typography, style—from any website instantly',
     color: 'primary',
   },
   {
     icon: Wand2,
-    title: 'On-Brand Asset Generation',
-    description: 'Agentic AI creates hiring posters, merch, marketing materials with perfect brand consistency',
+    title: 'Generate Any Brand Asset',
+    description: 'Agentic AI creates hiring posters, merch, marketing materials, social media—all perfectly on-brand',
     color: 'purple',
   },
   {
     icon: FileImage,
     title: 'Simple Text Prompts',
-    description: 'Autonomous AI agent generates any brand asset with just a text description—no design skills needed',
+    description: 'Just describe what you need. Autonomous AI agent generates professional brand assets—no design skills required',
     color: 'pink',
   },
   {
     icon: Layers,
-    title: 'Multi-Brand Support',
-    description: 'AI agent works with multiple brands simultaneously (Gumroad, Ulysses, HFØ)',
+    title: 'Multi-Brand Management',
+    description: 'AI agent manages multiple brands simultaneously. Switch between Gumroad, Ulysses, HFØ, and more instantly',
     color: 'blue',
   },
   {
     icon: Zap,
     title: 'Instant Generation',
-    description: 'Agentic AI creates fully on-brand assets in seconds, not hours',
+    description: 'From website URL to complete brand system in seconds. Agentic AI works at lightning speed',
     color: 'yellow',
   },
   {
     icon: Users,
-    title: 'Brand Kit Creation',
-    description: 'Autonomous AI agent automatically builds complete brand kits from website analysis',
+    title: 'Complete Brand Kit',
+    description: 'Autonomous AI agent builds your entire brand kit automatically—colors, fonts, logos, style guide, all ready to use',
     color: 'green',
   },
 ]
@@ -55,10 +55,10 @@ export default function Features() {
           className="text-center mb-16"
         >
           <h2 className="text-4xl sm:text-5xl font-bold text-gray-900 mb-4">
-            Everything you need to stay on-brand
+            Generate a Complete Brand System Instantly
           </h2>
           <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-            Powerful features designed for tech enthusiasts, marketing teams, and designers
+            From any website URL to a full brand kit with assets—all powered by autonomous AI agents
           </p>
         </motion.div>
 

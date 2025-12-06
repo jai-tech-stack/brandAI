@@ -2,8 +2,8 @@ import type { Metadata } from 'next'
 import './globals.css'
 
 export const metadata: Metadata = {
-  title: 'BloomboxAI - On-Brand AI Asset Generator',
-  description: 'The world\'s first on-brand AI. BloomboxAI is an Agentic AI with 6 autonomous AI agents that automatically extract your brand\'s visual identity and generate any brand asset you need, always perfectly on-brand.',
+  title: 'BloomboxAI - Generate Full Brand System From Your Website | AI Branding Superpower',
+  description: 'The New AI Branding Superpower! BloomboxAI generates a full brand system from your website—logo, colors, typography, style, and any brand asset you need. Insanely good. 🔥',
 }
 
 export default function RootLayout({
