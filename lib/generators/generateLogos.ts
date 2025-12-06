@@ -2,14 +2,9 @@ import { generateImageWithAI } from '../aiService'
 import { BrandText, ColorPalette } from '../analyzer/extractorTypes'
 import { BrandSystem } from './generatorTypes'
 
-// Potrace and sharp are optional (may not work in serverless)
-let potrace: any = null
+// Potrace removed - was causing canvas dependency issues
+// Sharp is optional (may not work in serverless)
 let sharp: any = null
-try {
-  potrace = require('potrace')
-} catch (e) {
-  // Potrace not available
-}
 try {
   sharp = require('sharp')
 } catch (e) {
@@ -95,20 +90,11 @@ export async function generateLogos(
 }
 
 /**
- * Convert PNG logo to SVG using potrace (optional)
+ * Convert PNG logo to SVG (removed - potrace caused canvas dependency issues)
+ * Logos are generated as PNG by default
  */
 export async function vectorizeLogo(pngBuffer: Buffer): Promise<string> {
-  if (!potrace) {
-    throw new Error('Potrace not available - SVG conversion skipped')
-  }
-  return new Promise((resolve, reject) => {
-    potrace.trace(pngBuffer, (err, svg) => {
-      if (err) {
-        reject(err)
-      } else {
-        resolve(svg)
-      }
-    })
-  })
+  // SVG conversion removed to avoid canvas dependency
+  throw new Error('SVG conversion not available - use PNG logos instead')
 }
 
