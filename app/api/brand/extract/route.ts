@@ -38,6 +38,30 @@ function colorToHex(color: string): string | null {
   return null
 }
 
+// Categorize colors into primary and secondary
+function categorizeColors(colors: string[]): { primary: string[], secondary: string[] } {
+  if (colors.length === 0) {
+    return { primary: ['#000000', '#FFFFFF'], secondary: ['#666666'] }
+  }
+  
+  // Filter out pure black/white for primary if we have other colors
+  const nonNeutral = colors.filter(c => c !== '#000000' && c !== '#000' && c !== '#FFFFFF' && c !== '#FFF')
+  const hasBlack = colors.some(c => c === '#000000' || c === '#000')
+  const hasWhite = colors.some(c => c === '#FFFFFF' || c === '#FFF')
+  
+  if (nonNeutral.length >= 2) {
+    return {
+      primary: nonNeutral.slice(0, 2),
+      secondary: nonNeutral.slice(2, 4).concat(hasBlack ? ['#000000'] : [], hasWhite ? ['#FFFFFF'] : []).slice(0, 2)
+    }
+  }
+  
+  return {
+    primary: colors.slice(0, 2),
+    secondary: colors.slice(2, 4)
+  }
+}
+
 export async function POST(request: NextRequest) {
   try {
     const { url } = await request.json()
@@ -286,12 +310,26 @@ export async function POST(request: NextRequest) {
         }
       }
 
+      // Categorize colors
+      const colorCategories = categorizeColors(finalColors)
+      
+      // Get typography pairings
+      const primaryFont = sortedFonts[0] || 'System Font'
+      const secondaryFont = sortedFonts[1] || 'Sans-serif'
+
       const brandData = {
         logo: logoUrl,
         colors: finalColors.slice(0, 4),
+        primaryColors: colorCategories.primary,
+        secondaryColors: colorCategories.secondary,
         typography: sortedFonts,
+        primaryFont,
+        secondaryFont,
+        typographyPairings: [primaryFont, secondaryFont],
         style: aiAnalysis.style,
         brandPersonality: aiAnalysis.brandPersonality,
+        brandTone: aiAnalysis.brandTone || aiAnalysis.brandPersonality,
+        messaging: aiAnalysis.messaging || [],
         recommendations: aiAnalysis.recommendations,
         extractedAt: new Date().toISOString(),
         sourceUrl: validUrl.toString(),

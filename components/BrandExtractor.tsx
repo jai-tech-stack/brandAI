@@ -7,12 +7,19 @@ import { Globe, Loader2, CheckCircle2, Palette, Type, Image as ImageIcon } from 
 interface BrandData {
   logo?: string
   colors: string[]
+  primaryColors?: string[]
+  secondaryColors?: string[]
   typography: string[]
+  primaryFont?: string
+  secondaryFont?: string
+  typographyPairings?: string[]
   style: string
   sourceUrl?: string
   aiPowered?: boolean
   autonomous?: boolean
   brandPersonality?: string
+  brandTone?: string
+  messaging?: string[]
   recommendations?: string[]
 }
 
@@ -201,49 +208,121 @@ export default function BrandExtractor() {
               <div className="p-4 bg-gray-50 rounded-lg">
                 <div className="flex items-center gap-2 mb-3">
                   <Palette className="w-5 h-5 text-gray-600" />
-                  <h4 className="font-semibold text-gray-900">Colors</h4>
+                  <h4 className="font-semibold text-gray-900">Brand Colors</h4>
                 </div>
-                <div className="flex flex-wrap gap-2">
-                  {brandData.colors.map((color, index) => (
-                    <div key={index} className="flex items-center gap-2">
-                      <div
-                        className="w-12 h-12 rounded-lg border border-gray-200 shadow-sm"
-                        style={{ backgroundColor: color }}
-                      />
-                      <span className="text-sm font-mono text-gray-700">{color}</span>
+                {brandData.primaryColors && brandData.primaryColors.length > 0 && (
+                  <div className="mb-3">
+                    <p className="text-xs text-gray-600 mb-2">Primary Colors</p>
+                    <div className="flex flex-wrap gap-2">
+                      {brandData.primaryColors.map((color, index) => (
+                        <div key={index} className="flex flex-col items-center">
+                          <div
+                            className="w-12 h-12 rounded-lg border border-gray-200 shadow-sm"
+                            style={{ backgroundColor: color }}
+                          />
+                          <span className="text-xs font-mono text-gray-700 mt-1">{color}</span>
+                        </div>
+                      ))}
                     </div>
-                  ))}
-                </div>
+                  </div>
+                )}
+                {brandData.secondaryColors && brandData.secondaryColors.length > 0 && (
+                  <div>
+                    <p className="text-xs text-gray-600 mb-2">Secondary Colors</p>
+                    <div className="flex flex-wrap gap-2">
+                      {brandData.secondaryColors.map((color, index) => (
+                        <div key={index} className="flex flex-col items-center">
+                          <div
+                            className="w-12 h-12 rounded-lg border border-gray-200 shadow-sm"
+                            style={{ backgroundColor: color }}
+                          />
+                          <span className="text-xs font-mono text-gray-700 mt-1">{color}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                {(!brandData.primaryColors || brandData.primaryColors.length === 0) && (
+                  <div className="flex flex-wrap gap-2">
+                    {brandData.colors.map((color, index) => (
+                      <div key={index} className="flex items-center gap-2">
+                        <div
+                          className="w-12 h-12 rounded-lg border border-gray-200 shadow-sm"
+                          style={{ backgroundColor: color }}
+                        />
+                        <span className="text-sm font-mono text-gray-700">{color}</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
 
               <div className="p-4 bg-gray-50 rounded-lg">
                 <div className="flex items-center gap-2 mb-3">
                   <Type className="w-5 h-5 text-gray-600" />
-                  <h4 className="font-semibold text-gray-900">Typography</h4>
+                  <h4 className="font-semibold text-gray-900">Typography Pairings</h4>
                 </div>
-                <div className="space-y-2">
-                  {brandData.typography.map((font, index) => (
-                    <div key={index} className="text-gray-700" style={{ fontFamily: font }}>
-                      {font}
-                    </div>
-                  ))}
-                </div>
+                {brandData.typographyPairings && brandData.typographyPairings.length > 0 ? (
+                  <div className="space-y-3">
+                    {brandData.primaryFont && (
+                      <div>
+                        <p className="text-xs text-gray-600 mb-1">Primary Font</p>
+                        <p className="text-lg font-bold text-gray-900" style={{ fontFamily: brandData.primaryFont }}>
+                          {brandData.primaryFont}
+                        </p>
+                      </div>
+                    )}
+                    {brandData.secondaryFont && (
+                      <div>
+                        <p className="text-xs text-gray-600 mb-1">Secondary Font</p>
+                        <p className="text-base text-gray-700" style={{ fontFamily: brandData.secondaryFont }}>
+                          {brandData.secondaryFont}
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <div className="space-y-2">
+                    {brandData.typography.map((font, index) => (
+                      <div key={index} className="text-gray-700" style={{ fontFamily: font }}>
+                        {font}
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
 
               <div className="p-4 bg-gray-50 rounded-lg">
-                <h4 className="font-semibold text-gray-900 mb-2">Style</h4>
-                <p className="text-gray-700">{brandData.style}</p>
+                <h4 className="font-semibold text-gray-900 mb-2">Style & Personality</h4>
+                <p className="text-gray-700 mb-2">{brandData.style}</p>
                 {brandData.brandPersonality && (
-                  <div className="mt-2">
+                  <div className="mb-2">
                     <span className="text-xs text-gray-500">Personality: </span>
                     <span className="text-xs font-medium text-gray-700">{brandData.brandPersonality}</span>
                   </div>
                 )}
+                {brandData.brandTone && (
+                  <div>
+                    <span className="text-xs text-gray-500">Brand Tone: </span>
+                    <span className="text-xs font-medium text-gray-700">{brandData.brandTone}</span>
+                  </div>
+                )}
               </div>
+
+              {brandData.messaging && brandData.messaging.length > 0 && (
+                <div className="md:col-span-2 p-4 bg-purple-50 rounded-lg border border-purple-200">
+                  <h4 className="font-semibold text-purple-900 mb-2">Brand Messaging Suggestions</h4>
+                  <ul className="list-disc list-inside space-y-1">
+                    {brandData.messaging.map((msg, index) => (
+                      <li key={index} className="text-sm text-purple-800">{msg}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
               
               {brandData.recommendations && brandData.recommendations.length > 0 && (
                 <div className="md:col-span-2 p-4 bg-blue-50 rounded-lg border border-blue-200">
-                  <h4 className="font-semibold text-blue-900 mb-2">AI Recommendations</h4>
+                  <h4 className="font-semibold text-blue-900 mb-2">AI Design Recommendations</h4>
                   <ul className="list-disc list-inside space-y-1">
                     {brandData.recommendations.map((rec, index) => (
                       <li key={index} className="text-sm text-blue-800">{rec}</li>

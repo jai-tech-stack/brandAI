@@ -146,10 +146,12 @@ export async function generateImageWithAI(options: AIImageGenerationOptions): Pr
   throw new Error('No AI image generation service configured. Please set OPENAI_API_KEY, STABILITY_API_KEY, or REPLICATE_API_TOKEN in environment variables.')
 }
 
-// AI-powered brand analysis
+// AI-powered brand analysis with enhanced messaging
 export async function analyzeBrandWithAI(html: string, colors: string[], fonts: string[]): Promise<{
   style: string
   brandPersonality: string
+  brandTone?: string
+  messaging?: string[]
   recommendations: string[]
 }> {
   // Use OpenAI for brand analysis if available
@@ -161,11 +163,19 @@ export async function analyzeBrandWithAI(html: string, colors: string[], fonts: 
 - Website content: ${html.substring(0, 2000)}
 
 Provide:
-1. Brand style (3-4 words)
-2. Brand personality (2-3 words)
-3. Design recommendations (2-3 short recommendations)
+1. Brand style (3-4 words describing visual aesthetic)
+2. Brand personality (2-3 words describing brand character)
+3. Brand tone (2-3 words for messaging tone: professional, friendly, bold, etc.)
+4. Messaging suggestions (2-3 short brand messaging recommendations)
+5. Design recommendations (2-3 short design recommendations)
 
-Format as JSON: { "style": "...", "brandPersonality": "...", "recommendations": ["...", "..."] }`
+Format as JSON: { 
+  "style": "...", 
+  "brandPersonality": "...", 
+  "brandTone": "...",
+  "messaging": ["...", "..."],
+  "recommendations": ["...", "..."] 
+}`
 
       const response = await fetch('https://api.openai.com/v1/chat/completions', {
         method: 'POST',
@@ -205,6 +215,8 @@ Format as JSON: { "style": "...", "brandPersonality": "...", "recommendations": 
             return {
               style: analysis.style || 'Modern, Clean, Professional',
               brandPersonality: analysis.brandPersonality || 'Professional',
+              brandTone: analysis.brandTone || analysis.brandPersonality || 'Professional',
+              messaging: analysis.messaging || analysis.recommendations || ['Maintain consistent brand voice', 'Use clear and concise messaging'],
               recommendations: analysis.recommendations || ['Maintain consistent color usage', 'Use brand fonts across all assets'],
             }
           } catch (e) {
@@ -236,6 +248,8 @@ Format as JSON: { "style": "...", "brandPersonality": "...", "recommendations": 
   return {
     style: 'Modern, Clean, Professional',
     brandPersonality: 'Professional',
+    brandTone: 'Professional',
+    messaging: ['Maintain consistent brand voice', 'Use clear and concise messaging'],
     recommendations: ['Maintain consistent color usage', 'Use brand fonts across all assets'],
   }
 }
