@@ -10,7 +10,7 @@
     "postinstall": "npx playwright install chromium --with-deps || true"
   },
   "overrides": {
-    "canvas": "npm:@empty/package@1.0.0"
+    "canvas": false
   },
   "dependencies": {
     "next": "^14.0.4",
