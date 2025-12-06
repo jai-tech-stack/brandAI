@@ -22,8 +22,6 @@ const nextConfig = {
       },
     ],
   },
-  // Enable standalone output for better Docker/deployment
-  output: 'standalone',
 }
 
 module.exports = nextConfig
