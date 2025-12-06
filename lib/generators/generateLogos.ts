@@ -1,8 +1,20 @@
 import { generateImageWithAI } from '../aiService'
 import { BrandText, ColorPalette } from '../analyzer/extractorTypes'
 import { BrandSystem } from './generatorTypes'
-import potrace from 'potrace'
-import sharp from 'sharp'
+
+// Potrace and sharp are optional (may not work in serverless)
+let potrace: any = null
+let sharp: any = null
+try {
+  potrace = require('potrace')
+} catch (e) {
+  // Potrace not available
+}
+try {
+  sharp = require('sharp')
+} catch (e) {
+  // Sharp not available
+}
 
 /**
  * Generate logo variations using DALL-E 3
@@ -83,9 +95,12 @@ export async function generateLogos(
 }
 
 /**
- * Convert PNG logo to SVG using potrace
+ * Convert PNG logo to SVG using potrace (optional)
  */
 export async function vectorizeLogo(pngBuffer: Buffer): Promise<string> {
+  if (!potrace) {
+    throw new Error('Potrace not available - SVG conversion skipped')
+  }
   return new Promise((resolve, reject) => {
     potrace.trace(pngBuffer, (err, svg) => {
       if (err) {

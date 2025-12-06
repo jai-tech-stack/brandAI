@@ -1,12 +1,7 @@
 import { ColorPalette } from './extractorTypes'
 
-// ColorThief will be used if available, otherwise fallback to CSS extraction
-let ColorThief: any = null
-try {
-  ColorThief = require('colorthief')
-} catch (e) {
-  // ColorThief not available, will use CSS extraction only
-}
+// ColorThief removed - was causing build issues on Vercel
+// CSS extraction is sufficient and works in all environments
 
 /**
  * Extract colors from website using multiple methods
@@ -96,25 +91,9 @@ function extractColorsFromCSS(html: string): string[] {
 }
 
 async function extractColorsFromImage(buffer: Buffer): Promise<string[]> {
-  try {
-    if (!ColorThief) {
-      return [] // ColorThief not available
-    }
-    // Use ColorThief to extract dominant colors
-    // Note: ColorThief may not work in serverless environments
-    // This is a fallback - CSS extraction is the primary method
-    const colorThief = new ColorThief()
-    const palette = colorThief.getPalette(buffer, 8) || []
-    
-    return palette.map((color: number[]) => {
-      const [r, g, b] = color
-      return rgbToHex(r, g, b)
-    })
-  } catch (error) {
-    // ColorThief may fail in serverless - that's okay, CSS extraction will handle it
-    console.warn('ColorThief extraction failed (this is normal in serverless):', error)
-    return []
-  }
+  // Image-based color extraction removed - CSS extraction is sufficient
+  // This avoids native dependency issues on serverless platforms
+  return []
 }
 
 function normalizeColor(color: string): string | null {
