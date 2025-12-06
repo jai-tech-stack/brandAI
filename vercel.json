@@ -1,7 +1,7 @@
 {
   "buildCommand": "npm run build",
   "outputDirectory": ".next",
-  "installCommand": "node scripts/block-canvas.js; npm install --no-optional --legacy-peer-deps 2>&1 | (grep -v canvas || true); node scripts/block-canvas.js",
+  "installCommand": "node scripts/block-canvas.js; npm install --no-optional --legacy-peer-deps || (node scripts/block-canvas.js && npm install --no-optional --legacy-peer-deps --ignore-scripts) || true",
   "framework": "nextjs",
   "functions": {
     "app/api/**/*.ts": {

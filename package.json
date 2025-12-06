@@ -7,8 +7,8 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "postinstall": "npx playwright install chromium --with-deps || true",
-    "preinstall": "node scripts/block-canvas.js || true"
+    "preinstall": "node scripts/block-canvas.js || true",
+    "postinstall": "node scripts/block-canvas.js || true; npx playwright install chromium --with-deps || true"
   },
   "overrides": {
     "canvas": false
