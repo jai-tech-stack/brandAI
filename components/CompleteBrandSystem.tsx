@@ -1,8 +1,9 @@
 'use client'
 
 import { useState } from 'react'
+import { useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
-import { Globe, Loader2, CheckCircle2, Palette, Type, Image as ImageIcon, Download, Sparkles, Layers, FileText, Instagram, Presentation } from 'lucide-react'
+import { Globe, Loader2, CheckCircle2, Palette, Type, Image as ImageIcon, Download, Sparkles, Layers, FileText, Instagram, Presentation, ArrowRight } from 'lucide-react'
 
 interface BrandSystem {
   logo?: string
@@ -24,6 +25,7 @@ interface BrandSystem {
 }
 
 export default function CompleteBrandSystem() {
+  const router = useRouter()
   const [url, setUrl] = useState('')
   const [loading, setLoading] = useState(false)
   const [brandSystem, setBrandSystem] = useState<BrandSystem | null>(null)
@@ -56,6 +58,12 @@ export default function CompleteBrandSystem() {
 
       const result = await response.json()
       setBrandSystem(result.data)
+      
+      // Store in sessionStorage for navigation
+      sessionStorage.setItem('brandSystem', JSON.stringify(result.data))
+      
+      // Redirect to brand viewer
+      router.push('/brand/temp')
     } catch (err: any) {
       setError(err.message || 'Failed to generate complete brand system. Please try again.')
     } finally {
