@@ -219,19 +219,34 @@ export default function CompleteBrandSystem() {
                         initial={{ opacity: 0, scale: 0.95 }}
                         animate={{ opacity: 1, scale: 1 }}
                         transition={{ delay: index * 0.1 }}
-                        className="bg-white border border-gray-200 rounded-xl overflow-hidden hover:shadow-lg transition-all"
+                        className="bg-white border-2 border-gray-200 rounded-xl overflow-hidden hover:border-primary-300 hover:shadow-xl transition-all group"
                       >
-                        <div className="aspect-video bg-gray-100 flex items-center justify-center relative">
-                          <ImageIcon className="w-12 h-12 text-gray-400" />
-                          <div className="absolute top-2 right-2">
-                            <Icon className="w-5 h-5 text-gray-600" />
+                        <div className="aspect-video bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center relative overflow-hidden">
+                          {asset.imageUrl && asset.imageUrl.startsWith('http') ? (
+                            <img 
+                              src={asset.imageUrl} 
+                              alt={asset.name}
+                              className="w-full h-full object-cover"
+                            />
+                          ) : (
+                            <ImageIcon className="w-12 h-12 text-gray-400" />
+                          )}
+                          <div className="absolute top-3 right-3 bg-white/90 backdrop-blur-sm rounded-lg p-2 shadow-md">
+                            <Icon className="w-5 h-5 text-gray-700" />
                           </div>
                         </div>
                         <div className="p-4">
                           <h5 className="font-semibold text-gray-900 mb-2">{asset.name}</h5>
-                          <button className="w-full px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors flex items-center justify-center gap-2 text-sm font-medium">
+                          <button 
+                            onClick={() => {
+                              if (asset.imageUrl && asset.imageUrl.startsWith('http')) {
+                                window.open(asset.imageUrl, '_blank')
+                              }
+                            }}
+                            className="w-full px-4 py-2.5 bg-gradient-to-r from-primary-600 to-purple-600 text-white rounded-lg hover:from-primary-700 hover:to-purple-700 transition-all flex items-center justify-center gap-2 text-sm font-semibold shadow-md hover:shadow-lg"
+                          >
                             <Download className="w-4 h-4" />
-                            Download
+                            Download Asset
                           </button>
                         </div>
                       </motion.div>
