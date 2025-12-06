@@ -21,8 +21,7 @@
     "@supabase/supabase-js": "^2.38.4",
     "zod": "^3.22.4",
     "colorthief": "^2.4.0",
-    "sharp": "^0.32.6",
-    "canvas": "^2.11.2"
+    "sharp": "^0.32.6"
   },
   "devDependencies": {
     "@types/node": "^20.10.6",

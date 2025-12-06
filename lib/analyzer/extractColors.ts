@@ -101,6 +101,8 @@ async function extractColorsFromImage(buffer: Buffer): Promise<string[]> {
       return [] // ColorThief not available
     }
     // Use ColorThief to extract dominant colors
+    // Note: ColorThief may not work in serverless environments
+    // This is a fallback - CSS extraction is the primary method
     const colorThief = new ColorThief()
     const palette = colorThief.getPalette(buffer, 8) || []
     
@@ -109,7 +111,8 @@ async function extractColorsFromImage(buffer: Buffer): Promise<string[]> {
       return rgbToHex(r, g, b)
     })
   } catch (error) {
-    console.warn('ColorThief extraction failed:', error)
+    // ColorThief may fail in serverless - that's okay, CSS extraction will handle it
+    console.warn('ColorThief extraction failed (this is normal in serverless):', error)
     return []
   }
 }
