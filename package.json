@@ -7,8 +7,10 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "postinstall": "npx playwright install chromium --with-deps || true",
-    "preinstall": "npx npm-force-resolutions || true"
+    "postinstall": "npx playwright install chromium --with-deps || true"
+  },
+  "overrides": {
+    "canvas": "npm:@empty/package@1.0.0"
   },
   "dependencies": {
     "next": "^14.0.4",
