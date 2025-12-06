@@ -1,10 +1,19 @@
-import { chromium, Browser, Page } from 'playwright'
 import { WebsiteAnalysis, AnalyzerConfig } from './extractorTypes'
 import { extractColors } from './extractColors'
 import { extractFonts } from './extractFonts'
 import { extractCopy } from './extractCopy'
 import { extractImages } from './extractImages'
-import sharp from 'sharp'
+
+// Playwright imports (optional - will use fallback if not available)
+let chromium: any = null
+let Browser: any = null
+try {
+  const playwright = require('playwright')
+  chromium = playwright.chromium
+  Browser = playwright.Browser
+} catch (e) {
+  // Playwright not available, will use fallback
+}
 
 const DEFAULT_CONFIG: AnalyzerConfig = {
   timeout: 30000,
@@ -22,16 +31,17 @@ export async function analyzeWebsite(
   config: AnalyzerConfig = {}
 ): Promise<WebsiteAnalysis> {
   const finalConfig = { ...DEFAULT_CONFIG, ...config }
-  let browser: Browser | null = null
+  let browser: any = null
 
   // Check if Playwright is available (may not be on serverless)
-  let playwrightAvailable = true
-  try {
-    await chromium.launch({ headless: true }).then(b => b.close()).catch(() => {
+  let playwrightAvailable = chromium !== null
+  if (playwrightAvailable) {
+    try {
+      const testBrowser = await chromium.launch({ headless: true })
+      await testBrowser.close()
+    } catch {
       playwrightAvailable = false
-    })
-  } catch {
-    playwrightAvailable = false
+    }
   }
 
   try {
