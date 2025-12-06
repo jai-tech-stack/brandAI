@@ -1,6 +1,6 @@
-# BloomboxAI - Agentic AI for On-Brand Asset Generation
+# BloomboxAI - Complete Brand System Generator
 
-BloomboxAI is the world's first Agentic AI for brand assets. This autonomous AI agent automatically extracts your brand's visual identity from any website—logo, colors, typography, and style—then generates any brand asset you need, always perfectly on-brand.
+BloomboxAI: An AI platform that generates a complete brand system based on your website. Distill your website into a dynamic brand system and generate brand assets in seconds. Brand assets made effortless.
 
 ## 🎨 Key Features (All Powered by Autonomous AI Agents)
 

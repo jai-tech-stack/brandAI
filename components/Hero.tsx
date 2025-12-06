@@ -19,22 +19,28 @@ export default function Hero() {
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.5, delay: 0.2 }}
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary-100 text-primary-700 text-sm font-medium mb-8"
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-gradient-to-r from-primary-500 to-purple-500 text-white text-sm font-bold mb-8 shadow-lg"
           >
             <Sparkles className="w-4 h-4" />
-            <span>BloomboxAI - The world's first on-brand AI</span>
+            <span>The New AI Branding Superpower! 🔥</span>
           </motion.div>
 
           <h1 className="text-5xl sm:text-6xl lg:text-7xl font-bold text-gray-900 mb-6">
-            Generate anything.
+            BloomboxAI Generates a
             <br />
             <span className="bg-gradient-to-r from-primary-600 to-purple-600 bg-clip-text text-transparent">
-              Always on brand.
+              Complete Brand System
             </span>
+            <br />
+            From Your Website
           </h1>
 
+          <p className="text-2xl sm:text-3xl font-bold text-gray-800 max-w-3xl mx-auto mb-4">
+            — Insanely Good 🔥
+          </p>
+
           <p className="text-xl sm:text-2xl text-gray-600 max-w-3xl mx-auto mb-10 leading-relaxed">
-            BloomboxAI is an Agentic AI with 6 autonomous AI agents that automatically extract your brand's visual identity from any website—logo, colors, typography, and style—then generate any brand asset you need, always perfectly on-brand.
+            An AI platform that generates a complete brand system based on your website. Brand assets made effortless—in seconds.
           </p>
 
           <motion.div
@@ -44,10 +50,10 @@ export default function Hero() {
             className="flex flex-col sm:flex-row gap-4 justify-center items-center"
           >
             <button className="px-8 py-4 bg-gradient-to-r from-primary-600 to-purple-600 text-white rounded-lg font-bold text-lg hover:from-primary-700 hover:to-purple-700 transition-all shadow-xl hover:shadow-2xl transform hover:scale-105">
-              Generate Your Brand System Now
+              Generate Brand System
             </button>
             <button className="px-8 py-4 bg-white text-gray-900 rounded-lg font-semibold text-lg hover:bg-gray-50 transition-colors shadow-lg border-2 border-gray-200 hover:border-primary-300">
-              See How It Works
+              Try It Free
             </button>
           </motion.div>
 

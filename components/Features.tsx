@@ -55,10 +55,10 @@ export default function Features() {
           className="text-center mb-16"
         >
           <h2 className="text-4xl sm:text-5xl font-bold text-gray-900 mb-4">
-            Generate a Complete Brand System Instantly
+            Brand Assets Made Effortless
           </h2>
           <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-            From any website URL to a full brand kit with assets—all powered by autonomous AI agents
+            Distill your website into a dynamic brand system. Generate any brand asset in seconds.
           </p>
         </motion.div>
 
