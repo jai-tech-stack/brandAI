@@ -22,25 +22,23 @@ export default function Hero() {
             className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-gradient-to-r from-primary-500 to-purple-500 text-white text-sm font-bold mb-8 shadow-lg"
           >
             <Sparkles className="w-4 h-4" />
-            <span>The New AI Branding Superpower! 🔥</span>
+            <span>Your Brand Guardian Angel ✨</span>
           </motion.div>
 
           <h1 className="text-5xl sm:text-6xl lg:text-7xl font-bold text-gray-900 mb-6">
-            BloomboxAI Generates a
+            One Click Gives You
             <br />
             <span className="bg-gradient-to-r from-primary-600 to-purple-600 bg-clip-text text-transparent">
               Complete Brand System
             </span>
-            <br />
-            From Your Website
           </h1>
 
-          <p className="text-2xl sm:text-3xl font-bold text-gray-800 max-w-3xl mx-auto mb-4">
-            — Insanely Good 🔥
+          <p className="text-xl sm:text-2xl text-gray-600 max-w-3xl mx-auto mb-6 leading-relaxed">
+            Brand colors, logo directions, typography, social templates, visual identity—all generated from your website in seconds.
           </p>
 
-          <p className="text-xl sm:text-2xl text-gray-600 max-w-3xl mx-auto mb-10 leading-relaxed">
-            An AI platform that generates a complete brand system based on your website. Brand assets made effortless—in seconds.
+          <p className="text-lg sm:text-xl text-gray-700 max-w-3xl mx-auto mb-10 font-medium">
+            For small teams, indie founders, and non-designers—this feels like having a full-time brand design team on standby.
           </p>
 
           <motion.div
@@ -50,10 +48,10 @@ export default function Hero() {
             className="flex flex-col sm:flex-row gap-4 justify-center items-center"
           >
             <button className="px-8 py-4 bg-gradient-to-r from-primary-600 to-purple-600 text-white rounded-lg font-bold text-lg hover:from-primary-700 hover:to-purple-700 transition-all shadow-xl hover:shadow-2xl transform hover:scale-105">
-              Generate Brand System
+              Generate Your Brand System Now
             </button>
             <button className="px-8 py-4 bg-white text-gray-900 rounded-lg font-semibold text-lg hover:bg-gray-50 transition-colors shadow-lg border-2 border-gray-200 hover:border-primary-300">
-              Try It Free
+              See How It Works
             </button>
           </motion.div>
 
@@ -67,24 +65,24 @@ export default function Hero() {
               <div className="w-12 h-12 bg-primary-100 rounded-lg flex items-center justify-center mb-4">
                 <Zap className="w-6 h-6 text-primary-600" />
               </div>
-              <h3 className="font-semibold text-gray-900 mb-2">Instant Generation</h3>
-              <p className="text-sm text-gray-600 text-center">Create fully on-brand assets in seconds</p>
+              <h3 className="font-semibold text-gray-900 mb-2">Minutes, Not Weeks</h3>
+              <p className="text-sm text-gray-600 text-center">From website to complete brand system in seconds</p>
             </div>
 
             <div className="flex flex-col items-center p-6 bg-white/60 backdrop-blur-sm rounded-xl border border-gray-200">
               <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center mb-4">
                 <Palette className="w-6 h-6 text-purple-600" />
               </div>
-              <h3 className="font-semibold text-gray-900 mb-2">Perfect Consistency</h3>
-              <p className="text-sm text-gray-600 text-center">Maintain brand identity across all assets</p>
+              <h3 className="font-semibold text-gray-900 mb-2">Professional Quality</h3>
+              <p className="text-sm text-gray-600 text-center">Genuinely good results—better than cheap outsourcing</p>
             </div>
 
             <div className="flex flex-col items-center p-6 bg-white/60 backdrop-blur-sm rounded-xl border border-gray-200">
               <div className="w-12 h-12 bg-pink-100 rounded-lg flex items-center justify-center mb-4">
                 <Sparkles className="w-6 h-6 text-pink-600" />
               </div>
-              <h3 className="font-semibold text-gray-900 mb-2">Multi-Brand Support</h3>
-              <p className="text-sm text-gray-600 text-center">Work with multiple brands simultaneously</p>
+              <h3 className="font-semibold text-gray-900 mb-2">Endless Exploration</h3>
+              <p className="text-sm text-gray-600 text-center">Regenerate, refine, try new styles—no extra cost</p>
             </div>
           </motion.div>
         </motion.div>

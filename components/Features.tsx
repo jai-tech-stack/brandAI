@@ -7,38 +7,38 @@ import SocialTags from './SocialTags'
 const features = [
   {
     icon: Globe,
-    title: 'Full Brand System Extraction',
-    description: 'Autonomous AI agent extracts complete brand identity—logo, colors, typography, style—from any website instantly',
+    title: 'Brand Primary & Secondary Colors',
+    description: 'AI extracts your exact color palette from your website—primary, secondary, and accent colors automatically identified',
     color: 'primary',
   },
   {
     icon: Wand2,
-    title: 'Generate Any Brand Asset',
-    description: 'Agentic AI creates hiring posters, merch, marketing materials, social media—all perfectly on-brand',
+    title: 'Logo Concepts & Alternatives',
+    description: 'Generate logo directions and alternatives based on your existing brand identity—endless variations',
     color: 'purple',
   },
   {
     icon: FileImage,
-    title: 'Simple Text Prompts',
-    description: 'Just describe what you need. Autonomous AI agent generates professional brand assets—no design skills required',
+    title: 'Typography Pairings',
+    description: 'Perfect font combinations extracted from your site, with pairing suggestions for all brand assets',
     color: 'pink',
   },
   {
     icon: Layers,
-    title: 'Multi-Brand Management',
-    description: 'AI agent manages multiple brands simultaneously. Switch between Gumroad, Ulysses, HFØ, and more instantly',
+    title: 'Social Media Templates',
+    description: 'Banner & ad templates, social content templates—all perfectly on-brand and ready to use',
     color: 'blue',
   },
   {
     icon: Zap,
-    title: 'Instant Generation',
-    description: 'From website URL to complete brand system in seconds. Agentic AI works at lightning speed',
+    title: 'Visual Moodboard',
+    description: 'Complete visual identity system with moodboards, style guides, and brand tone suggestions',
     color: 'yellow',
   },
   {
     icon: Users,
-    title: 'Complete Brand Kit',
-    description: 'Autonomous AI agent builds your entire brand kit automatically—colors, fonts, logos, style guide, all ready to use',
+    title: 'Pitch-Deck Visual Kit',
+    description: 'Professional pitch-deck visuals, brand messaging suggestions, and complete visual identity—all in one click',
     color: 'green',
   },
 ]
@@ -55,10 +55,13 @@ export default function Features() {
           className="text-center mb-16"
         >
           <h2 className="text-4xl sm:text-5xl font-bold text-gray-900 mb-4">
-            Brand Assets Made Effortless
+            How BloomboxAI Works
           </h2>
-          <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-            Distill your website into a dynamic brand system. Generate any brand asset in seconds.
+          <p className="text-xl text-gray-600 max-w-2xl mx-auto mb-6">
+            In one sentence: <strong>Upload your website → AI analyzes → full brand system generated.</strong>
+          </p>
+          <p className="text-lg text-gray-700 max-w-2xl mx-auto">
+            And it includes a LOT 👇
           </p>
         </motion.div>
 
@@ -102,15 +105,59 @@ export default function Features() {
         >
           <div className="text-center">
             <div className="inline-block p-8 bg-gradient-to-br from-primary-50 to-purple-50 rounded-2xl border border-primary-200">
-              <p className="text-lg text-gray-700 mb-4">
-                <strong className="text-gray-900">Tech enthusiasts:</strong> Experience the power of Agentic AI—autonomous agents that work independently to deliver perfect brand assets.
-              </p>
-              <p className="text-lg text-gray-700 mb-4">
-                <strong className="text-gray-900">Marketing teams:</strong> Let our AI agent maintain perfect brand consistency across all assets effortlessly—no manual oversight needed.
-              </p>
-              <p className="text-lg text-gray-700">
-                <strong className="text-gray-900">Designers:</strong> Generate on-brand assets instantly with an autonomous AI agent that understands your brand identity.
-              </p>
+              <div className="mb-6">
+                <h3 className="text-2xl font-bold text-gray-900 mb-4">Why BloomboxAI is Blowing Up</h3>
+                <div className="space-y-3 text-left">
+                  <p className="text-lg text-gray-700">
+                    <strong className="text-gray-900">① Every startup needs branding</strong><br />
+                    But hiring a designer is expensive and slow. BloomboxAI gives you a professional brand system in minutes.
+                  </p>
+                  <p className="text-lg text-gray-700">
+                    <strong className="text-gray-900">② Everyone wants to launch fast & iterate fast</strong><br />
+                    AI lets you get a complete brand identity instantly, then regenerate and refine endlessly.
+                  </p>
+                  <p className="text-lg text-gray-700">
+                    <strong className="text-gray-900">③ The results are genuinely good</strong><br />
+                    Not random collages—the AI pulls your site's content, tone, and visual cues, then extends it into a consistent brand identity.
+                  </p>
+                </div>
+              </div>
+              
+              <div className="mb-6">
+                <h3 className="text-2xl font-bold text-gray-900 mb-4">Who is BloomboxAI Perfect For?</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-left">
+                  <div className="flex items-start gap-2">
+                    <span className="text-green-600 font-bold">✔️</span>
+                    <span className="text-gray-700">Indie developers</span>
+                  </div>
+                  <div className="flex items-start gap-2">
+                    <span className="text-green-600 font-bold">✔️</span>
+                    <span className="text-gray-700">Content creators</span>
+                  </div>
+                  <div className="flex items-start gap-2">
+                    <span className="text-green-600 font-bold">✔️</span>
+                    <span className="text-gray-700">Small startups</span>
+                  </div>
+                  <div className="flex items-start gap-2">
+                    <span className="text-green-600 font-bold">✔️</span>
+                    <span className="text-gray-700">PM/ops who need visuals fast</span>
+                  </div>
+                  <div className="flex items-start gap-2 md:col-span-2">
+                    <span className="text-green-600 font-bold">✔️</span>
+                    <span className="text-gray-700">Anyone who wants their project to look more professional</span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-gradient-to-r from-primary-50 to-purple-50 rounded-xl p-6 border-2 border-primary-200">
+                <p className="text-xl font-bold text-gray-900 mb-2">🪄 One-Sentence Summary</p>
+                <p className="text-lg text-gray-700">
+                  <strong>BloomboxAI = "Turning branding from a week-long process into a few minutes."</strong>
+                </p>
+                <p className="text-base text-gray-600 mt-2">
+                  In the AI era, even branding is automatic now.
+                </p>
+              </div>
             </div>
           </div>
           
