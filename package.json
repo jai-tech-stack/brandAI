@@ -8,7 +8,9 @@
     "start": "next start",
     "lint": "next lint",
     "preinstall": "node scripts/block-canvas.js || true",
-    "postinstall": "node scripts/block-canvas.js || true"
+    "postinstall": "node scripts/block-canvas.js || true",
+    "verify-env": "node scripts/verify-vercel-env.js",
+    "test-db": "node scripts/test-db-connection.js"
   },
   "overrides": {
     "canvas": false
