@@ -59,11 +59,16 @@ export default function CompleteBrandSystem() {
       const result = await response.json()
       setBrandSystem(result.data)
       
-      // Store in sessionStorage for navigation
+      // Store in sessionStorage for navigation (optional)
       sessionStorage.setItem('brandSystem', JSON.stringify(result.data))
       
-      // Redirect to brand viewer
-      router.push('/brand/temp')
+      // Scroll to results (results display on same page)
+      setTimeout(() => {
+        const resultsElement = document.getElementById('brand-results')
+        if (resultsElement) {
+          resultsElement.scrollIntoView({ behavior: 'smooth', block: 'start' })
+        }
+      }, 100)
     } catch (err: any) {
       setError(err.message || 'Failed to generate complete brand system. Please try again.')
     } finally {
@@ -120,9 +125,10 @@ export default function CompleteBrandSystem() {
 
         {brandSystem && (
           <motion.div
+            id="brand-results"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="space-y-8"
+            className="space-y-8 mt-8"
           >
             <div className="flex items-center gap-2 mb-6">
               <CheckCircle2 className="w-6 h-6 text-green-600" />
