@@ -28,15 +28,19 @@ const faqs = [
     questions: [
       {
         q: 'How unique are the generated logos and designs?',
-        a: 'AI-generated designs are professional starting points. For truly unique, memorable brand identities, we recommend reviewing and refining outputs manually. BloomboxAI is perfect for MVPs and early-stage projects.',
+        a: 'AI-generated designs are professional starting points. Real users report getting cohesive brand kits quickly, but for truly unique, memorable brand identities, manual refinement is recommended. BloomboxAI is perfect for MVPs and early-stage projects—many users generate in hours what would take weeks with designers.',
       },
       {
         q: 'Will the templates work across all platforms?',
-        a: 'Yes! We generate templates for web, social media, banners, and pitch decks. However, you may want to customize templates for specific platforms or use cases.',
+        a: 'Yes! We generate templates for web, social media, banners, and pitch decks. Real users find them useful for rapid prototyping. However, you may want to customize templates for specific platforms or use cases, especially for long-term brand use.',
       },
       {
         q: 'How accurate is the brand tone and messaging?',
-        a: 'Our AI analyzes your website content to suggest brand tone and messaging. These are starting points—we recommend reviewing and refining based on your brand strategy, target audience, and cultural context.',
+        a: 'Our AI analyzes your website content to suggest brand tone and messaging. These are starting points—we recommend reviewing and refining based on your brand strategy, target audience, and cultural context. Expert reviews note AI may miss nuanced cultural or contextual details.',
+      },
+      {
+        q: 'Do the outputs look generic or template-driven?',
+        a: 'AI tools can produce similar-looking outputs. BloomboxAI generates based on YOUR unique website, which helps. However, for maximum uniqueness, we recommend refining outputs manually. Many users successfully use AI outputs as a foundation, then customize for distinctiveness.',
       },
     ],
   },
@@ -62,15 +66,19 @@ const faqs = [
     questions: [
       {
         q: 'Who is BloomboxAI best for?',
-        a: 'Perfect for indie developers, solo founders, small startups, content creators, and anyone who needs professional branding fast without design skills or large budgets.',
+        a: 'Perfect for indie developers, solo founders, small startups, content creators, and anyone who needs professional branding fast without design skills or large budgets. Real users report building complete brand kits in hours instead of weeks, at a fraction of designer costs.',
       },
       {
         q: 'Is BloomboxAI suitable for established brands?',
-        a: 'BloomboxAI is best for MVPs, early-stage projects, and rapid prototyping. Established brands may need more custom, unique branding that requires human design expertise.',
+        a: 'BloomboxAI is best for MVPs, early-stage projects, and rapid prototyping. Real user feedback shows AI tools shine for prototypes and early-stage, but established brands typically need more custom, unique branding. Many users use AI as a starting point, then refine with human designers.',
       },
       {
         q: 'What if my website is minimal or poorly designed?',
-        a: 'The quality of your website affects the output. For best results, ensure your website represents your brand well. Consider refining your site before generating a brand system.',
+        a: 'The quality of your website affects the output. For best results, ensure your website represents your brand well. Consider refining your site before generating a brand system. Better input = better output.',
+      },
+      {
+        q: 'Can I use BloomboxAI for long-term brand identity?',
+        a: 'AI tools are great for MVPs and early-stage, but for long-term brand building (uniqueness, emotional resonance, print materials), treat AI output as a starting point. Plan to refine design manually or with a human designer for final brand identity.',
       },
     ],
   },
@@ -128,9 +136,18 @@ export default function FAQPage() {
               <AlertCircle className="w-6 h-6 text-blue-600 flex-shrink-0 mt-0.5" />
               <div>
                 <h3 className="font-bold text-blue-900 mb-2">Transparency Notice</h3>
-                <p className="text-blue-800 text-sm leading-relaxed">
-                  BloomboxAI is designed for speed, accessibility, and rapid iteration. AI-generated outputs are professional starting points that may need refinement for truly unique brand identities. Perfect for MVPs, early-stage projects, and rapid prototyping. For established brands or highly unique identities, consider combining AI generation with human design expertise.
+                <p className="text-blue-800 text-sm leading-relaxed mb-3">
+                  BloomboxAI is designed for speed, accessibility, and rapid iteration. Based on real user feedback: AI tools excel at rapid brand-kit creation (hours vs. weeks) and cost-effectiveness, but outputs may need refinement for uniqueness. Perfect for MVPs, early-stage projects, and rapid prototyping. For long-term brand identity, treat AI output as a starting point and refine with human design expertise.
                 </p>
+                <div className="bg-blue-100 rounded-lg p-3 mt-3">
+                  <p className="text-blue-900 text-xs font-semibold mb-1">Real User Insights:</p>
+                  <ul className="text-blue-800 text-xs space-y-1 list-disc list-inside">
+                    <li>✅ Users report building complete brand kits in hours (vs. weeks with designers)</li>
+                    <li>✅ Cost-effective: fraction of designer costs</li>
+                    <li>⚠️ Outputs may look generic—refinement recommended for uniqueness</li>
+                    <li>⚠️ Best for MVPs/early-stage, less ideal for long-term high-stakes branding</li>
+                  </ul>
+                </div>
               </div>
             </div>
           </motion.div>
