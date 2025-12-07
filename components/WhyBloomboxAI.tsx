@@ -81,12 +81,30 @@ export default function WhyBloomboxAI() {
           </div>
         </motion.div>
 
+        {/* Transparency Notice */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          className="mt-12"
+        >
+          <div className="bg-blue-50 border-2 border-blue-200 rounded-2xl p-6">
+            <h3 className="text-lg font-bold text-blue-900 mb-3">💡 Important to Know</h3>
+            <p className="text-blue-800 text-sm leading-relaxed mb-3">
+              BloomboxAI generates professional brand systems quickly—perfect for MVPs, early-stage projects, and rapid iteration. AI outputs are great starting points that may need refinement for truly unique brand identities. For established brands or highly custom needs, consider combining AI generation with human design expertise.
+            </p>
+            <p className="text-blue-700 text-xs">
+              <strong>Best for:</strong> Indie builders, startups, content creators | <strong>Consider refinement for:</strong> Highly unique identities, complex brand strategies, legal requirements
+            </p>
+          </div>
+        </motion.div>
+
         {/* One-Sentence Summary */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          className="mt-12 text-center"
+          className="mt-8 text-center"
         >
           <div className="inline-block bg-white rounded-2xl p-8 shadow-xl border-2 border-primary-200">
             <p className="text-xl font-bold text-gray-900 mb-2">🪄 One-Sentence Summary</p>
