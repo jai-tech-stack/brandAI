@@ -5,7 +5,7 @@ import { generateLinkedInTemplate } from '@/lib/templates/linkedin'
 import { generateTwitterTemplate } from '@/lib/templates/twitter'
 import { generateYouTubeTemplate } from '@/lib/templates/youtube'
 import { generateHeroBannerTemplate } from '@/lib/templates/heroBanner'
-import { TemplateConfig } from '@/lib/templates/templateTypes'
+import { TemplateConfig, TEMPLATE_SIZES } from '@/lib/templates/templateTypes'
 
 const generateTemplatesSchema = z.object({
   brandSystem: z.object({
@@ -29,17 +29,23 @@ export async function POST(request: NextRequest) {
     const templateTypes = types || ['instagram', 'linkedin', 'twitter', 'youtube', 'heroBanner']
     const templates: any[] = []
 
-    const config: TemplateConfig = {
-      backgroundColor: brandSystem.colors.primary[0] || '#FFFFFF',
-      primaryColor: brandSystem.colors.primary[0] || '#000000',
-      secondaryColor: brandSystem.colors.secondary[0] || '#666666',
-      text: brandSystem.voice.tagline,
-      logoUrl,
-    }
-
     // Generate each template type
     for (const type of templateTypes) {
       try {
+        // Get template size for this type
+        const size = TEMPLATE_SIZES[type]
+        
+        // Create config with required width and height
+        const config: TemplateConfig = {
+          width: size.width,
+          height: size.height,
+          backgroundColor: brandSystem.colors.primary[0] || '#FFFFFF',
+          primaryColor: brandSystem.colors.primary[0] || '#000000',
+          secondaryColor: brandSystem.colors.secondary[0] || '#666666',
+          text: brandSystem.voice.tagline,
+          logoUrl,
+        }
+
         let result
         switch (type) {
           case 'instagram':
