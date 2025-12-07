@@ -11,7 +11,8 @@
     "postinstall": "node scripts/block-canvas.js || true",
     "verify-env": "node scripts/verify-vercel-env.js",
     "test-db": "node scripts/test-db-connection.js",
-    "setup-env": "node scripts/setup-env.js"
+    "setup-env": "node scripts/setup-env.js",
+    "install-deps": "node scripts/install-dependencies.js"
   },
   "overrides": {
     "canvas": false
