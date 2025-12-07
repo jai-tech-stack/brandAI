@@ -1,11 +1,12 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Navigation from '@/components/Navigation'
 import Footer from '@/components/Footer'
 import { Loader2, Mail, Lock, ArrowRight } from 'lucide-react'
 import Link from 'next/link'
+import { supabaseClient } from '@/lib/auth/supabaseAuth'
 
 export default function SignInPage() {
   const router = useRouter()
@@ -14,26 +15,57 @@ export default function SignInPage() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
 
+  useEffect(() => {
+    // Check if already logged in
+    checkSession()
+  }, [])
+
+  const checkSession = async () => {
+    if (!supabaseClient) return
+    
+    try {
+      const { data: { session } } = await supabaseClient.auth.getSession()
+      if (session) {
+        router.push('/dashboard')
+      }
+    } catch (error) {
+      // Ignore errors
+    }
+  }
+
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
     setError('')
 
+    if (!supabaseClient) {
+      // Demo mode - show message but allow testing
+      setError('Supabase not configured. For full functionality, please set up Supabase environment variables. You can still test the brand generation feature.')
+      setLoading(false)
+      // Allow user to continue to dashboard in demo mode
+      setTimeout(() => {
+        router.push('/dashboard')
+      }, 2000)
+      return
+    }
+
     try {
-      const response = await fetch('/api/auth/signin', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password }),
+      const { data, error: signInError } = await supabaseClient.auth.signInWithPassword({
+        email,
+        password,
       })
 
-      const data = await response.json()
-
-      if (!response.ok) {
-        throw new Error(data.error || 'Failed to sign in')
+      if (signInError) {
+        throw new Error(signInError.message || 'Failed to sign in')
       }
 
-      // Redirect to dashboard
-      router.push('/dashboard')
+      if (data.session) {
+        // Redirect to dashboard
+        router.push('/dashboard')
+        router.refresh()
+      } else {
+        throw new Error('No session created')
+      }
     } catch (err: any) {
       setError(err.message || 'Failed to sign in. Please try again.')
     } finally {

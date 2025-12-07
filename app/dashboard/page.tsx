@@ -32,10 +32,20 @@ export default function DashboardPage() {
 
   const loadUserData = async () => {
     try {
-      const response = await fetch('/api/auth/session')
-      const data = await response.json()
-      if (data.session?.user) {
-        setUser(data.session.user)
+      // Use Supabase client directly
+      const { supabaseClient } = await import('@/lib/auth/supabaseAuth')
+      if (supabaseClient) {
+        const { data: { session } } = await supabaseClient.auth.getSession()
+        if (session?.user) {
+          setUser(session.user)
+        }
+      } else {
+        // Fallback to API
+        const response = await fetch('/api/auth/session')
+        const data = await response.json()
+        if (data.session?.user) {
+          setUser(data.session.user)
+        }
       }
     } catch (error) {
       console.error('Failed to load user data:', error)

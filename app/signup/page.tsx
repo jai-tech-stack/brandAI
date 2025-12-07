@@ -1,11 +1,12 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Navigation from '@/components/Navigation'
 import Footer from '@/components/Footer'
 import { Loader2, Mail, Lock, User, ArrowRight } from 'lucide-react'
 import Link from 'next/link'
+import { supabaseClient } from '@/lib/auth/supabaseAuth'
 
 export default function SignUpPage() {
   const router = useRouter()
@@ -15,26 +16,63 @@ export default function SignUpPage() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
 
+  useEffect(() => {
+    // Check if already logged in
+    checkSession()
+  }, [])
+
+  const checkSession = async () => {
+    if (!supabaseClient) return
+    
+    try {
+      const { data: { session } } = await supabaseClient.auth.getSession()
+      if (session) {
+        router.push('/dashboard')
+      }
+    } catch (error) {
+      // Ignore errors
+    }
+  }
+
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
     setError('')
 
+    if (!supabaseClient) {
+      // Demo mode - show message but allow testing
+      setError('Supabase not configured. For full functionality, please set up Supabase environment variables. You can still test the brand generation feature.')
+      setLoading(false)
+      // Allow user to continue to dashboard in demo mode
+      setTimeout(() => {
+        router.push('/dashboard')
+      }, 2000)
+      return
+    }
+
     try {
-      const response = await fetch('/api/auth/signup', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password, name }),
+      const { data, error: signUpError } = await supabaseClient.auth.signUp({
+        email,
+        password,
+        options: {
+          data: {
+            name: name || email.split('@')[0],
+          },
+        },
       })
 
-      const data = await response.json()
-
-      if (!response.ok) {
-        throw new Error(data.error || 'Failed to sign up')
+      if (signUpError) {
+        throw new Error(signUpError.message || 'Failed to sign up')
       }
 
-      // Redirect to dashboard
-      router.push('/dashboard')
+      if (data.session) {
+        // Redirect to dashboard
+        router.push('/dashboard')
+        router.refresh()
+      } else {
+        // Email confirmation might be required
+        setError('Please check your email to confirm your account.')
+      }
     } catch (err: any) {
       setError(err.message || 'Failed to sign up. Please try again.')
     } finally {

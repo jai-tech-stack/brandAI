@@ -1,11 +1,41 @@
 'use client'
 
-import { useState } from 'react'
-import { Sparkles, Menu, X } from 'lucide-react'
+import { useState, useEffect } from 'react'
+import { Sparkles, Menu, X, LogOut, User } from 'lucide-react'
 import Link from 'next/link'
+import { supabaseClient } from '@/lib/auth/supabaseAuth'
+import { useRouter } from 'next/navigation'
 
 export default function Navigation() {
+  const router = useRouter()
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+  const [user, setUser] = useState<any>(null)
+
+  useEffect(() => {
+    if (supabaseClient) {
+      // Get current user
+      supabaseClient.auth.getSession().then(({ data: { session } }) => {
+        setUser(session?.user ?? null)
+      })
+
+      // Listen for auth changes
+      const { data: { subscription } } = supabaseClient.auth.onAuthStateChange((event, session) => {
+        setUser(session?.user ?? null)
+      })
+
+      return () => {
+        subscription.unsubscribe()
+      }
+    }
+  }, [])
+
+  const handleSignOut = async () => {
+    if (supabaseClient) {
+      await supabaseClient.auth.signOut()
+      router.push('/')
+      router.refresh()
+    }
+  }
 
   const scrollToSection = (id: string) => {
     const element = document.getElementById(id)
@@ -16,10 +46,17 @@ export default function Navigation() {
   }
 
   const scrollToGenerator = () => {
-    const element = document.querySelector('section[class*="py-24"]')
+    const element = document.getElementById('generator')
     if (element) {
       element.scrollIntoView({ behavior: 'smooth', block: 'start' })
       setMobileMenuOpen(false)
+    } else {
+      // Fallback: scroll to generator section
+      const generatorSection = document.querySelector('section[id="generator"]')
+      if (generatorSection) {
+        generatorSection.scrollIntoView({ behavior: 'smooth', block: 'start' })
+        setMobileMenuOpen(false)
+      }
     }
   }
 
@@ -55,18 +92,39 @@ export default function Navigation() {
             >
               Pricing
             </button>
-            <Link
-              href="/signin"
-              className="px-4 py-2 text-gray-700 hover:text-gray-900 font-medium transition-colors"
-            >
-              Sign In
-            </Link>
-            <button 
-              onClick={scrollToGenerator}
-              className="px-6 py-2 bg-gradient-to-r from-primary-600 to-purple-600 text-white rounded-lg font-semibold hover:from-primary-700 hover:to-purple-700 transition-all shadow-lg"
-            >
-              Get Started
-            </button>
+            {user ? (
+              <>
+                <Link
+                  href="/dashboard"
+                  className="px-4 py-2 text-gray-700 hover:text-gray-900 font-medium transition-colors flex items-center gap-2"
+                >
+                  <User className="w-4 h-4" />
+                  Dashboard
+                </Link>
+                <button
+                  onClick={handleSignOut}
+                  className="px-4 py-2 text-gray-700 hover:text-gray-900 font-medium transition-colors flex items-center gap-2"
+                >
+                  <LogOut className="w-4 h-4" />
+                  Sign Out
+                </button>
+              </>
+            ) : (
+              <>
+                <Link
+                  href="/signin"
+                  className="px-4 py-2 text-gray-700 hover:text-gray-900 font-medium transition-colors"
+                >
+                  Sign In
+                </Link>
+                <button 
+                  onClick={scrollToGenerator}
+                  className="px-6 py-2 bg-gradient-to-r from-primary-600 to-purple-600 text-white rounded-lg font-semibold hover:from-primary-700 hover:to-purple-700 transition-all shadow-lg"
+                >
+                  Get Started
+                </button>
+              </>
+            )}
           </div>
 
           {/* Mobile Menu Button */}
@@ -99,19 +157,45 @@ export default function Navigation() {
             >
               Pricing
             </button>
-            <Link
-              href="/signin"
-              onClick={() => setMobileMenuOpen(false)}
-              className="block w-full text-left px-4 py-2 text-gray-700 hover:text-gray-900 font-medium"
-            >
-              Sign In
-            </Link>
-            <button 
-              onClick={scrollToGenerator}
-              className="block w-full px-6 py-2 bg-gradient-to-r from-primary-600 to-purple-600 text-white rounded-lg font-semibold text-center"
-            >
-              Get Started
-            </button>
+            {user ? (
+              <>
+                <Link
+                  href="/dashboard"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="block w-full text-left px-4 py-2 text-gray-700 hover:text-gray-900 font-medium"
+                >
+                  Dashboard
+                </Link>
+                <button
+                  onClick={() => {
+                    handleSignOut()
+                    setMobileMenuOpen(false)
+                  }}
+                  className="block w-full text-left px-4 py-2 text-gray-700 hover:text-gray-900 font-medium"
+                >
+                  Sign Out
+                </button>
+              </>
+            ) : (
+              <>
+                <Link
+                  href="/signin"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="block w-full text-left px-4 py-2 text-gray-700 hover:text-gray-900 font-medium"
+                >
+                  Sign In
+                </Link>
+                <button 
+                  onClick={() => {
+                    scrollToGenerator()
+                    setMobileMenuOpen(false)
+                  }}
+                  className="block w-full px-6 py-2 bg-gradient-to-r from-primary-600 to-purple-600 text-white rounded-lg font-semibold text-center"
+                >
+                  Get Started
+                </button>
+              </>
+            )}
           </div>
         )}
       </div>
