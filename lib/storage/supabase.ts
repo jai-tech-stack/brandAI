@@ -1,9 +1,20 @@
 import { createClient } from '@supabase/supabase-js'
 
+// Supabase configuration
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || ''
 const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || ''
 
+// Server-side Supabase client (uses service role key for admin operations)
 export const supabase = supabaseUrl && supabaseKey ? createClient(supabaseUrl, supabaseKey) : null
+
+// Log connection status (only in development)
+if (process.env.NODE_ENV === 'development') {
+  if (!supabase) {
+    console.warn('⚠️  Supabase not configured. Set NEXT_PUBLIC_SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY in .env.local')
+  } else {
+    console.log('✅ Supabase connected:', supabaseUrl)
+  }
+}
 
 /**
  * Upload file to Supabase Storage

@@ -55,15 +55,12 @@ export default function Navigation() {
             >
               Pricing
             </button>
-            <button 
-              onClick={() => {
-                // Sign In functionality - can be replaced with actual auth later
-                alert('Sign In coming soon!')
-              }}
+            <Link
+              href="/signin"
               className="px-4 py-2 text-gray-700 hover:text-gray-900 font-medium transition-colors"
             >
               Sign In
-            </button>
+            </Link>
             <button 
               onClick={scrollToGenerator}
               className="px-6 py-2 bg-gradient-to-r from-primary-600 to-purple-600 text-white rounded-lg font-semibold hover:from-primary-700 hover:to-purple-700 transition-all shadow-lg"
@@ -102,15 +99,13 @@ export default function Navigation() {
             >
               Pricing
             </button>
-            <button 
-              onClick={() => {
-                alert('Sign In coming soon!')
-                setMobileMenuOpen(false)
-              }}
+            <Link
+              href="/signin"
+              onClick={() => setMobileMenuOpen(false)}
               className="block w-full text-left px-4 py-2 text-gray-700 hover:text-gray-900 font-medium"
             >
               Sign In
-            </button>
+            </Link>
             <button 
               onClick={scrollToGenerator}
               className="block w-full px-6 py-2 bg-gradient-to-r from-primary-600 to-purple-600 text-white rounded-lg font-semibold text-center"
