@@ -6,6 +6,7 @@ import Hero from '@/components/Hero'
 import Features from '@/components/Features'
 import HowItWorks from '@/components/HowItWorks'
 import WhyBloomboxAI from '@/components/WhyBloomboxAI'
+import Pricing from '@/components/Pricing'
 import CompleteBrandSystem from '@/components/CompleteBrandSystem'
 import Footer from '@/components/Footer'
 
@@ -20,9 +21,10 @@ export default function Home() {
         <Features />
         <HowItWorks />
         <WhyBloomboxAI />
+        <Pricing />
         
         {/* Main Generator Section */}
-        <section className="py-24 bg-white">
+        <section id="generator" className="py-24 bg-white">
           <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="text-center mb-12">
               <h2 className="text-4xl sm:text-5xl font-bold text-gray-900 mb-4">

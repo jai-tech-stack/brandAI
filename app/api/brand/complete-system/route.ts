@@ -11,51 +11,136 @@ async function extractCompleteBrandSystem(url: string) {
   }
 
   const validUrl = new URL(normalizedUrl)
-
-  // Fetch website
-  const response = await fetch(validUrl.toString(), {
-    headers: {
-      'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
-      'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
-    },
-    signal: AbortSignal.timeout(15000),
-  })
-
-  if (!response.ok) {
-    throw new Error(`Failed to fetch website: ${response.status}`)
-  }
-
-  const html = await response.text()
   const baseUrl = validUrl.origin
 
-  // Extract colors (primary & secondary)
-  const colors: string[] = []
-  const colorRegex = /(?:color|background-color|background|border-color):\s*(#[0-9a-fA-F]{3,6}|rgb\([^)]+\)|rgba\([^)]+\))/gi
-  const colorMatches = html.match(colorRegex) || []
-  const colorSet = new Set<string>()
+  // Try to use Playwright for accurate color extraction
+  let html = ''
+  let extractedColors: string[] = []
   
-  colorMatches.forEach(match => {
-    const colorMatch = match.match(/(#[0-9a-fA-F]{3,6}|rgb\([^)]+\)|rgba\([^)]+\))/)
-    if (colorMatch) {
-      let color = colorMatch[1]
-      if (color.startsWith('#')) {
-        if (color.length === 4) {
-          color = `#${color[1]}${color[1]}${color[2]}${color[2]}${color[3]}${color[3]}`
+  try {
+    // Check if Playwright is available
+    const playwright = require('playwright')
+    const browser = await playwright.chromium.launch({ headless: true })
+    const context = await browser.newContext({
+      viewport: { width: 1920, height: 1080 },
+      userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+    })
+    const page = await context.newPage()
+    
+    await page.goto(validUrl.toString(), { waitUntil: 'networkidle', timeout: 30000 })
+    await page.waitForTimeout(2000) // Wait for dynamic content
+    
+    html = await page.content()
+    
+    // Extract colors from computed styles of visible elements
+    const colorData = await page.evaluate(() => {
+      const colors = new Set<string>()
+      const colorFrequency = new Map<string, number>()
+      
+      // Get all visible elements
+      const elements = document.querySelectorAll('*')
+      
+      elements.forEach((el: Element) => {
+        const computed = window.getComputedStyle(el as HTMLElement)
+        const bgColor = computed.backgroundColor
+        const textColor = computed.color
+        const borderColor = computed.borderColor
+        
+        // Convert rgb/rgba to hex
+        const toHex = (color: string): string | null => {
+          if (!color || color === 'transparent' || color === 'rgba(0, 0, 0, 0)') return null
+          
+          const rgbMatch = color.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)/)
+          if (rgbMatch) {
+            const r = parseInt(rgbMatch[1]).toString(16).padStart(2, '0')
+            const g = parseInt(rgbMatch[2]).toString(16).padStart(2, '0')
+            const b = parseInt(rgbMatch[3]).toString(16).padStart(2, '0')
+            return `#${r}${g}${b}`.toUpperCase()
+          }
+          return null
         }
-        colorSet.add(color.toUpperCase())
-      } else if (color.startsWith('rgb')) {
-        const rgbMatch = color.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)/)
-        if (rgbMatch) {
-          const r = parseInt(rgbMatch[1]).toString(16).padStart(2, '0')
-          const g = parseInt(rgbMatch[2]).toString(16).padStart(2, '0')
-          const b = parseInt(rgbMatch[3]).toString(16).padStart(2, '0')
-          colorSet.add(`#${r}${g}${b}`.toUpperCase())
+        
+        [bgColor, textColor, borderColor].forEach(color => {
+          const hex = toHex(color)
+          if (hex && hex !== '#FFFFFF' && hex !== '#000000' && hex !== '#FFF' && hex !== '#000') {
+            colors.add(hex)
+            colorFrequency.set(hex, (colorFrequency.get(hex) || 0) + 1)
+          }
+        })
+      })
+      
+      // Sort by frequency and return top colors
+      return Array.from(colorFrequency.entries())
+        .sort((a, b) => b[1] - a[1])
+        .map(([color]) => color)
+        .filter(color => {
+          // Filter out very light/dark grays
+          const hex = color.replace('#', '')
+          if (hex.length < 6) return true
+          const r = parseInt(hex.substring(0, 2), 16)
+          const g = parseInt(hex.substring(2, 4), 16)
+          const b = parseInt(hex.substring(4, 6), 16)
+          const brightness = (r + g + b) / 3
+          const saturation = Math.max(r, g, b) - Math.min(r, g, b)
+          return brightness > 30 && brightness < 230 && saturation > 20
+        })
+    })
+    
+    extractedColors = colorData.slice(0, 8)
+    
+    await browser.close()
+  } catch (playwrightError) {
+    // Fallback to fetch-based extraction
+    console.warn('Playwright not available, using fetch fallback:', playwrightError)
+    
+    const response = await fetch(validUrl.toString(), {
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+      },
+      signal: AbortSignal.timeout(15000),
+    })
+
+    if (!response.ok) {
+      throw new Error(`Failed to fetch website: ${response.status}`)
+    }
+
+    html = await response.text()
+
+    // Extract colors from CSS
+    const colorRegex = /(?:color|background-color|background|border-color):\s*(#[0-9a-fA-F]{3,6}|rgb\([^)]+\)|rgba\([^)]+\))/gi
+    const colorMatches = html.match(colorRegex) || []
+    const colorSet = new Set<string>()
+    
+    colorMatches.forEach(match => {
+      const colorMatch = match.match(/(#[0-9a-fA-F]{3,6}|rgb\([^)]+\)|rgba\([^)]+\))/)
+      if (colorMatch) {
+        let color = colorMatch[1]
+        if (color.startsWith('#')) {
+          if (color.length === 4) {
+            color = `#${color[1]}${color[1]}${color[2]}${color[2]}${color[3]}${color[3]}`
+          }
+          colorSet.add(color.toUpperCase())
+        } else if (color.startsWith('rgb')) {
+          const rgbMatch = color.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)/)
+          if (rgbMatch) {
+            const r = parseInt(rgbMatch[1]).toString(16).padStart(2, '0')
+            const g = parseInt(rgbMatch[2]).toString(16).padStart(2, '0')
+            const b = parseInt(rgbMatch[3]).toString(16).padStart(2, '0')
+            colorSet.add(`#${r}${g}${b}`.toUpperCase())
+          }
         }
       }
-    }
-  })
+    })
 
-  const extractedColors = Array.from(colorSet).slice(0, 6)
+    extractedColors = Array.from(colorSet).slice(0, 8)
+  }
+
+  // Ensure we have at least some colors
+  if (extractedColors.length === 0) {
+    extractedColors = ['#4285F4', '#34A853', '#FBBC04', '#EA4335'] // Google colors as fallback
+  }
+
   const primaryColors = extractedColors.slice(0, 2)
   const secondaryColors = extractedColors.slice(2, 4)
 
