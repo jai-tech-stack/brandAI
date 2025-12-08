@@ -1,4 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
+import type { TemplateConfig } from '@/lib/templates/templateTypes'
+import { TEMPLATE_SIZES } from '@/lib/templates/templateTypes'
 
 // Mark route as fully dynamic to prevent Vercel build errors
 export const dynamic = 'force-dynamic'
@@ -23,7 +25,6 @@ export async function POST(request: NextRequest) {
     const { generateTwitterTemplate } = await import('@/lib/templates/twitter')
     const { generateYouTubeTemplate } = await import('@/lib/templates/youtube')
     const { generateHeroBannerTemplate } = await import('@/lib/templates/heroBanner')
-    const { TemplateConfig, TEMPLATE_SIZES } = await import('@/lib/templates/templateTypes')
 
     const generateTemplatesSchema = z.object({
       brandSystem: z.object({
@@ -105,8 +106,9 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    const errorMessage = error instanceof Error ? error.message : 'Failed to generate templates'
     return NextResponse.json(
-      { error: error.message || 'Failed to generate templates' },
+      { error: errorMessage },
       { status: 500 }
     )
   }
