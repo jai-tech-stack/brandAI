@@ -170,7 +170,7 @@ function extractFontsFromHTML(html: string, fontFrequency: Map<string, number>) 
 }
 
 // Enhanced brand extraction with complete system - 100% ACCURATE
-async function extractCompleteBrandSystem(url: string) {
+async function extractCompleteBrandSystem(url: string, styleVariation?: string) {
   // Normalize URL
   let normalizedUrl = url.trim()
   if (!normalizedUrl.startsWith('http://') && !normalizedUrl.startsWith('https://')) {
@@ -663,7 +663,7 @@ export async function POST(request: NextRequest) {
     // Step 1: Extract complete brand system (with timeout)
     let brandSystem
     try {
-      const brandSystemPromise = extractCompleteBrandSystem(url)
+      const brandSystemPromise = extractCompleteBrandSystem(url, styleVariation)
       brandSystem = await Promise.race([brandSystemPromise, timeoutPromise]) as Awaited<ReturnType<typeof extractCompleteBrandSystem>>
     } catch (extractError: unknown) {
       console.error('Brand extraction error:', extractError)
@@ -711,11 +711,11 @@ export async function POST(request: NextRequest) {
     }
 
     return NextResponse.json({ success: true, data: completeSystem })
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Complete brand system generation error:', error)
     
     // Ensure error response is always JSON
-    const errorMessage = error.message || 'Failed to generate complete brand system'
+    const errorMessage = error instanceof Error ? error.message : 'Failed to generate complete brand system'
     const isTimeout = errorMessage.includes('timeout') || errorMessage.includes('Timeout')
     
     return NextResponse.json(
