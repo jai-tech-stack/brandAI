@@ -373,7 +373,7 @@ async function extractCompleteBrandSystem(url: string) {
   }
 }
 
-  // Generate all brand assets (optimized for speed)
+// Generate all brand assets (optimized for speed)
 async function generateAllBrandAssets(brandSystem: any) {
   const assets: any[] = []
 
