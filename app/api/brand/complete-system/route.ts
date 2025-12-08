@@ -16,166 +16,137 @@ async function extractCompleteBrandSystem(url: string) {
   const validUrl = new URL(normalizedUrl)
   const baseUrl = validUrl.origin
 
-  // Try to use Playwright for accurate color extraction
+  // Try fetch first (faster), then Playwright as fallback only if needed
   let html = ''
   let extractedColors: string[] = []
+  let usePlaywright = false
   
+  // First, try fast fetch-based extraction
   try {
-    // Don't try to load playwright during build
-    if (process.env.NEXT_PHASE === 'phase-production-build') {
-      throw new Error('Build phase - skipping Playwright')
-    }
-    
-    // Check if Playwright is available
-    // Using dynamic require to prevent webpack from trying to resolve it at build time
-    const requirePlaywright = new Function('moduleName', 'return require(moduleName)')
-    const playwright = requirePlaywright('playwright')
-    if (!playwright) {
-      throw new Error('Playwright not available')
-    }
-    const browser = await playwright.chromium.launch({ headless: true })
-    const context = await browser.newContext({
-      viewport: { width: 1920, height: 1080 },
-      userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+    const fetchResponse = await fetch(validUrl.toString(), {
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+      },
+      signal: AbortSignal.timeout(10000), // 10 second timeout
     })
-    const page = await context.newPage()
-    
-    await page.goto(validUrl.toString(), { waitUntil: 'domcontentloaded', timeout: 20000 })
-    await page.waitForTimeout(1000) // Reduced wait time
-    
-    html = await page.content()
-    
-    // Extract colors from computed styles of visible elements with better accuracy
-    const colorData = await page.evaluate(() => {
-      const colorFrequency = new Map<string, number>()
-      const elementTypes = new Map<string, Set<string>>()
-      
-      // Get all visible elements, prioritizing important ones
-      const importantSelectors = [
-        'header', 'nav', 'main', 'section', 'article',
-        '[class*="hero"]', '[class*="banner"]', '[class*="header"]',
-        '[class*="brand"]', '[class*="logo"]', '[id*="hero"]',
-        'h1', 'h2', 'h3', 'button', 'a', '[role="button"]'
-      ]
-      
-      // First, get colors from important elements
-      importantSelectors.forEach(selector => {
-        try {
-          document.querySelectorAll(selector).forEach((el: Element) => {
-            const computed = window.getComputedStyle(el as HTMLElement)
-            const rect = (el as HTMLElement).getBoundingClientRect()
-            
-            // Only process visible elements
-            if (rect.width === 0 || rect.height === 0) return
-            
-            const bgColor = computed.backgroundColor
-            const textColor = computed.color
-            const borderColor = computed.borderColor
-            
-            // Convert rgb/rgba to hex
-            const toHex = (color: string): string | null => {
-              if (!color || color === 'transparent' || color === 'rgba(0, 0, 0, 0)') return null
-              
-              const rgbMatch = color.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)/)
-              if (rgbMatch) {
-                const r = parseInt(rgbMatch[1])
-                const g = parseInt(rgbMatch[2])
-                const b = parseInt(rgbMatch[3])
-                const a = rgbMatch[0].includes('rgba') ? parseFloat(color.match(/,\s*([\d.]+)\)/)?.[1] || '1') : 1
-                
-                // Skip transparent colors
-                if (a < 0.1) return null
-                
-                const rHex = r.toString(16).padStart(2, '0')
-                const gHex = g.toString(16).padStart(2, '0')
-                const bHex = b.toString(16).padStart(2, '0')
-                return `#${rHex}${gHex}${bHex}`.toUpperCase()
-              }
-              return null
-            }
-            
-            // Process colors with higher weight for important elements
-            const weight = selector.includes('hero') || selector.includes('banner') || selector.includes('brand') ? 3 : 1
-            
-            [bgColor, textColor, borderColor].forEach(color => {
-              const hex = toHex(color)
-              if (hex) {
-                const r = parseInt(hex.substring(1, 3), 16)
-                const g = parseInt(hex.substring(3, 5), 16)
-                const b = parseInt(hex.substring(5, 7), 16)
-                const brightness = (r + g + b) / 3
-                const max = Math.max(r, g, b)
-                const min = Math.min(r, g, b)
-                const saturation = max === 0 ? 0 : (max - min) / max
-                
-                // Better filtering: exclude pure black/white, very light/dark grays, low saturation
-                if (hex !== '#FFFFFF' && hex !== '#000000' && 
-                    brightness > 40 && brightness < 220 && 
-                    saturation > 15) {
-                  colorFrequency.set(hex, (colorFrequency.get(hex) || 0) + weight)
-                }
-              }
-            })
-          })
-        } catch (e) {
-          // Continue if selector fails
-        }
-      })
-      
-      // Also sample from all elements for completeness
-      const allElements = document.querySelectorAll('*')
-      const sampleSize = Math.min(500, allElements.length)
-      const step = Math.max(1, Math.floor(allElements.length / sampleSize))
-      
-      for (let i = 0; i < allElements.length; i += step) {
-        const el = allElements[i] as HTMLElement
-        const computed = window.getComputedStyle(el)
-        const rect = el.getBoundingClientRect()
-        
-        if (rect.width === 0 || rect.height === 0) continue
-        
-        const bgColor = computed.backgroundColor
-        const toHex = (color: string): string | null => {
-          if (!color || color === 'transparent' || color === 'rgba(0, 0, 0, 0)') return null
-          const rgbMatch = color.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)/)
-          if (rgbMatch) {
-            const r = parseInt(rgbMatch[1]).toString(16).padStart(2, '0')
-            const g = parseInt(rgbMatch[2]).toString(16).padStart(2, '0')
-            const b = parseInt(rgbMatch[3]).toString(16).padStart(2, '0')
-            return `#${r}${g}${b}`.toUpperCase()
-          }
-          return null
-        }
-        
-        const hex = toHex(bgColor)
-        if (hex && hex !== '#FFFFFF' && hex !== '#000000') {
-          const r = parseInt(hex.substring(1, 3), 16)
-          const g = parseInt(hex.substring(3, 5), 16)
-          const b = parseInt(hex.substring(5, 7), 16)
-          const brightness = (r + g + b) / 3
-          const max = Math.max(r, g, b)
-          const min = Math.min(r, g, b)
-          const saturation = max === 0 ? 0 : (max - min) / max
-          
-          if (brightness > 40 && brightness < 220 && saturation > 15) {
-            colorFrequency.set(hex, (colorFrequency.get(hex) || 0) + 0.5)
-          }
-        }
+
+    if (fetchResponse.ok) {
+      html = await fetchResponse.text()
+      usePlaywright = false // Use fast fetch method
+    } else {
+      throw new Error('Fetch failed')
+    }
+  } catch (fetchError) {
+    // Fallback to Playwright only if fetch fails
+    usePlaywright = true
+  }
+  
+  // Use Playwright only if fetch failed or if we need more accurate extraction
+  if (usePlaywright) {
+    try {
+      // Don't try to load playwright during build
+      if (process.env.NEXT_PHASE === 'phase-production-build' || process.env.VERCEL === '1') {
+        throw new Error('Skipping Playwright in build/production')
       }
       
-      // Sort by frequency and return top colors
-      return Array.from(colorFrequency.entries())
-        .sort((a, b) => b[1] - a[1])
-        .map(([color]) => color)
-        .slice(0, 12) // Get more colors for better selection
-    })
+      // Check if Playwright is available
+      const requirePlaywright = new Function('moduleName', 'return require(moduleName)')
+      const playwright = requirePlaywright('playwright')
+      if (!playwright) {
+        throw new Error('Playwright not available')
+      }
+      
+      // Launch browser with timeout
+      const browserPromise = playwright.chromium.launch({ headless: true })
+      const browserTimeout = new Promise((_, reject) => {
+        setTimeout(() => reject(new Error('Browser launch timeout')), 5000)
+      })
+      const browser = await Promise.race([browserPromise, browserTimeout]) as any
+      
+      const context = await browser.newContext({
+        viewport: { width: 1280, height: 720 }, // Smaller viewport
+        userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+      })
+      const page = await context.newPage()
+      
+      // Faster navigation with shorter timeout
+      await page.goto(validUrl.toString(), { waitUntil: 'domcontentloaded', timeout: 10000 })
+      await page.waitForTimeout(500) // Minimal wait
+      
+      html = await page.content()
+      await browser.close()
     
-    extractedColors = colorData.slice(0, 8)
-    
-    await browser.close()
-  } catch (playwrightError) {
-    // Fallback to fetch-based extraction
-    console.warn('Playwright not available, using fetch fallback:', playwrightError)
+      // Extract colors from computed styles (only if using Playwright)
+      const colorData = await page.evaluate(() => {
+        const colorFrequency = new Map<string, number>()
+        
+        // Only process important elements (faster)
+        const importantSelectors = [
+          'header', 'nav', 'main', '[class*="hero"]', '[class*="banner"]',
+          'h1', 'h2', 'button', 'a'
+        ]
+        
+        importantSelectors.forEach(selector => {
+          try {
+            const elements = document.querySelectorAll(selector)
+            const maxElements = Math.min(20, elements.length) // Limit to 20 elements per selector
+            
+            for (let i = 0; i < maxElements; i++) {
+              const el = elements[i] as HTMLElement
+              const computed = window.getComputedStyle(el)
+              const rect = el.getBoundingClientRect()
+              
+              if (rect.width === 0 || rect.height === 0) continue
+              
+              const bgColor = computed.backgroundColor
+              const textColor = computed.color
+              
+              const toHex = (color: string): string | null => {
+                if (!color || color === 'transparent' || color === 'rgba(0, 0, 0, 0)') return null
+                const rgbMatch = color.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)/)
+                if (rgbMatch) {
+                  const r = parseInt(rgbMatch[1]).toString(16).padStart(2, '0')
+                  const g = parseInt(rgbMatch[2]).toString(16).padStart(2, '0')
+                  const b = parseInt(rgbMatch[3]).toString(16).padStart(2, '0')
+                  return `#${r}${g}${b}`.toUpperCase()
+                }
+                return null
+              }
+              
+              [bgColor, textColor].forEach(color => {
+                const hex = toHex(color)
+                if (hex && hex !== '#FFFFFF' && hex !== '#000000') {
+                  const r = parseInt(hex.substring(1, 3), 16)
+                  const g = parseInt(hex.substring(3, 5), 16)
+                  const b = parseInt(hex.substring(5, 7), 16)
+                  const brightness = (r + g + b) / 3
+                  const max = Math.max(r, g, b)
+                  const min = Math.min(r, g, b)
+                  const saturation = max === 0 ? 0 : (max - min) / max
+                  
+                  if (brightness > 40 && brightness < 220 && saturation > 15) {
+                    colorFrequency.set(hex, (colorFrequency.get(hex) || 0) + 1)
+                  }
+                }
+              })
+            }
+          } catch (e) {
+            // Continue
+          }
+        })
+        
+        return Array.from(colorFrequency.entries())
+          .sort((a, b) => b[1] - a[1])
+          .map(([color]) => color)
+          .slice(0, 8)
+      })
+      
+      extractedColors = colorData
+      await browser.close()
+    } catch (playwrightError) {
+      // If Playwright fails, use fetch HTML we already have
+      console.warn('Playwright failed, using fetch HTML:', playwrightError)
     
     const response = await fetch(validUrl.toString(), {
       headers: {
@@ -191,33 +162,90 @@ async function extractCompleteBrandSystem(url: string) {
 
     html = await response.text()
 
-    // Extract colors from CSS
-    const colorRegex = /(?:color|background-color|background|border-color):\s*(#[0-9a-fA-F]{3,6}|rgb\([^)]+\)|rgba\([^)]+\))/gi
-    const colorMatches = html.match(colorRegex) || []
-    const colorSet = new Set<string>()
+    // Fast CSS-based color extraction (optimized)
+    const colorFrequency = new Map<string, number>()
     
-    colorMatches.forEach(match => {
-      const colorMatch = match.match(/(#[0-9a-fA-F]{3,6}|rgb\([^)]+\)|rgba\([^)]+\))/)
-      if (colorMatch) {
-        let color = colorMatch[1]
-        if (color.startsWith('#')) {
-          if (color.length === 4) {
-            color = `#${color[1]}${color[1]}${color[2]}${color[2]}${color[3]}${color[3]}`
-          }
-          colorSet.add(color.toUpperCase())
-        } else if (color.startsWith('rgb')) {
-          const rgbMatch = color.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)/)
-          if (rgbMatch) {
-            const r = parseInt(rgbMatch[1]).toString(16).padStart(2, '0')
-            const g = parseInt(rgbMatch[2]).toString(16).padStart(2, '0')
-            const b = parseInt(rgbMatch[3]).toString(16).padStart(2, '0')
-            colorSet.add(`#${r}${g}${b}`.toUpperCase())
-          }
+    // Extract CSS variables first (most important)
+    const cssVarRegex = /--[\w-]+:\s*([^;]+)/gi
+    let varMatch
+    while ((varMatch = cssVarRegex.exec(html)) !== null) {
+      const value = varMatch[1].trim()
+      if (value.match(/^#[0-9a-fA-F]{3,6}$|^rgb|^rgba/i)) {
+        const hex = normalizeColorToHex(value)
+        if (hex && hex !== '#FFFFFF' && hex !== '#000000') {
+          colorFrequency.set(hex, (colorFrequency.get(hex) || 0) + 3) // Higher weight for CSS vars
         }
       }
-    })
-
-    extractedColors = Array.from(colorSet).slice(0, 8)
+    }
+    
+    // Extract from style attributes (common in modern sites)
+    const styleAttrRegex = /style=["']([^"']+)["']/gi
+    let styleMatch
+    while ((styleMatch = styleAttrRegex.exec(html)) !== null) {
+      const styleContent = styleMatch[1]
+      const colorMatches = styleContent.match(/(?:color|background-color|background|border-color):\s*([^;]+)/gi) || []
+      colorMatches.forEach(match => {
+        const colorValue = match.split(':')[1]?.trim()
+        if (colorValue) {
+          const hex = normalizeColorToHex(colorValue)
+          if (hex && hex !== '#FFFFFF' && hex !== '#000000') {
+            colorFrequency.set(hex, (colorFrequency.get(hex) || 0) + 2)
+          }
+        }
+      })
+    }
+    
+    // Extract from style tags
+    const styleTagRegex = /<style[^>]*>([\s\S]{0,50000})<\/style>/gi // Limit size
+    let styleTagMatch
+    while ((styleTagMatch = styleTagRegex.exec(html)) !== null) {
+      const css = styleTagMatch[1]
+      const colorMatches = css.match(/(?:color|background-color|background|border-color):\s*([^;]+)/gi) || []
+      colorMatches.forEach(match => {
+        const colorValue = match.split(':')[1]?.trim()
+        if (colorValue) {
+          const hex = normalizeColorToHex(colorValue)
+          if (hex && hex !== '#FFFFFF' && hex !== '#000000') {
+            colorFrequency.set(hex, (colorFrequency.get(hex) || 0) + 1)
+          }
+        }
+      })
+    }
+    
+    // Sort by frequency and filter
+    extractedColors = Array.from(colorFrequency.entries())
+      .sort((a, b) => b[1] - a[1])
+      .map(([color]) => color)
+      .filter(color => {
+        const r = parseInt(color.substring(1, 3), 16)
+        const g = parseInt(color.substring(3, 5), 16)
+        const b = parseInt(color.substring(5, 7), 16)
+        const brightness = (r + g + b) / 3
+        const max = Math.max(r, g, b)
+        const min = Math.min(r, g, b)
+        const saturation = max === 0 ? 0 : (max - min) / max
+        return brightness > 40 && brightness < 220 && saturation > 15
+      })
+      .slice(0, 8)
+    
+    // Helper function
+    function normalizeColorToHex(color: string): string | null {
+      color = color.trim()
+      if (color.startsWith('#')) {
+        if (color.length === 4) {
+          return `#${color[1]}${color[1]}${color[2]}${color[2]}${color[3]}${color[3]}`.toUpperCase()
+        }
+        return color.length === 7 ? color.toUpperCase() : null
+      }
+      const rgbMatch = color.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)/)
+      if (rgbMatch) {
+        const r = parseInt(rgbMatch[1]).toString(16).padStart(2, '0')
+        const g = parseInt(rgbMatch[2]).toString(16).padStart(2, '0')
+        const b = parseInt(rgbMatch[3]).toString(16).padStart(2, '0')
+        return `#${r}${g}${b}`.toUpperCase()
+      }
+      return null
+    }
   }
 
   // Only use extracted colors - don't add fake fallbacks
@@ -323,22 +351,8 @@ async function extractCompleteBrandSystem(url: string) {
     }
   }
   
-  // Fallback: try common logo paths
-  if (!logoUrl) {
-    const commonPaths = ['/logo.png', '/logo.svg', '/assets/logo.png', '/images/logo.png', '/img/logo.png', '/static/logo.png']
-    for (const path of commonPaths) {
-      try {
-        const testUrl = `${baseUrl}${path}`
-        const testResponse = await fetch(testUrl, { method: 'HEAD', signal: AbortSignal.timeout(2000) })
-        if (testResponse.ok && testResponse.headers.get('content-type')?.startsWith('image/')) {
-          logoUrl = testUrl
-          break
-        }
-      } catch (e) {
-        // Continue
-      }
-    }
-  }
+  // Skip logo URL validation to save time - just extract the URL
+  // Logo validation can be done client-side if needed
 
   // AI Analysis
   const aiAnalysis = await analyzeBrandWithAI(html, extractedColors, extractedFonts)
@@ -514,27 +528,18 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Set timeout for the entire operation (50 seconds max for Vercel)
+    // Set timeout for the entire operation (30 seconds max - faster response)
     const timeoutPromise = new Promise((_, reject) => {
-      setTimeout(() => reject(new Error('Request timeout - brand extraction took too long')), 50000)
+      setTimeout(() => reject(new Error('Request timeout - brand extraction took too long')), 30000)
     })
 
     // Step 1: Extract complete brand system (with timeout)
     const brandSystemPromise = extractCompleteBrandSystem(url)
     const brandSystem = await Promise.race([brandSystemPromise, timeoutPromise]) as Awaited<ReturnType<typeof extractCompleteBrandSystem>>
 
-    // Step 2: Generate brand assets (optional, non-blocking - return what we have if timeout)
-    let assets: any[] = []
-    try {
-      const assetsPromise = generateAllBrandAssets(brandSystem)
-      const assetsTimeout = new Promise((resolve) => {
-        setTimeout(() => resolve([]), 40000) // 40 second timeout for assets
-      })
-      assets = await Promise.race([assetsPromise, assetsTimeout]) as any[]
-    } catch (assetError: any) {
-      console.warn('Asset generation failed or timed out:', assetError.message)
-      // Continue without assets - brand system is more important
-    }
+    // Step 2: Skip asset generation for now (too slow) - can be done async later
+    // Assets can be generated on-demand via separate API endpoint
+    const assets: any[] = []
 
     const completeSystem = {
       ...brandSystem,
