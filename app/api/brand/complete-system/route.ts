@@ -670,9 +670,26 @@ export async function POST(request: NextRequest) {
       throw extractError // Re-throw to be caught by outer catch
     }
 
-    // Step 2: Skip asset generation for now (too slow) - can be done async later
-    // Assets can be generated on-demand via separate API endpoint
-    const assets: any[] = []
+    // Step 2: Generate all brand assets (logo, moodboard, templates, pitch-deck)
+    let assets: any[] = []
+    try {
+      // Generate assets with a shorter timeout to prevent overall timeout
+      const assetsPromise = generateAllBrandAssets(brandSystem)
+      const assetsTimeout = new Promise((_, reject) => {
+        setTimeout(() => reject(new Error('Asset generation timeout')), 20000) // 20 second timeout for assets
+      })
+      
+      try {
+        assets = await Promise.race([assetsPromise, assetsTimeout]) as any[]
+      } catch (assetError) {
+        console.warn('Asset generation timed out or failed, continuing with brand system:', assetError)
+        // Continue without assets - brand system is still complete
+        assets = []
+      }
+    } catch (assetError) {
+      console.warn('Asset generation failed, continuing with brand system:', assetError)
+      assets = []
+    }
 
     const completeSystem = {
       ...brandSystem,
@@ -680,7 +697,7 @@ export async function POST(request: NextRequest) {
       generatedAt: new Date().toISOString(),
       aiPowered: true,
       autonomous: true,
-      note: assets.length === 0 ? 'Brand system extracted successfully. Some assets may still be generating.' : undefined,
+      note: assets.length === 0 ? 'Brand system extracted successfully. Assets can be generated on-demand via the asset generator.' : undefined,
     }
 
     return NextResponse.json({ success: true, data: completeSystem })
