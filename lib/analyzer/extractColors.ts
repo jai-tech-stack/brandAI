@@ -32,7 +32,8 @@ export async function extractColors(
 
   // Combine and categorize colors
   const allColors = [...cssColors, ...screenshotColors]
-  const uniqueColors = Array.from(new Set(allColors.map(normalizeColor)))
+  const normalizedColors = allColors.map(normalizeColor).filter((color): color is string => color !== null)
+  const uniqueColors = Array.from(new Set(normalizedColors))
   
   // Categorize colors
   categorizeColors(uniqueColors, colors)
@@ -57,20 +58,6 @@ function extractColorsFromCSS(html: string): string[] {
       }
     })
   }
-
-  // Extract from inline styles
-  const elements = document.querySelectorAll('[style]')
-  elements.forEach((el) => {
-    const style = el.getAttribute('style') || ''
-    const matches = style.match(/(?:color|background-color|background|border-color):\s*([^;]+)/gi)
-    matches?.forEach((match) => {
-      const colorMatch = match.match(/(#[0-9a-fA-F]{3,6}|rgb\([^)]+\)|rgba\([^)]+\)|hsl\([^)]+\)|hsla\([^)]+\)|[a-z]+)/i)
-      if (colorMatch) {
-        const color = normalizeColor(colorMatch[1])
-        if (color) colors.push(color)
-      }
-    })
-  })
 
   // Extract from style tags
   const styleTagRegex = /<style[^>]*>([\s\S]*?)<\/style>/gi
