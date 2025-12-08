@@ -147,105 +147,105 @@ async function extractCompleteBrandSystem(url: string) {
     } catch (playwrightError) {
       // If Playwright fails, use fetch HTML we already have
       console.warn('Playwright failed, using fetch HTML:', playwrightError)
-    
-    const response = await fetch(validUrl.toString(), {
-      headers: {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
-        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
-      },
-      signal: AbortSignal.timeout(15000),
-    })
-
-    if (!response.ok) {
-      throw new Error(`Failed to fetch website: ${response.status}`)
-    }
-
-    html = await response.text()
-
-    // Fast CSS-based color extraction (optimized)
-    const colorFrequency = new Map<string, number>()
-    
-    // Extract CSS variables first (most important)
-    const cssVarRegex = /--[\w-]+:\s*([^;]+)/gi
-    let varMatch
-    while ((varMatch = cssVarRegex.exec(html)) !== null) {
-      const value = varMatch[1].trim()
-      if (value.match(/^#[0-9a-fA-F]{3,6}$|^rgb|^rgba/i)) {
-        const hex = normalizeColorToHex(value)
-        if (hex && hex !== '#FFFFFF' && hex !== '#000000') {
-          colorFrequency.set(hex, (colorFrequency.get(hex) || 0) + 3) // Higher weight for CSS vars
+      
+      // Helper function (must be defined before use)
+      function normalizeColorToHex(color: string): string | null {
+        color = color.trim()
+        if (color.startsWith('#')) {
+          if (color.length === 4) {
+            return `#${color[1]}${color[1]}${color[2]}${color[2]}${color[3]}${color[3]}`.toUpperCase()
+          }
+          return color.length === 7 ? color.toUpperCase() : null
         }
+        const rgbMatch = color.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)/)
+        if (rgbMatch) {
+          const r = parseInt(rgbMatch[1]).toString(16).padStart(2, '0')
+          const g = parseInt(rgbMatch[2]).toString(16).padStart(2, '0')
+          const b = parseInt(rgbMatch[3]).toString(16).padStart(2, '0')
+          return `#${r}${g}${b}`.toUpperCase()
+        }
+        return null
       }
-    }
-    
-    // Extract from style attributes (common in modern sites)
-    const styleAttrRegex = /style=["']([^"']+)["']/gi
-    let styleMatch
-    while ((styleMatch = styleAttrRegex.exec(html)) !== null) {
-      const styleContent = styleMatch[1]
-      const colorMatches = styleContent.match(/(?:color|background-color|background|border-color):\s*([^;]+)/gi) || []
-      colorMatches.forEach(match => {
-        const colorValue = match.split(':')[1]?.trim()
-        if (colorValue) {
-          const hex = normalizeColorToHex(colorValue)
+      
+      const response = await fetch(validUrl.toString(), {
+        headers: {
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+          'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+        },
+        signal: AbortSignal.timeout(15000),
+      })
+
+      if (!response.ok) {
+        throw new Error(`Failed to fetch website: ${response.status}`)
+      }
+
+      html = await response.text()
+
+      // Fast CSS-based color extraction (optimized)
+      const colorFrequency = new Map<string, number>()
+      
+      // Extract CSS variables first (most important)
+      const cssVarRegex = /--[\w-]+:\s*([^;]+)/gi
+      let varMatch
+      while ((varMatch = cssVarRegex.exec(html)) !== null) {
+        const value = varMatch[1].trim()
+        if (value.match(/^#[0-9a-fA-F]{3,6}$|^rgb|^rgba/i)) {
+          const hex = normalizeColorToHex(value)
           if (hex && hex !== '#FFFFFF' && hex !== '#000000') {
-            colorFrequency.set(hex, (colorFrequency.get(hex) || 0) + 2)
+            colorFrequency.set(hex, (colorFrequency.get(hex) || 0) + 3) // Higher weight for CSS vars
           }
         }
-      })
-    }
-    
-    // Extract from style tags
-    const styleTagRegex = /<style[^>]*>([\s\S]{0,50000})<\/style>/gi // Limit size
-    let styleTagMatch
-    while ((styleTagMatch = styleTagRegex.exec(html)) !== null) {
-      const css = styleTagMatch[1]
-      const colorMatches = css.match(/(?:color|background-color|background|border-color):\s*([^;]+)/gi) || []
-      colorMatches.forEach(match => {
-        const colorValue = match.split(':')[1]?.trim()
-        if (colorValue) {
-          const hex = normalizeColorToHex(colorValue)
-          if (hex && hex !== '#FFFFFF' && hex !== '#000000') {
-            colorFrequency.set(hex, (colorFrequency.get(hex) || 0) + 1)
+      }
+      
+      // Extract from style attributes (common in modern sites)
+      const styleAttrRegex = /style=["']([^"']+)["']/gi
+      let styleMatch
+      while ((styleMatch = styleAttrRegex.exec(html)) !== null) {
+        const styleContent = styleMatch[1]
+        const colorMatches = styleContent.match(/(?:color|background-color|background|border-color):\s*([^;]+)/gi) || []
+        colorMatches.forEach(match => {
+          const colorValue = match.split(':')[1]?.trim()
+          if (colorValue) {
+            const hex = normalizeColorToHex(colorValue)
+            if (hex && hex !== '#FFFFFF' && hex !== '#000000') {
+              colorFrequency.set(hex, (colorFrequency.get(hex) || 0) + 2)
+            }
           }
-        }
-      })
-    }
-    
-    // Sort by frequency and filter
-    extractedColors = Array.from(colorFrequency.entries())
-      .sort((a, b) => b[1] - a[1])
-      .map(([color]) => color)
-      .filter(color => {
-        const r = parseInt(color.substring(1, 3), 16)
-        const g = parseInt(color.substring(3, 5), 16)
-        const b = parseInt(color.substring(5, 7), 16)
-        const brightness = (r + g + b) / 3
-        const max = Math.max(r, g, b)
-        const min = Math.min(r, g, b)
-        const saturation = max === 0 ? 0 : (max - min) / max
-        return brightness > 40 && brightness < 220 && saturation > 15
-      })
-      .slice(0, 8)
-    
-    // Helper function
-    function normalizeColorToHex(color: string): string | null {
-      color = color.trim()
-      if (color.startsWith('#')) {
-        if (color.length === 4) {
-          return `#${color[1]}${color[1]}${color[2]}${color[2]}${color[3]}${color[3]}`.toUpperCase()
-        }
-        return color.length === 7 ? color.toUpperCase() : null
+        })
       }
-      const rgbMatch = color.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)/)
-      if (rgbMatch) {
-        const r = parseInt(rgbMatch[1]).toString(16).padStart(2, '0')
-        const g = parseInt(rgbMatch[2]).toString(16).padStart(2, '0')
-        const b = parseInt(rgbMatch[3]).toString(16).padStart(2, '0')
-        return `#${r}${g}${b}`.toUpperCase()
+      
+      // Extract from style tags
+      const styleTagRegex = /<style[^>]*>([\s\S]{0,50000})<\/style>/gi // Limit size
+      let styleTagMatch
+      while ((styleTagMatch = styleTagRegex.exec(html)) !== null) {
+        const css = styleTagMatch[1]
+        const colorMatches = css.match(/(?:color|background-color|background|border-color):\s*([^;]+)/gi) || []
+        colorMatches.forEach(match => {
+          const colorValue = match.split(':')[1]?.trim()
+          if (colorValue) {
+            const hex = normalizeColorToHex(colorValue)
+            if (hex && hex !== '#FFFFFF' && hex !== '#000000') {
+              colorFrequency.set(hex, (colorFrequency.get(hex) || 0) + 1)
+            }
+          }
+        })
       }
-      return null
-    }
+      
+      // Sort by frequency and filter
+      extractedColors = Array.from(colorFrequency.entries())
+        .sort((a, b) => b[1] - a[1])
+        .map(([color]) => color)
+        .filter(color => {
+          const r = parseInt(color.substring(1, 3), 16)
+          const g = parseInt(color.substring(3, 5), 16)
+          const b = parseInt(color.substring(5, 7), 16)
+          const brightness = (r + g + b) / 3
+          const max = Math.max(r, g, b)
+          const min = Math.min(r, g, b)
+          const saturation = max === 0 ? 0 : (max - min) / max
+          return brightness > 40 && brightness < 220 && saturation > 15
+        })
+        .slice(0, 8)
     } // Close catch block
   } // Close if (usePlaywright) block
 
