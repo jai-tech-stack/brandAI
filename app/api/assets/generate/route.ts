@@ -1,8 +1,25 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getBrandKitById } from '@/lib/brandKitsStorage'
-import { generateImageWithAI, enhancePromptWithAI } from '@/lib/aiService'
+
+// Mark route as fully dynamic to prevent Vercel build errors
+export const dynamic = 'force-dynamic'
+export const runtime = 'nodejs'
+export const fetchCache = 'force-no-store'
+export const revalidate = 0
 
 export async function POST(request: NextRequest) {
+  // Prevent static analysis during build
+  if (process.env.NEXT_PHASE === 'phase-production-build') {
+    return NextResponse.json(
+      { error: 'This route is not available during build' },
+      { status: 503 }
+    )
+  }
+
+  try {
+    // Dynamic imports to prevent build-time execution
+    const { getBrandKitById } = await import('@/lib/brandKitsStorage')
+    const { generateImageWithAI, enhancePromptWithAI } = await import('@/lib/aiService')
+
     const { prompt, brandId } = await request.json()
 
     if (!prompt || !prompt.trim()) {
@@ -61,15 +78,16 @@ export async function POST(request: NextRequest) {
     }
 
     return NextResponse.json({ success: true, data: assetData })
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Asset generation error:', error)
     
     // Provide helpful error message
     let errorMessage = 'Failed to generate asset. '
-    if (error.message?.includes('No AI image generation service')) {
+    const errorMsg = error instanceof Error ? error.message : String(error)
+    if (errorMsg.includes('No AI image generation service')) {
       errorMessage += 'Please configure an AI service (OPENAI_API_KEY, STABILITY_API_KEY, or REPLICATE_API_TOKEN) in your environment variables.'
     } else {
-      errorMessage += error.message || 'Please try again.'
+      errorMessage += errorMsg || 'Please try again.'
     }
     
     return NextResponse.json(
