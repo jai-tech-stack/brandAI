@@ -106,10 +106,10 @@ export async function analyzeWebsite(
     // Extract metadata
     const title = await page.title().catch(() => undefined)
     const metaDescription = await page
-      .$eval('meta[name="description"]', (el) => el.getAttribute('content'))
+      .$eval('meta[name="description"]', (el: Element) => el.getAttribute('content'))
       .catch(() => undefined)
     const ogImage = await page
-      .$eval('meta[property="og:image"]', (el) => el.getAttribute('content'))
+      .$eval('meta[property="og:image"]', (el: Element) => el.getAttribute('content'))
       .catch(() => undefined)
 
     await browser.close()
