@@ -531,18 +531,31 @@ export async function POST(request: NextRequest) {
     // Feature gate: Check subscription if user is authenticated
     if (userId) {
       try {
-        const { checkFeatureAccess } = await import('@/lib/middleware/featureGate')
-        const featureCheck = await checkFeatureAccess(request, 'maxBrandSystems')
+        // Check subscription via API
+        const checkResponse = await fetch(`${request.nextUrl.origin}/api/subscription/check`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            userId,
+            action: 'maxBrandSystems',
+            currentUsage: 0, // TODO: Get actual usage from database
+          }),
+        })
         
-        if (!featureCheck.allowed) {
-          return NextResponse.json(
-            {
-              error: featureCheck.reason || 'Upgrade required',
-              tier: featureCheck.tier,
-              upgradeRequired: true,
-            },
-            { status: 403 }
-          )
+        if (checkResponse.ok) {
+          const checkData = await checkResponse.json()
+          if (!checkData.allowed) {
+            return NextResponse.json(
+              {
+                error: checkData.reason || 'Upgrade required',
+                tier: checkData.tier,
+                upgradeRequired: true,
+              },
+              { status: 403 }
+            )
+          }
         }
       } catch (gateError) {
         // Continue if feature gate check fails (for backward compatibility)

@@ -83,24 +83,32 @@ export default function CompleteBrandSystem() {
 
     try {
       // Check subscription before generating
-      if (isAuthenticated) {
-        const checkResponse = await fetch('/api/subscription/check', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ 
-            userId: (await supabaseClient?.auth.getSession())?.data.session?.user.id,
-            action: 'maxBrandSystems',
-            currentUsage: usageCount 
-          }),
-        })
-        
-        if (checkResponse.ok) {
-          const checkData = await checkResponse.json()
-          if (!checkData.allowed) {
-            setError(checkData.reason || 'Upgrade required')
-            setLoading(false)
-            return
+      if (isAuthenticated && supabaseClient) {
+        try {
+          const { data: { session } } = await supabaseClient.auth.getSession()
+          if (session?.user?.id) {
+            const checkResponse = await fetch('/api/subscription/check', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ 
+                userId: session.user.id,
+                action: 'maxBrandSystems',
+                currentUsage: usageCount 
+              }),
+            })
+            
+            if (checkResponse.ok) {
+              const checkData = await checkResponse.json()
+              if (!checkData.allowed) {
+                setError(checkData.reason || 'Upgrade required')
+                setLoading(false)
+                return
+              }
+            }
           }
+        } catch (checkError) {
+          console.warn('Subscription check failed:', checkError)
+          // Continue anyway for backward compatibility
         }
       }
       const response = await fetch('/api/brand/complete-system', {
