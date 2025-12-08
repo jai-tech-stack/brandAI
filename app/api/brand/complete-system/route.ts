@@ -519,13 +519,35 @@ async function generateAllBrandAssets(brandSystem: any) {
 
 export async function POST(request: NextRequest) {
   try {
-    const { url } = await request.json()
+    const { url, userId } = await request.json()
 
     if (!url) {
       return NextResponse.json(
         { error: 'URL is required' },
         { status: 400 }
       )
+    }
+
+    // Feature gate: Check subscription if user is authenticated
+    if (userId) {
+      try {
+        const { checkFeatureAccess } = await import('@/lib/middleware/featureGate')
+        const featureCheck = await checkFeatureAccess(request, 'maxBrandSystems')
+        
+        if (!featureCheck.allowed) {
+          return NextResponse.json(
+            {
+              error: featureCheck.reason || 'Upgrade required',
+              tier: featureCheck.tier,
+              upgradeRequired: true,
+            },
+            { status: 403 }
+          )
+        }
+      } catch (gateError) {
+        // Continue if feature gate check fails (for backward compatibility)
+        console.warn('Feature gate check failed:', gateError)
+      }
     }
 
     // Set timeout for the entire operation (30 seconds max - faster response)
