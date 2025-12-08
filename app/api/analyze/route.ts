@@ -1,26 +1,27 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { z } from 'zod'
-import { createClient } from '@supabase/supabase-js'
 
 // Mark route as dynamic to prevent static analysis during build
 export const dynamic = 'force-dynamic'
-
-const analyzeSchema = z.object({
-  url: z.string().url(),
-})
-
-// Initialize Supabase (will be configured via env vars)
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || ''
-const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || ''
-const supabase = supabaseUrl && supabaseKey ? createClient(supabaseUrl, supabaseKey) : null
+export const runtime = 'nodejs'
 
 export async function POST(request: NextRequest) {
   try {
+    // Dynamic imports to prevent build-time execution
+    const { z } = await import('zod')
+    const { createClient } = await import('@supabase/supabase-js')
+    const { analyzeWebsite } = await import('@/lib/analyzer/analyzeWebsite')
+    
+    const analyzeSchema = z.object({
+      url: z.string().url(),
+    })
+
     const body = await request.json()
     const { url } = analyzeSchema.parse(body)
 
-    // Dynamically import to prevent build-time execution
-    const { analyzeWebsite } = await import('@/lib/analyzer/analyzeWebsite')
+    // Initialize Supabase (will be configured via env vars)
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || ''
+    const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || ''
+    const supabase = supabaseUrl && supabaseKey ? createClient(supabaseUrl, supabaseKey) : null
     
     // Analyze website
     const analysis = await analyzeWebsite(url)
@@ -75,8 +76,11 @@ export async function POST(request: NextRequest) {
         screenshotUrl,
       },
     })
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Analysis error:', error)
+    
+    // Dynamic import for error handling
+    const { z } = await import('zod')
     
     if (error instanceof z.ZodError) {
       return NextResponse.json(
@@ -85,8 +89,9 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    const errorMessage = error instanceof Error ? error.message : 'Failed to analyze website'
     return NextResponse.json(
-      { error: error.message || 'Failed to analyze website' },
+      { error: errorMessage },
       { status: 500 }
     )
   }
