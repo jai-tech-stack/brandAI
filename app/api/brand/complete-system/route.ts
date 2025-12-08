@@ -581,8 +581,24 @@ export async function POST(request: NextRequest) {
     })
 
     // Step 1: Extract complete brand system (with timeout)
-    const brandSystemPromise = extractCompleteBrandSystem(url)
-    const brandSystem = await Promise.race([brandSystemPromise, timeoutPromise]) as Awaited<ReturnType<typeof extractCompleteBrandSystem>>
+    let brandSystem
+    try {
+      const brandSystemPromise = extractCompleteBrandSystem(url)
+      brandSystem = await Promise.race([brandSystemPromise, timeoutPromise]) as Awaited<ReturnType<typeof extractCompleteBrandSystem>>
+    } catch (extractError: unknown) {
+      console.error('Brand extraction error:', extractError)
+      const errorMsg = extractError instanceof Error ? extractError.message : 'Unknown error'
+      if (errorMsg.includes('timeout') || errorMsg.includes('Timeout')) {
+        return NextResponse.json(
+          { 
+            error: 'Brand extraction timed out. The website may be too complex or slow. Please try a simpler website or try again.',
+            code: 'TIMEOUT'
+          },
+          { status: 504 }
+        )
+      }
+      throw extractError // Re-throw to be caught by outer catch
+    }
 
     // Step 2: Skip asset generation for now (too slow) - can be done async later
     // Assets can be generated on-demand via separate API endpoint
