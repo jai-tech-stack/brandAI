@@ -3,6 +3,13 @@ import { TemplateConfig, TemplateResult, TEMPLATE_SIZES } from './templateTypes'
 // Playwright imports (optional - will use fallback if not available)
 // Using dynamic require to prevent webpack from trying to resolve it at build time
 function loadPlaywright() {
+  // Don't try to load playwright during build or if not in runtime
+  if (process.env.NEXT_PHASE === 'phase-production-build' || 
+      process.env.NEXT_RUNTIME === undefined ||
+      typeof require === 'undefined') {
+    return null
+  }
+  
   try {
     // Use Function constructor to prevent webpack from analyzing this require
     const requirePlaywright = new Function('moduleName', 'return require(moduleName)')

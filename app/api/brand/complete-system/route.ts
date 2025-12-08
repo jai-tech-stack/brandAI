@@ -18,6 +18,11 @@ async function extractCompleteBrandSystem(url: string) {
   let extractedColors: string[] = []
   
   try {
+    // Don't try to load playwright during build
+    if (process.env.NEXT_PHASE === 'phase-production-build') {
+      throw new Error('Build phase - skipping Playwright')
+    }
+    
     // Check if Playwright is available
     // Using dynamic require to prevent webpack from trying to resolve it at build time
     const requirePlaywright = new Function('moduleName', 'return require(moduleName)')

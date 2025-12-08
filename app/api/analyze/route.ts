@@ -1,7 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { analyzeWebsite } from '@/lib/analyzer/analyzeWebsite'
 import { z } from 'zod'
 import { createClient } from '@supabase/supabase-js'
+
+// Mark route as dynamic to prevent static analysis during build
+export const dynamic = 'force-dynamic'
+export const runtime = 'nodejs'
 
 const analyzeSchema = z.object({
   url: z.string().url(),
@@ -17,6 +20,9 @@ export async function POST(request: NextRequest) {
     const body = await request.json()
     const { url } = analyzeSchema.parse(body)
 
+    // Dynamically import to prevent build-time execution
+    const { analyzeWebsite } = await import('@/lib/analyzer/analyzeWebsite')
+    
     // Analyze website
     const analysis = await analyzeWebsite(url)
 

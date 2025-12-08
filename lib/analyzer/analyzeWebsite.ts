@@ -7,6 +7,13 @@ import { extractImages } from './extractImages'
 // Playwright imports (optional - will use fallback if not available)
 // Using dynamic require to prevent webpack from trying to resolve it at build time
 function loadPlaywright() {
+  // Don't try to load playwright during build or if not in runtime
+  if (process.env.NEXT_PHASE === 'phase-production-build' || 
+      process.env.NEXT_RUNTIME === undefined ||
+      typeof require === 'undefined') {
+    return null
+  }
+  
   try {
     // Use Function constructor to prevent webpack from analyzing this require
     const requirePlaywright = new Function('moduleName', 'return require(moduleName)')
@@ -35,8 +42,10 @@ export async function analyzeWebsite(
   let browser: any = null
 
   // Check if Playwright is available (may not be on serverless)
+  // Only load playwright at runtime, not during build
   const playwright = loadPlaywright()
   let playwrightAvailable = playwright !== null
+  
   if (playwrightAvailable) {
     try {
       const testBrowser = await playwright.chromium.launch({ headless: true })
