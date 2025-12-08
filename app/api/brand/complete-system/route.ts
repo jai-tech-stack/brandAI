@@ -246,7 +246,8 @@ async function extractCompleteBrandSystem(url: string) {
       }
       return null
     }
-  }
+    } // Close catch block
+  } // Close if (usePlaywright) block
 
   // Only use extracted colors - don't add fake fallbacks
   // If no colors found, it means the extraction failed and we should indicate that
