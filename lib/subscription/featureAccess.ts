@@ -159,7 +159,7 @@ export async function getUserTier(userId?: string): Promise<SubscriptionTier> {
     // In a real implementation, fetch from database
     // For now, return default
     return 'free'
-  } catch (error) {
+  } catch (error: unknown) {
     console.error('Error fetching user tier:', error)
     return 'free'
   }

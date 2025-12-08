@@ -12,7 +12,7 @@ export async function generateVoice(
   if (process.env.OPENAI_API_KEY) {
     try {
       return await generateVoiceWithAI(text, brandStyle)
-    } catch (error) {
+    } catch (error: unknown) {
       console.warn('AI voice generation failed, using fallback:', error)
     }
   }

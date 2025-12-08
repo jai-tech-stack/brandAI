@@ -25,7 +25,7 @@ export async function extractColors(
   if (screenshotBuffer) {
     try {
       screenshotColors = await extractColorsFromImage(screenshotBuffer)
-    } catch (error) {
+    } catch (error: unknown) {
       console.warn('Failed to extract colors from screenshot:', error)
     }
   }

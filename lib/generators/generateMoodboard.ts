@@ -32,7 +32,7 @@ export async function generateMoodboard(
         size: '1024x1024',
       })
       moodboardImages.push(result.imageUrl)
-    } catch (error) {
+    } catch (error: unknown) {
       console.warn('Moodboard image generation failed:', error)
     }
   }

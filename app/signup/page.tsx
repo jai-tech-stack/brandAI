@@ -29,7 +29,7 @@ export default function SignUpPage() {
       if (session) {
         router.push('/dashboard')
       }
-    } catch (error) {
+    } catch (error: unknown) {
       // Ignore errors
     }
   }

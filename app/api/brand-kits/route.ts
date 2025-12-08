@@ -5,7 +5,7 @@ export async function GET() {
   try {
     const brandKits = getAllBrandKits()
     return NextResponse.json({ success: true, data: brandKits })
-  } catch (error) {
+  } catch (error: unknown) {
     console.error('Failed to get brand kits:', error)
     return NextResponse.json(
       { error: 'Failed to fetch brand kits' },
@@ -19,7 +19,7 @@ export async function POST(request: NextRequest) {
     const brandKit = await request.json()
     const newBrandKit = createBrandKit(brandKit)
     return NextResponse.json({ success: true, data: newBrandKit })
-  } catch (error) {
+  } catch (error: unknown) {
     console.error('Brand kit creation error:', error)
     return NextResponse.json(
       { error: 'Failed to create brand kit' },
@@ -49,7 +49,7 @@ export async function DELETE(request: NextRequest) {
     }
 
     return NextResponse.json({ success: true })
-  } catch (error) {
+  } catch (error: unknown) {
     console.error('Brand kit deletion error:', error)
     return NextResponse.json(
       { error: 'Failed to delete brand kit' },

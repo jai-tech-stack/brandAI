@@ -56,7 +56,7 @@ export default function CompleteBrandSystem() {
             setUserTier(data.tier || 'free')
           }
         }
-      } catch (error) {
+      } catch (error: unknown) {
         console.error('Error checking user status:', error)
       }
     }

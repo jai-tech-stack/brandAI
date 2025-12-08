@@ -60,7 +60,7 @@ export async function generateImageWithAI(options: AIImageGenerationOptions): Pr
           }
         }
       }
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('OpenAI DALL-E error:', error)
     }
   }
@@ -92,7 +92,7 @@ export async function generateImageWithAI(options: AIImageGenerationOptions): Pr
           model: 'stable-image-core',
         }
       }
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('Stability AI error:', error)
     }
   }
@@ -137,7 +137,7 @@ export async function generateImageWithAI(options: AIImageGenerationOptions): Pr
           }
         }
       }
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('Replicate error:', error)
     }
   }
@@ -334,7 +334,7 @@ Return only the enhanced prompt, no explanations.`
           return enhanced
         }
       }
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('AI prompt enhancement error:', error)
     }
   }

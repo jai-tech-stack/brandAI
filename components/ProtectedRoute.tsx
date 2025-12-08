@@ -76,7 +76,7 @@ export default function ProtectedRoute({ children, requireAdmin = false }: Prote
       }
 
       setAuthorized(true)
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('Auth check failed:', error)
       // Only redirect if Supabase is configured
       if (process.env.NEXT_PUBLIC_SUPABASE_URL) {

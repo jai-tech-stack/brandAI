@@ -28,7 +28,7 @@ export default function SignInPage() {
       if (session) {
         router.push('/dashboard')
       }
-    } catch (error) {
+    } catch (error: unknown) {
       // Ignore errors
     }
   }

@@ -47,7 +47,7 @@ export default function DashboardPage() {
           setUser(data.session.user)
         }
       }
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('Failed to load user data:', error)
     }
   }
@@ -60,7 +60,7 @@ export default function DashboardPage() {
       if (stored) {
         setBrandSystems(JSON.parse(stored))
       }
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('Failed to load brand systems:', error)
     } finally {
       setLoading(false)
@@ -75,7 +75,7 @@ export default function DashboardPage() {
       const updated = brandSystems.filter(s => s.id !== id)
       setBrandSystems(updated)
       sessionStorage.setItem('brandSystems', JSON.stringify(updated))
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('Failed to delete:', error)
     }
   }

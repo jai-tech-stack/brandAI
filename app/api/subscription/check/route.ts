@@ -33,7 +33,7 @@ export async function POST(request: NextRequest) {
         if (!error && data?.subscription_tier) {
           tier = data.subscription_tier as SubscriptionTier
         }
-      } catch (error) {
+      } catch (error: unknown) {
         console.warn('Error fetching user tier:', error)
       }
     }

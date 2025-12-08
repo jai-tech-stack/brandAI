@@ -43,7 +43,7 @@ export async function checkFeatureAccess(
         if (!error && data?.subscription_tier) {
           tier = data.subscription_tier as SubscriptionTier
         }
-      } catch (error) {
+      } catch (error: unknown) {
         console.warn('Error fetching user tier:', error)
       }
     }
@@ -56,7 +56,7 @@ export async function checkFeatureAccess(
       tier,
       reason: result.reason,
     }
-  } catch (error) {
+  } catch (error: unknown) {
     console.error('Feature gate error:', error)
     return {
       allowed: false,

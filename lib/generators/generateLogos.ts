@@ -34,7 +34,7 @@ export async function generateLogos(
       size: '1024x1024',
     })
     logos.icon.push(iconResult.imageUrl)
-  } catch (error) {
+  } catch (error: unknown) {
     console.warn('Icon logo generation failed:', error)
   }
 
@@ -48,7 +48,7 @@ export async function generateLogos(
       size: '1792x1024',
     })
     logos.horizontal.push(horizontalResult.imageUrl)
-  } catch (error) {
+  } catch (error: unknown) {
     console.warn('Horizontal logo generation failed:', error)
   }
 
@@ -62,7 +62,7 @@ export async function generateLogos(
       size: '1024x1024',
     })
     logos.badge.push(badgeResult.imageUrl)
-  } catch (error) {
+  } catch (error: unknown) {
     console.warn('Badge logo generation failed:', error)
   }
 
@@ -76,7 +76,7 @@ export async function generateLogos(
       size: '1024x1024',
     })
     logos.symbol.push(symbolResult.imageUrl)
-  } catch (error) {
+  } catch (error: unknown) {
     console.warn('Symbol logo generation failed:', error)
   }
 
