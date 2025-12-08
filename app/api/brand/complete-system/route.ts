@@ -45,24 +45,98 @@ async function extractCompleteBrandSystem(url: string) {
     
     html = await page.content()
     
-    // Extract colors from computed styles of visible elements
+    // Extract colors from computed styles of visible elements with better accuracy
     const colorData = await page.evaluate(() => {
-      const colors = new Set<string>()
       const colorFrequency = new Map<string, number>()
+      const elementTypes = new Map<string, Set<string>>()
       
-      // Get all visible elements
-      const elements = document.querySelectorAll('*')
+      // Get all visible elements, prioritizing important ones
+      const importantSelectors = [
+        'header', 'nav', 'main', 'section', 'article',
+        '[class*="hero"]', '[class*="banner"]', '[class*="header"]',
+        '[class*="brand"]', '[class*="logo"]', '[id*="hero"]',
+        'h1', 'h2', 'h3', 'button', 'a', '[role="button"]'
+      ]
       
-      elements.forEach((el: Element) => {
-        const computed = window.getComputedStyle(el as HTMLElement)
-        const bgColor = computed.backgroundColor
-        const textColor = computed.color
-        const borderColor = computed.borderColor
+      // First, get colors from important elements
+      importantSelectors.forEach(selector => {
+        try {
+          document.querySelectorAll(selector).forEach((el: Element) => {
+            const computed = window.getComputedStyle(el as HTMLElement)
+            const rect = (el as HTMLElement).getBoundingClientRect()
+            
+            // Only process visible elements
+            if (rect.width === 0 || rect.height === 0) return
+            
+            const bgColor = computed.backgroundColor
+            const textColor = computed.color
+            const borderColor = computed.borderColor
+            
+            // Convert rgb/rgba to hex
+            const toHex = (color: string): string | null => {
+              if (!color || color === 'transparent' || color === 'rgba(0, 0, 0, 0)') return null
+              
+              const rgbMatch = color.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)/)
+              if (rgbMatch) {
+                const r = parseInt(rgbMatch[1])
+                const g = parseInt(rgbMatch[2])
+                const b = parseInt(rgbMatch[3])
+                const a = rgbMatch[0].includes('rgba') ? parseFloat(color.match(/,\s*([\d.]+)\)/)?.[1] || '1') : 1
+                
+                // Skip transparent colors
+                if (a < 0.1) return null
+                
+                const rHex = r.toString(16).padStart(2, '0')
+                const gHex = g.toString(16).padStart(2, '0')
+                const bHex = b.toString(16).padStart(2, '0')
+                return `#${rHex}${gHex}${bHex}`.toUpperCase()
+              }
+              return null
+            }
+            
+            // Process colors with higher weight for important elements
+            const weight = selector.includes('hero') || selector.includes('banner') || selector.includes('brand') ? 3 : 1
+            
+            [bgColor, textColor, borderColor].forEach(color => {
+              const hex = toHex(color)
+              if (hex) {
+                const r = parseInt(hex.substring(1, 3), 16)
+                const g = parseInt(hex.substring(3, 5), 16)
+                const b = parseInt(hex.substring(5, 7), 16)
+                const brightness = (r + g + b) / 3
+                const max = Math.max(r, g, b)
+                const min = Math.min(r, g, b)
+                const saturation = max === 0 ? 0 : (max - min) / max
+                
+                // Better filtering: exclude pure black/white, very light/dark grays, low saturation
+                if (hex !== '#FFFFFF' && hex !== '#000000' && 
+                    brightness > 40 && brightness < 220 && 
+                    saturation > 15) {
+                  colorFrequency.set(hex, (colorFrequency.get(hex) || 0) + weight)
+                }
+              }
+            })
+          })
+        } catch (e) {
+          // Continue if selector fails
+        }
+      })
+      
+      // Also sample from all elements for completeness
+      const allElements = document.querySelectorAll('*')
+      const sampleSize = Math.min(500, allElements.length)
+      const step = Math.max(1, Math.floor(allElements.length / sampleSize))
+      
+      for (let i = 0; i < allElements.length; i += step) {
+        const el = allElements[i] as HTMLElement
+        const computed = window.getComputedStyle(el)
+        const rect = el.getBoundingClientRect()
         
-        // Convert rgb/rgba to hex
+        if (rect.width === 0 || rect.height === 0) continue
+        
+        const bgColor = computed.backgroundColor
         const toHex = (color: string): string | null => {
           if (!color || color === 'transparent' || color === 'rgba(0, 0, 0, 0)') return null
-          
           const rgbMatch = color.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)/)
           if (rgbMatch) {
             const r = parseInt(rgbMatch[1]).toString(16).padStart(2, '0')
@@ -73,30 +147,27 @@ async function extractCompleteBrandSystem(url: string) {
           return null
         }
         
-        [bgColor, textColor, borderColor].forEach(color => {
-          const hex = toHex(color)
-          if (hex && hex !== '#FFFFFF' && hex !== '#000000' && hex !== '#FFF' && hex !== '#000') {
-            colors.add(hex)
-            colorFrequency.set(hex, (colorFrequency.get(hex) || 0) + 1)
+        const hex = toHex(bgColor)
+        if (hex && hex !== '#FFFFFF' && hex !== '#000000') {
+          const r = parseInt(hex.substring(1, 3), 16)
+          const g = parseInt(hex.substring(3, 5), 16)
+          const b = parseInt(hex.substring(5, 7), 16)
+          const brightness = (r + g + b) / 3
+          const max = Math.max(r, g, b)
+          const min = Math.min(r, g, b)
+          const saturation = max === 0 ? 0 : (max - min) / max
+          
+          if (brightness > 40 && brightness < 220 && saturation > 15) {
+            colorFrequency.set(hex, (colorFrequency.get(hex) || 0) + 0.5)
           }
-        })
-      })
+        }
+      }
       
       // Sort by frequency and return top colors
       return Array.from(colorFrequency.entries())
         .sort((a, b) => b[1] - a[1])
         .map(([color]) => color)
-        .filter(color => {
-          // Filter out very light/dark grays
-          const hex = color.replace('#', '')
-          if (hex.length < 6) return true
-          const r = parseInt(hex.substring(0, 2), 16)
-          const g = parseInt(hex.substring(2, 4), 16)
-          const b = parseInt(hex.substring(4, 6), 16)
-          const brightness = (r + g + b) / 3
-          const saturation = Math.max(r, g, b) - Math.min(r, g, b)
-          return brightness > 30 && brightness < 230 && saturation > 20
-        })
+        .slice(0, 12) // Get more colors for better selection
     })
     
     extractedColors = colorData.slice(0, 8)
@@ -149,55 +220,123 @@ async function extractCompleteBrandSystem(url: string) {
     extractedColors = Array.from(colorSet).slice(0, 8)
   }
 
-  // Ensure we have at least some colors
+  // Only use extracted colors - don't add fake fallbacks
+  // If no colors found, it means the extraction failed and we should indicate that
   if (extractedColors.length === 0) {
-    extractedColors = ['#4285F4', '#34A853', '#FBBC04', '#EA4335'] // Google colors as fallback
+    console.warn('No colors extracted from website - extraction may have failed')
+    // Don't add fake colors - let the frontend handle empty state
   }
 
   const primaryColors = extractedColors.slice(0, 2)
   const secondaryColors = extractedColors.slice(2, 4)
 
-  // Extract fonts
+  // Extract fonts with better accuracy
   const fonts: string[] = []
+  const fontSet = new Set<string>()
+  const fontFrequency = new Map<string, number>()
+
+  // Extract from CSS (inline styles and style tags)
   const fontRegex = /font-family:\s*([^;]+)/gi
   const fontMatches = html.match(fontRegex) || []
-  const fontSet = new Set<string>()
 
   fontMatches.forEach(match => {
     const fontMatch = match.match(/font-family:\s*(.+)/i)
     if (fontMatch) {
       const fontFamilies = fontMatch[1].split(',').map(f => f.trim().replace(/['"]/g, ''))
       fontFamilies.forEach(font => {
-        if (font && !font.match(/^(sans-serif|serif|monospace|system-ui)$/i)) {
-          fontSet.add(font)
+        // Filter out generic fonts
+        if (font && !font.match(/^(sans-serif|serif|monospace|system-ui|-apple-system|BlinkMacSystemFont|Segoe UI|Roboto|Arial|Helvetica|Times|Courier)$/i)) {
+          const cleanFont = font.split(' ')[0] // Take first word (font name)
+          if (cleanFont && cleanFont.length > 2) {
+            fontSet.add(cleanFont)
+            fontFrequency.set(cleanFont, (fontFrequency.get(cleanFont) || 0) + 1)
+          }
         }
       })
     }
   })
 
-  // Google Fonts
+  // Extract Google Fonts
   const googleFontRegex = /fonts\.googleapis\.com\/css\?family=([^&"']+)/gi
-  const googleFontMatch = html.match(googleFontRegex)
-  if (googleFontMatch) {
-    const googleFonts = googleFontMatch[0].split('family=')[1]?.split('&')[0]?.split('|') || []
-    googleFonts.forEach(font => {
+  let googleFontMatch
+  while ((googleFontMatch = googleFontRegex.exec(html)) !== null) {
+    const fontParam = googleFontMatch[1]
+    const fonts = fontParam.split('|')
+    fonts.forEach(font => {
       const fontName = font.split(':')[0].replace(/\+/g, ' ').trim()
-      if (fontName) fontSet.add(fontName)
+      if (fontName) {
+        fontSet.add(fontName)
+        fontFrequency.set(fontName, (fontFrequency.get(fontName) || 0) + 5) // Higher weight for Google Fonts
+      }
     })
   }
 
-  const extractedFonts = Array.from(fontSet).slice(0, 3)
-  const primaryFont = extractedFonts[0] || 'System Font'
-  const secondaryFont = extractedFonts[1] || 'Sans-serif'
+  // Extract Adobe Fonts
+  const adobeFontRegex = /use\.typekit\.net|fonts\.adobe\.com[^"']*family=([^&"']+)/gi
+  let adobeMatch
+  while ((adobeMatch = adobeFontRegex.exec(html)) !== null) {
+    const fontName = adobeMatch[1]?.split('&')[0]?.replace(/\+/g, ' ').trim()
+    if (fontName) {
+      fontSet.add(fontName)
+      fontFrequency.set(fontName, (fontFrequency.get(fontName) || 0) + 5)
+    }
+  }
 
-  // Extract logo
-  const logoRegex = /<img[^>]*(?:logo|brand)[^>]*src=["']([^"']+)["']/i
-  const logoMatch = html.match(logoRegex)
+  // Sort by frequency and get top fonts
+  const extractedFonts = Array.from(fontFrequency.entries())
+    .sort((a, b) => b[1] - a[1])
+    .map(([font]) => font)
+    .slice(0, 3)
+
+  const primaryFont = extractedFonts[0] || null
+  const secondaryFont = extractedFonts[1] || null
+
+  // Extract logo with better detection
   let logoUrl: string | null = null
-  if (logoMatch) {
-    logoUrl = logoMatch[1]
-    if (!logoUrl.startsWith('http')) {
-      logoUrl = logoUrl.startsWith('/') ? `${baseUrl}${logoUrl}` : `${baseUrl}/${logoUrl}`
+  
+  // Try multiple logo detection methods
+  const logoPatterns = [
+    // Pattern 1: img with logo/brand in class/id/alt/src
+    /<img[^>]*(?:class|id|alt|src)=["'][^"']*(?:logo|brand)[^"']*["'][^>]*src=["']([^"']+)["']/i,
+    // Pattern 2: img in header/nav with logo-related attributes
+    /<(?:header|nav)[^>]*>[\s\S]*?<img[^>]*src=["']([^"']+)["'][^>]*(?:logo|brand|alt=["'][^"']*(?:logo|brand)[^"']*["'])/i,
+    // Pattern 3: svg logo
+    /<(?:svg|img)[^>]*(?:class|id)=["'][^"']*logo[^"']*["'][^>]*(?:src|href|xlink:href)=["']([^"']+)["']/i,
+    // Pattern 4: link rel="icon" or apple-touch-icon (favicon as logo)
+    /<link[^>]*(?:rel=["'](?:icon|apple-touch-icon|shortcut icon)["']|href=["']([^"']*logo[^"']*)["'])/i,
+  ]
+  
+  for (const pattern of logoPatterns) {
+    const match = html.match(pattern)
+    if (match) {
+      logoUrl = match[1] || match[0]?.match(/src=["']([^"']+)["']/)?.[1] || match[0]?.match(/href=["']([^"']+)["']/)?.[1]
+      if (logoUrl) {
+        // Normalize URL
+        if (!logoUrl.startsWith('http')) {
+          logoUrl = logoUrl.startsWith('/') ? `${baseUrl}${logoUrl}` : `${baseUrl}/${logoUrl}`
+        }
+        // Validate it's likely an image
+        if (logoUrl.match(/\.(png|jpg|jpeg|svg|gif|webp)/i) || logoUrl.includes('logo') || logoUrl.includes('brand')) {
+          break
+        }
+      }
+    }
+  }
+  
+  // Fallback: try common logo paths
+  if (!logoUrl) {
+    const commonPaths = ['/logo.png', '/logo.svg', '/assets/logo.png', '/images/logo.png', '/img/logo.png', '/static/logo.png']
+    for (const path of commonPaths) {
+      try {
+        const testUrl = `${baseUrl}${path}`
+        const testResponse = await fetch(testUrl, { method: 'HEAD', signal: AbortSignal.timeout(2000) })
+        if (testResponse.ok && testResponse.headers.get('content-type')?.startsWith('image/')) {
+          logoUrl = testUrl
+          break
+        }
+      } catch (e) {
+        // Continue
+      }
     }
   }
 

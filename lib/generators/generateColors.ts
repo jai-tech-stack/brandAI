@@ -13,11 +13,12 @@ export function generateColors(extractedColors: ColorPalette): BrandSystem['colo
     wcagContrast: {},
   }
 
-  // Ensure we have defaults
-  if (colors.primary.length === 0) colors.primary = ['#000000']
-  if (colors.secondary.length === 0) colors.secondary = ['#666666']
-  if (colors.accent.length === 0) colors.accent = ['#0066FF']
-  if (colors.neutral.length === 0) colors.neutral = ['#000000', '#FFFFFF', '#808080', '#F5F5F5']
+  // Don't add fake defaults - return empty arrays if no colors extracted
+  // This allows proper handling of "extraction failed" state
+  // Only add neutral defaults if we have other colors (meaning extraction worked but no neutrals found)
+  if ((colors.primary.length > 0 || colors.secondary.length > 0 || colors.accent.length > 0) && colors.neutral.length === 0) {
+    colors.neutral = ['#000000', '#FFFFFF', '#808080', '#F5F5F5']
+  }
 
   // Calculate WCAG contrast ratios
   const allColors = [

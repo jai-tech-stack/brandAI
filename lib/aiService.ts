@@ -157,19 +157,48 @@ export async function analyzeBrandWithAI(html: string, colors: string[], fonts: 
   // Use OpenAI for brand analysis if available
   if (process.env.OPENAI_API_KEY) {
     try {
-      const analysisPrompt = `Analyze this brand based on:
-- Colors: ${colors.join(', ')}
-- Fonts: ${fonts.join(', ')}
-- Website content: ${html.substring(0, 2000)}
+      // Extract more meaningful content from HTML
+      const textContent = html.replace(/<script[^>]*>[\s\S]*?<\/script>/gi, '')
+        .replace(/<style[^>]*>[\s\S]*?<\/style>/gi, '')
+        .replace(/<[^>]+>/g, ' ')
+        .replace(/\s+/g, ' ')
+        .trim()
+      
+      const titleMatch = html.match(/<title[^>]*>([\s\S]*?)<\/title>/i)
+      const title = titleMatch ? titleMatch[1].trim() : ''
+      
+      const metaDescMatch = html.match(/<meta\s+name=["']description["']\s+content=["']([^"']+)["']/i)
+      const description = metaDescMatch ? metaDescMatch[1] : ''
+      
+      const h1Matches = html.match(/<h1[^>]*>([\s\S]*?)<\/h1>/gi)
+      const h1s = h1Matches ? h1Matches.map(h => h.replace(/<[^>]+>/g, '').trim()).slice(0, 3) : []
+      
+      // Get more context (up to 4000 chars of meaningful content)
+      const meaningfulContent = [title, description, ...h1s, textContent.substring(0, 3000)].filter(Boolean).join(' | ')
+      
+      const analysisPrompt = `You are a professional brand identity expert. Analyze this brand accurately based on the actual website data:
+
+BRAND CONTEXT:
+- Website Title: ${title || 'Not available'}
+- Meta Description: ${description || 'Not available'}
+- Main Headings: ${h1s.join(', ') || 'Not available'}
+- Website Content Sample: ${meaningfulContent.substring(0, 2500)}
+- Extracted Colors: ${colors.length > 0 ? colors.join(', ') : 'Limited color data available'}
+- Typography: ${fonts.length > 0 ? fonts.join(', ') : 'Standard fonts detected'}
+
+ANALYSIS REQUIREMENTS:
+Analyze the ACTUAL brand identity from the provided data. Be specific and accurate based on what you see, not generic.
 
 Provide:
-1. Brand style (3-4 words describing visual aesthetic)
-2. Brand personality (2-3 words describing brand character)
-3. Brand tone (2-3 words for messaging tone: professional, friendly, bold, etc.)
-4. Messaging suggestions (2-3 short brand messaging recommendations)
-5. Design recommendations (2-3 short design recommendations)
+1. Brand style: 3-4 specific words describing the ACTUAL visual aesthetic you observe (e.g., "Modern Minimalist", "Bold Tech", "Elegant Luxury")
+2. Brand personality: 2-3 words describing the ACTUAL brand character based on content and design
+3. Brand tone: 2-3 words for messaging tone that matches the brand (professional, friendly, bold, etc.)
+4. Messaging suggestions: 2-3 specific brand messaging recommendations based on actual content
+5. Design recommendations: 2-3 specific design recommendations based on actual brand elements
 
-Format as JSON: { 
+IMPORTANT: Base your analysis on the ACTUAL website content and design, not generic assumptions. If data is limited, acknowledge that in your recommendations.
+
+Format as JSON only: { 
   "style": "...", 
   "brandPersonality": "...", 
   "brandTone": "...",
@@ -195,8 +224,8 @@ Format as JSON: {
               content: analysisPrompt,
             },
           ],
-          temperature: 0.7,
-          max_tokens: 300,
+          temperature: 0.3, // Lower temperature for more accurate, consistent results
+          max_tokens: 500, // More tokens for detailed analysis
         }),
       })
 

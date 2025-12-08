@@ -162,11 +162,13 @@ function categorizeColors(colors: string[], palette: ColorPalette): void {
   )
   palette.neutral = neutral.slice(0, 4)
 
-  // Ensure we have defaults
-  if (palette.primary.length === 0) palette.primary = ['#000000']
-  if (palette.secondary.length === 0) palette.secondary = ['#666666']
-  if (palette.accent.length === 0) palette.accent = ['#0066FF']
-  if (palette.neutral.length === 0) palette.neutral = ['#000000', '#FFFFFF', '#808080']
+  // Don't add fake defaults - if no colors found, return empty arrays
+  // This allows the frontend to handle the "no colors extracted" state properly
+  // Only add neutral defaults if we actually have some colors but no neutrals
+  if (colors.length > 0 && palette.neutral.length === 0) {
+    // Only add neutral if we have other colors (meaning extraction worked)
+    palette.neutral = ['#000000', '#FFFFFF', '#808080']
+  }
 }
 
 function hexToRgb(hex: string): { r: number; g: number; b: number } | null {

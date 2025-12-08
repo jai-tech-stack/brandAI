@@ -33,21 +33,27 @@ async function generateVoiceWithAI(
 
   const content = text.paragraphs.slice(0, 3).join(' ')
 
-  const prompt = `Analyze this brand content and generate brand voice and messaging:
+  const prompt = `You are a professional brand voice expert. Analyze the ACTUAL brand content and generate accurate brand voice and messaging based on what you see:
 
-Headings: ${headings}
-Content: ${content}
-Brand Style: ${brandStyle || 'Professional'}
+BRAND CONTENT:
+- Headings: ${headings || 'Not available'}
+- Content Sample: ${content || 'Limited content available'}
+- Brand Style: ${brandStyle || 'To be determined from content'}
+
+ANALYSIS REQUIREMENTS:
+Generate brand voice elements that accurately reflect the ACTUAL brand based on the provided content. Be specific and authentic, not generic.
 
 Provide:
-1. Brand tone (2-3 words)
-2. Tagline (short, memorable)
-3. Elevator pitch (1-2 sentences)
-4. Value propositions (3-5 short points)
-5. Social media captions (5 engaging captions)
-6. About paragraph (2-3 sentences)
+1. Brand tone: 2-3 words describing the ACTUAL tone you observe (e.g., "Professional and Approachable", "Bold and Innovative")
+2. Tagline: A short, memorable tagline that reflects the ACTUAL brand message (not generic)
+3. Elevator pitch: 1-2 sentences summarizing what the brand ACTUALLY does based on content
+4. Value propositions: 3-5 specific value points derived from ACTUAL content (not generic)
+5. Social media captions: 5 engaging captions that match the ACTUAL brand voice
+6. About paragraph: 2-3 sentences describing the brand based on ACTUAL content
 
-Format as JSON:
+IMPORTANT: Base everything on the ACTUAL content provided. If content is limited, acknowledge that and be honest about limitations.
+
+Format as JSON only:
 {
   "tone": "...",
   "tagline": "...",
@@ -76,8 +82,8 @@ Format as JSON:
           content: prompt,
         },
       ],
-      temperature: 0.7,
-      max_tokens: 800,
+      temperature: 0.3, // Lower temperature for more accurate results
+      max_tokens: 1000, // More tokens for detailed analysis
     }),
   })
 
