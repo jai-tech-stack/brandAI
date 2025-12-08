@@ -22,6 +22,23 @@ const nextConfig = {
       },
     ],
   },
+  webpack: (config, { isServer }) => {
+    // Externalize playwright to prevent webpack from trying to bundle it
+    // Playwright is optional and only used if available
+    if (isServer) {
+      config.externals = config.externals || []
+      config.externals.push({
+        playwright: 'commonjs playwright',
+      })
+      
+      // Ignore playwright module resolution warnings
+      config.ignoreWarnings = [
+        ...(config.ignoreWarnings || []),
+        { module: /playwright/ },
+      ]
+    }
+    return config
+  },
 }
 
 module.exports = nextConfig

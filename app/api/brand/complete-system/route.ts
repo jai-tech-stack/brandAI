@@ -19,7 +19,12 @@ async function extractCompleteBrandSystem(url: string) {
   
   try {
     // Check if Playwright is available
-    const playwright = require('playwright')
+    // Using dynamic require to prevent webpack from trying to resolve it at build time
+    const requirePlaywright = new Function('moduleName', 'return require(moduleName)')
+    const playwright = requirePlaywright('playwright')
+    if (!playwright) {
+      throw new Error('Playwright not available')
+    }
     const browser = await playwright.chromium.launch({ headless: true })
     const context = await browser.newContext({
       viewport: { width: 1920, height: 1080 },

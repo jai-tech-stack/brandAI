@@ -5,14 +5,15 @@ import { extractCopy } from './extractCopy'
 import { extractImages } from './extractImages'
 
 // Playwright imports (optional - will use fallback if not available)
-let chromium: any = null
-let Browser: any = null
-try {
-  const playwright = require('playwright')
-  chromium = playwright.chromium
-  Browser = playwright.Browser
-} catch (e) {
-  // Playwright not available, will use fallback
+// Using dynamic require to prevent webpack from trying to resolve it at build time
+function loadPlaywright() {
+  try {
+    // Use Function constructor to prevent webpack from analyzing this require
+    const requirePlaywright = new Function('moduleName', 'return require(moduleName)')
+    return requirePlaywright('playwright')
+  } catch (e) {
+    return null
+  }
 }
 
 const DEFAULT_CONFIG: AnalyzerConfig = {
@@ -34,10 +35,11 @@ export async function analyzeWebsite(
   let browser: any = null
 
   // Check if Playwright is available (may not be on serverless)
-  let playwrightAvailable = chromium !== null
+  const playwright = loadPlaywright()
+  let playwrightAvailable = playwright !== null
   if (playwrightAvailable) {
     try {
-      const testBrowser = await chromium.launch({ headless: true })
+      const testBrowser = await playwright.chromium.launch({ headless: true })
       await testBrowser.close()
     } catch {
       playwrightAvailable = false
@@ -55,12 +57,12 @@ export async function analyzeWebsite(
     const baseUrl = validUrl.origin
 
     // Launch browser (if Playwright is available)
-    if (!playwrightAvailable) {
+    if (!playwrightAvailable || !playwright) {
       // Fallback to fetch-based analysis
       return await analyzeWebsiteFallback(validUrl.toString(), finalConfig)
     }
 
-    browser = await chromium.launch({
+    browser = await playwright.chromium.launch({
       headless: true,
     })
 
