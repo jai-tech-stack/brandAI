@@ -678,16 +678,16 @@ ${brandSystem.secondaryColors.map((c, i) => `  --color-secondary-${i + 1}: ${c};
                       <div className="w-3 h-3 rounded-full bg-green-500"></div>
                       <div className="flex-1 text-center text-xs text-gray-600 font-medium">Website Preview</div>
                     </div>
-                    <div className="p-6" style={{ backgroundColor: brandSystem.primaryColors[0] || '#FFFFFF' }}>
+                    <div className="p-6" style={{ backgroundColor: brandSystem.primaryColors?.[0] || '#FFFFFF' }}>
                       <div className="mb-4">
-                        <div className="h-8 rounded" style={{ backgroundColor: brandSystem.primaryColors[1] || '#000000', width: '60%' }}></div>
+                        <div className="h-8 rounded" style={{ backgroundColor: brandSystem.primaryColors?.[1] || '#000000', width: '60%' }}></div>
                       </div>
                       <div className="space-y-2 mb-4">
-                        <div className="h-4 rounded" style={{ backgroundColor: brandSystem.primaryColors[1] || '#000000', opacity: 0.7, width: '100%' }}></div>
-                        <div className="h-4 rounded" style={{ backgroundColor: brandSystem.primaryColors[1] || '#000000', opacity: 0.5, width: '85%' }}></div>
-                        <div className="h-4 rounded" style={{ backgroundColor: brandSystem.primaryColors[1] || '#000000', opacity: 0.5, width: '70%' }}></div>
+                        <div className="h-4 rounded" style={{ backgroundColor: brandSystem.primaryColors?.[1] || '#000000', opacity: 0.7, width: '100%' }}></div>
+                        <div className="h-4 rounded" style={{ backgroundColor: brandSystem.primaryColors?.[1] || '#000000', opacity: 0.5, width: '85%' }}></div>
+                        <div className="h-4 rounded" style={{ backgroundColor: brandSystem.primaryColors?.[1] || '#000000', opacity: 0.5, width: '70%' }}></div>
                       </div>
-                      <button className="px-4 py-2 rounded text-white text-sm font-semibold" style={{ backgroundColor: brandSystem.secondaryColors[0] || brandSystem.primaryColors[1] || '#000000' }}>
+                      <button className="px-4 py-2 rounded text-white text-sm font-semibold" style={{ backgroundColor: brandSystem.secondaryColors?.[0] || brandSystem.primaryColors?.[1] || '#000000' }}>
                         Call to Action
                       </button>
                     </div>
@@ -704,12 +704,12 @@ ${brandSystem.secondaryColors.map((c, i) => `  --color-secondary-${i + 1}: ${c};
                         </div>
                       </div>
                     </div>
-                    <div className="p-4" style={{ backgroundColor: brandSystem.primaryColors[0] || '#FFFFFF' }}>
-                      <p className="text-sm mb-3" style={{ color: brandSystem.primaryColors[1] || '#000000', fontFamily: brandSystem.primaryFont }}>
-                        {brandSystem.messaging[0] || 'Your brand message here'}
+                    <div className="p-4" style={{ backgroundColor: brandSystem.primaryColors?.[0] || '#FFFFFF' }}>
+                      <p className="text-sm mb-3" style={{ color: brandSystem.primaryColors?.[1] || '#000000', fontFamily: brandSystem.primaryFont }}>
+                        {brandSystem.messaging?.[0] || 'Your brand message here'}
                       </p>
-                      <div className="aspect-video rounded-lg mb-3" style={{ backgroundColor: brandSystem.secondaryColors[0] || '#F5F5F5' }}></div>
-                      <div className="flex items-center gap-4 text-xs" style={{ color: brandSystem.primaryColors[1] || '#000000' }}>
+                      <div className="aspect-video rounded-lg mb-3" style={{ backgroundColor: brandSystem.secondaryColors?.[0] || '#F5F5F5' }}></div>
+                      <div className="flex items-center gap-4 text-xs" style={{ color: brandSystem.primaryColors?.[1] || '#000000' }}>
                         <span>❤️</span>
                         <span>💬</span>
                         <span>📤</span>
@@ -719,20 +719,20 @@ ${brandSystem.secondaryColors.map((c, i) => `  --color-secondary-${i + 1}: ${c};
 
                   {/* Business Card */}
                   <div className="border-2 border-gray-200 rounded-lg overflow-hidden bg-white shadow-lg">
-                    <div className="p-6 aspect-[3.5/2] flex flex-col justify-between" style={{ backgroundColor: brandSystem.primaryColors[0] || '#FFFFFF' }}>
+                    <div className="p-6 aspect-[3.5/2] flex flex-col justify-between" style={{ backgroundColor: brandSystem.primaryColors?.[0] || '#FFFFFF' }}>
                       <div>
-                        <div className="text-2xl font-bold mb-2" style={{ color: brandSystem.primaryColors[1] || '#000000', fontFamily: brandSystem.primaryFont }}>
+                        <div className="text-2xl font-bold mb-2" style={{ color: brandSystem.primaryColors?.[1] || '#000000', fontFamily: brandSystem.primaryFont }}>
                           Brand Name
                         </div>
-                        <div className="text-sm mb-4" style={{ color: brandSystem.secondaryColors[0] || brandSystem.primaryColors[1] || '#000000', fontFamily: brandSystem.secondaryFont }}>
+                        <div className="text-sm mb-4" style={{ color: brandSystem.secondaryColors?.[0] || brandSystem.primaryColors?.[1] || '#000000', fontFamily: brandSystem.secondaryFont }}>
                           {brandSystem.brandTone}
                         </div>
                       </div>
                       <div className="flex items-center justify-between">
-                        <div className="text-xs" style={{ color: brandSystem.primaryColors[1] || '#000000' }}>
+                        <div className="text-xs" style={{ color: brandSystem.primaryColors?.[1] || '#000000' }}>
                           email@brand.com
                         </div>
-                        <div className="w-12 h-12 rounded" style={{ backgroundColor: brandSystem.secondaryColors[0] || brandSystem.primaryColors[1] || '#000000' }}></div>
+                        <div className="w-12 h-12 rounded" style={{ backgroundColor: brandSystem.secondaryColors?.[0] || brandSystem.primaryColors?.[1] || '#000000' }}></div>
                       </div>
                     </div>
                   </div>

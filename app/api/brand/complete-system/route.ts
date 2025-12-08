@@ -2,8 +2,11 @@ import { NextRequest, NextResponse } from 'next/server'
 import { analyzeBrandWithAI } from '@/lib/aiService'
 import { generateImageWithAI, enhancePromptWithAI } from '@/lib/aiService'
 
-// Mark route as dynamic to prevent static analysis during build
+// Mark route as fully dynamic to prevent Vercel build errors
 export const dynamic = 'force-dynamic'
+export const runtime = 'nodejs'
+export const fetchCache = 'force-no-store'
+export const revalidate = 0
 
 // Helper function for color normalization
 function normalizeColorToHex(color: string): string | null {

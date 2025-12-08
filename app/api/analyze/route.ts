@@ -1,10 +1,20 @@
 import { NextRequest, NextResponse } from 'next/server'
 
-// Mark route as dynamic to prevent static analysis during build
+// Mark route as fully dynamic to prevent Vercel build errors
 export const dynamic = 'force-dynamic'
 export const runtime = 'nodejs'
+export const fetchCache = 'force-no-store'
+export const revalidate = 0
 
 export async function POST(request: NextRequest) {
+  // Prevent static analysis during build
+  if (process.env.NEXT_PHASE === 'phase-production-build') {
+    return NextResponse.json(
+      { error: 'This route is not available during build' },
+      { status: 503 }
+    )
+  }
+
   try {
     // Dynamic imports to prevent build-time execution
     const { z } = await import('zod')
@@ -23,7 +33,7 @@ export async function POST(request: NextRequest) {
     const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || ''
     const supabase = supabaseUrl && supabaseKey ? createClient(supabaseUrl, supabaseKey) : null
     
-    // Analyze website
+    // Analyze website (only at runtime, never during build)
     const analysis = await analyzeWebsite(url)
 
     // Upload screenshot to Supabase Storage if configured

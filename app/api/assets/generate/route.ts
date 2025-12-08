@@ -3,7 +3,6 @@ import { getBrandKitById } from '@/lib/brandKitsStorage'
 import { generateImageWithAI, enhancePromptWithAI } from '@/lib/aiService'
 
 export async function POST(request: NextRequest) {
-  try {
     const { prompt, brandId } = await request.json()
 
     if (!prompt || !prompt.trim()) {

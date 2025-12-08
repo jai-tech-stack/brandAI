@@ -1,28 +1,44 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { z } from 'zod'
-import { generateInstagramTemplate } from '@/lib/templates/instagram'
-import { generateLinkedInTemplate } from '@/lib/templates/linkedin'
-import { generateTwitterTemplate } from '@/lib/templates/twitter'
-import { generateYouTubeTemplate } from '@/lib/templates/youtube'
-import { generateHeroBannerTemplate } from '@/lib/templates/heroBanner'
-import { TemplateConfig, TEMPLATE_SIZES } from '@/lib/templates/templateTypes'
 
-const generateTemplatesSchema = z.object({
-  brandSystem: z.object({
-    colors: z.object({
-      primary: z.array(z.string()),
-      secondary: z.array(z.string()),
-    }),
-    voice: z.object({
-      tagline: z.string(),
-    }),
-  }),
-  logoUrl: z.string().optional(),
-  types: z.array(z.enum(['instagram', 'linkedin', 'twitter', 'youtube', 'heroBanner'])).optional(),
-})
+// Mark route as fully dynamic to prevent Vercel build errors
+export const dynamic = 'force-dynamic'
+export const runtime = 'nodejs'
+export const fetchCache = 'force-no-store'
+export const revalidate = 0
 
 export async function POST(request: NextRequest) {
+  // Prevent static analysis during build
+  if (process.env.NEXT_PHASE === 'phase-production-build') {
+    return NextResponse.json(
+      { error: 'This route is not available during build' },
+      { status: 503 }
+    )
+  }
+
   try {
+    // Dynamic imports to prevent build-time execution
+    const { z } = await import('zod')
+    const { generateInstagramTemplate } = await import('@/lib/templates/instagram')
+    const { generateLinkedInTemplate } = await import('@/lib/templates/linkedin')
+    const { generateTwitterTemplate } = await import('@/lib/templates/twitter')
+    const { generateYouTubeTemplate } = await import('@/lib/templates/youtube')
+    const { generateHeroBannerTemplate } = await import('@/lib/templates/heroBanner')
+    const { TemplateConfig, TEMPLATE_SIZES } = await import('@/lib/templates/templateTypes')
+
+    const generateTemplatesSchema = z.object({
+      brandSystem: z.object({
+        colors: z.object({
+          primary: z.array(z.string()),
+          secondary: z.array(z.string()),
+        }),
+        voice: z.object({
+          tagline: z.string(),
+        }),
+      }),
+      logoUrl: z.string().optional(),
+      types: z.array(z.enum(['instagram', 'linkedin', 'twitter', 'youtube', 'heroBanner'])).optional(),
+    })
+
     const body = await request.json()
     const { brandSystem, logoUrl, types } = generateTemplatesSchema.parse(body)
 
@@ -76,9 +92,12 @@ export async function POST(request: NextRequest) {
         templates,
       },
     })
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Template generation error:', error)
 
+    // Dynamic import for error handling
+    const { z } = await import('zod')
+    
     if (error instanceof z.ZodError) {
       return NextResponse.json(
         { error: 'Invalid request data', details: error.errors },
