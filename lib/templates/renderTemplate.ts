@@ -51,7 +51,7 @@ export async function renderTemplate(
     await browser.close()
 
     return screenshot as Buffer
-  } catch (error) {
+  } catch (error: unknown) {
     if (browser) {
       await browser.close()
     }

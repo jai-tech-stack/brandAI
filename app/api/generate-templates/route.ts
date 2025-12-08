@@ -65,7 +65,7 @@ export async function POST(request: NextRequest) {
             break
         }
         templates.push(result)
-      } catch (error) {
+      } catch (error: unknown) {
         console.error(`Failed to generate ${type} template:`, error)
       }
     }

@@ -29,7 +29,7 @@ export default function BrandKits() {
         const result = await response.json()
         setBrandKits(result.data)
       }
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('Failed to fetch brand kits:', error)
     } finally {
       setLoading(false)
@@ -44,7 +44,7 @@ export default function BrandKits() {
       if (response.ok) {
         setBrandKits(brandKits.filter((kit) => kit.id !== id))
       }
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('Failed to delete brand kit:', error)
     }
   }

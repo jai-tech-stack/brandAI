@@ -79,7 +79,7 @@ export default function AssetGenerator() {
       
       setGeneratedAssets([newAsset, ...generatedAssets])
       setPrompt('')
-    } catch (err) {
+    } catch (err: unknown) {
       setError('Failed to generate asset. Please try again.')
     } finally {
       setLoading(false)

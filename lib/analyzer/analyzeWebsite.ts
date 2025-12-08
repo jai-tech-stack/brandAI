@@ -132,7 +132,7 @@ export async function analyzeWebsite(
         ogImage: ogImage || undefined,
       },
     }
-  } catch (error) {
+  } catch (error: unknown) {
     if (browser) {
       await browser.close()
     }

@@ -44,7 +44,7 @@ export async function uploadToStorage(
     // Get public URL
     const { data: urlData } = supabase.storage.from(bucket).getPublicUrl(path)
     return urlData.publicUrl
-  } catch (error) {
+  } catch (error: unknown) {
     console.error('Storage upload failed:', error)
     return null
   }
@@ -85,7 +85,7 @@ export async function saveProject(data: {
     }
 
     return project.id
-  } catch (error) {
+  } catch (error: unknown) {
     console.error('Database save failed:', error)
     return null
   }
@@ -112,7 +112,7 @@ export async function getProject(projectId: string): Promise<any | null> {
     }
 
     return data
-  } catch (error) {
+  } catch (error: unknown) {
     console.error('Database fetch failed:', error)
     return null
   }
@@ -149,7 +149,7 @@ export async function saveAsset(data: {
     }
 
     return asset.id
-  } catch (error) {
+  } catch (error: unknown) {
     console.error('Asset save failed:', error)
     return null
   }

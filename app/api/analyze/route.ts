@@ -27,7 +27,7 @@ export async function POST(request: NextRequest) {
         // Note: Screenshot upload will be handled separately
         // For now, we'll store the analysis without screenshot
         screenshotUrl = '' // Placeholder
-      } catch (error) {
+      } catch (error: unknown) {
         console.warn('Failed to upload screenshot:', error)
       }
     }
@@ -58,7 +58,7 @@ export async function POST(request: NextRequest) {
             },
           })
         }
-      } catch (error) {
+      } catch (error: unknown) {
         console.warn('Database save failed:', error)
       }
     }
