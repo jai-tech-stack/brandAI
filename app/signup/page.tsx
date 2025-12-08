@@ -62,6 +62,14 @@ export default function SignUpPage() {
       })
 
       if (signUpError) {
+        // Handle rate limiting
+        if (signUpError.status === 429 || signUpError.message?.includes('rate limit')) {
+          throw new Error('Too many signup attempts. Please wait a few minutes and try again.')
+        }
+        // Handle email already exists
+        if (signUpError.message?.includes('already registered') || signUpError.message?.includes('already exists')) {
+          throw new Error('An account with this email already exists. Please sign in instead.')
+        }
         throw new Error(signUpError.message || 'Failed to sign up')
       }
 

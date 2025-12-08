@@ -40,8 +40,8 @@ async function extractCompleteBrandSystem(url: string) {
     })
     const page = await context.newPage()
     
-    await page.goto(validUrl.toString(), { waitUntil: 'networkidle', timeout: 30000 })
-    await page.waitForTimeout(2000) // Wait for dynamic content
+    await page.goto(validUrl.toString(), { waitUntil: 'domcontentloaded', timeout: 20000 })
+    await page.waitForTimeout(1000) // Reduced wait time
     
     html = await page.content()
     
@@ -359,18 +359,17 @@ async function extractCompleteBrandSystem(url: string) {
   }
 }
 
-// Generate all brand assets
+  // Generate all brand assets (optimized for speed)
 async function generateAllBrandAssets(brandSystem: any) {
   const assets: any[] = []
 
-  // 1. Logo alternatives
+  // Limit asset generation to prevent timeouts - generate only essential assets
+  // 1. Logo alternatives (limit to 1)
   const logoPrompts = [
     `Create a modern logo alternative for ${brandSystem.sourceUrl} using colors ${brandSystem.primaryColors.join(', ')}`,
-    `Design a minimalist logo variation for ${brandSystem.sourceUrl} with ${brandSystem.style} style`,
-    `Generate a creative logo concept for ${brandSystem.sourceUrl} using typography ${brandSystem.primaryFont}`,
   ]
 
-  for (const prompt of logoPrompts.slice(0, 2)) {
+  for (const prompt of logoPrompts.slice(0, 1)) {
     try {
       const enhanced = await enhancePromptWithAI(prompt, {
         colors: brandSystem.allColors,
@@ -394,14 +393,12 @@ async function generateAllBrandAssets(brandSystem: any) {
     }
   }
 
-  // 2. Social media templates
+  // 2. Social media templates (limit to 1)
   const socialPrompts = [
     `Create a social media banner template for ${brandSystem.sourceUrl} using brand colors ${brandSystem.primaryColors.join(', ')} and ${brandSystem.style} style`,
-    `Design an Instagram post template for ${brandSystem.sourceUrl} with ${brandSystem.primaryFont} typography`,
-    `Generate a Twitter header template for ${brandSystem.sourceUrl} using ${brandSystem.style} aesthetic`,
   ]
 
-  for (const prompt of socialPrompts.slice(0, 2)) {
+  for (const prompt of socialPrompts.slice(0, 1)) {
     try {
       const enhanced = await enhancePromptWithAI(prompt, {
         colors: brandSystem.allColors,
@@ -517,11 +514,27 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Step 1: Extract complete brand system
-    const brandSystem = await extractCompleteBrandSystem(url)
+    // Set timeout for the entire operation (50 seconds max for Vercel)
+    const timeoutPromise = new Promise((_, reject) => {
+      setTimeout(() => reject(new Error('Request timeout - brand extraction took too long')), 50000)
+    })
 
-    // Step 2: Generate all brand assets
-    const assets = await generateAllBrandAssets(brandSystem)
+    // Step 1: Extract complete brand system (with timeout)
+    const brandSystemPromise = extractCompleteBrandSystem(url)
+    const brandSystem = await Promise.race([brandSystemPromise, timeoutPromise]) as Awaited<ReturnType<typeof extractCompleteBrandSystem>>
+
+    // Step 2: Generate brand assets (optional, non-blocking - return what we have if timeout)
+    let assets: any[] = []
+    try {
+      const assetsPromise = generateAllBrandAssets(brandSystem)
+      const assetsTimeout = new Promise((resolve) => {
+        setTimeout(() => resolve([]), 40000) // 40 second timeout for assets
+      })
+      assets = await Promise.race([assetsPromise, assetsTimeout]) as any[]
+    } catch (assetError: any) {
+      console.warn('Asset generation failed or timed out:', assetError.message)
+      // Continue without assets - brand system is more important
+    }
 
     const completeSystem = {
       ...brandSystem,
@@ -529,14 +542,25 @@ export async function POST(request: NextRequest) {
       generatedAt: new Date().toISOString(),
       aiPowered: true,
       autonomous: true,
+      note: assets.length === 0 ? 'Brand system extracted successfully. Some assets may still be generating.' : undefined,
     }
 
     return NextResponse.json({ success: true, data: completeSystem })
   } catch (error: any) {
     console.error('Complete brand system generation error:', error)
+    
+    // Ensure error response is always JSON
+    const errorMessage = error.message || 'Failed to generate complete brand system'
+    const isTimeout = errorMessage.includes('timeout') || errorMessage.includes('Timeout')
+    
     return NextResponse.json(
-      { error: error.message || 'Failed to generate complete brand system' },
-      { status: 500 }
+      { 
+        error: isTimeout 
+          ? 'Brand extraction timed out. The website may be too complex or slow. Please try a simpler website or try again.'
+          : errorMessage,
+        code: isTimeout ? 'TIMEOUT' : 'EXTRACTION_ERROR'
+      },
+      { status: isTimeout ? 504 : 500 }
     )
   }
 }

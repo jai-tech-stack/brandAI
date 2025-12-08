@@ -51,12 +51,19 @@ export default function CompleteBrandSystem() {
         body: JSON.stringify({ url: trimmedUrl }),
       })
 
-      if (!response.ok) {
-        const errorData = await response.json()
-        throw new Error(errorData.error || 'Failed to generate brand system')
+      // Check if response is JSON
+      const contentType = response.headers.get('content-type')
+      if (!contentType || !contentType.includes('application/json')) {
+        const text = await response.text()
+        throw new Error(`Server error: ${text.substring(0, 100)}`)
       }
 
       const result = await response.json()
+
+      if (!response.ok) {
+        throw new Error(result.error || 'Failed to generate brand system')
+      }
+
       setBrandSystem(result.data)
       
       // Store in sessionStorage for navigation (optional)
@@ -70,7 +77,18 @@ export default function CompleteBrandSystem() {
         }
       }, 100)
     } catch (err: any) {
-      setError(err.message || 'Failed to generate complete brand system. Please try again.')
+      // Handle different error types
+      let errorMessage = 'Failed to generate complete brand system. Please try again.'
+      
+      if (err.message?.includes('timeout') || err.message?.includes('Timeout')) {
+        errorMessage = 'The request timed out. The website may be too complex or slow. Please try a simpler website or try again.'
+      } else if (err.message?.includes('JSON') || err.message?.includes('parse')) {
+        errorMessage = 'Server error occurred. Please try again or contact support.'
+      } else if (err.message) {
+        errorMessage = err.message
+      }
+      
+      setError(errorMessage)
     } finally {
       setLoading(false)
     }

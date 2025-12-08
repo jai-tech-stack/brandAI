@@ -20,9 +20,37 @@ export async function POST(request: NextRequest) {
       session: data.session,
     })
   } catch (error: any) {
+    console.error('Signin error:', error)
+    
+    // Handle rate limiting
+    if (error.status === 429 || error.message?.includes('rate limit') || error.message?.includes('429')) {
+      return NextResponse.json(
+        { 
+          error: 'Too many sign-in attempts. Please wait a few minutes and try again.',
+          code: 'RATE_LIMIT'
+        },
+        { status: 429 }
+      )
+    }
+    
+    // Handle invalid credentials
+    if (error.status === 400 || error.message?.includes('Invalid login') || error.message?.includes('invalid')) {
+      return NextResponse.json(
+        { 
+          error: 'Invalid email or password. Please check your credentials and try again.',
+          code: 'INVALID_CREDENTIALS'
+        },
+        { status: 401 }
+      )
+    }
+    
+    // Ensure JSON response
     return NextResponse.json(
-      { error: error.message || 'Failed to sign in' },
-      { status: 401 }
+      { 
+        error: error.message || 'Failed to sign in. Please check your credentials.',
+        code: 'SIGNIN_ERROR'
+      },
+      { status: error.status || 401 }
     )
   }
 }

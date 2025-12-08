@@ -4,8 +4,11 @@
   "installCommand": "node scripts/install.js",
   "framework": "nextjs",
   "functions": {
-    "app/api/**/*.ts": {
+    "app/api/brand/complete-system/route.ts": {
       "maxDuration": 60
+    },
+    "app/api/**/*.ts": {
+      "maxDuration": 30
     }
   }
 }

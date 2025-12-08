@@ -21,9 +21,37 @@ export async function POST(request: NextRequest) {
       session: data.session,
     })
   } catch (error: any) {
+    console.error('Signup error:', error)
+    
+    // Handle rate limiting
+    if (error.status === 429 || error.message?.includes('rate limit') || error.message?.includes('429')) {
+      return NextResponse.json(
+        { 
+          error: 'Too many signup attempts. Please wait a few minutes and try again.',
+          code: 'RATE_LIMIT'
+        },
+        { status: 429 }
+      )
+    }
+    
+    // Handle validation errors
+    if (error.message?.includes('already registered') || error.message?.includes('already exists')) {
+      return NextResponse.json(
+        { 
+          error: 'An account with this email already exists. Please sign in instead.',
+          code: 'EMAIL_EXISTS'
+        },
+        { status: 400 }
+      )
+    }
+    
+    // Ensure JSON response
     return NextResponse.json(
-      { error: error.message || 'Failed to sign up' },
-      { status: 400 }
+      { 
+        error: error.message || 'Failed to sign up. Please check your email and password.',
+        code: 'SIGNUP_ERROR'
+      },
+      { status: error.status || 400 }
     )
   }
 }

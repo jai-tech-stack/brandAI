@@ -56,6 +56,14 @@ export default function SignInPage() {
       })
 
       if (signInError) {
+        // Handle rate limiting
+        if (signInError.status === 429 || signInError.message?.includes('rate limit')) {
+          throw new Error('Too many sign-in attempts. Please wait a few minutes and try again.')
+        }
+        // Handle invalid credentials
+        if (signInError.status === 400 || signInError.message?.includes('Invalid login') || signInError.message?.includes('invalid')) {
+          throw new Error('Invalid email or password. Please check your credentials and try again.')
+        }
         throw new Error(signInError.message || 'Failed to sign in')
       }
 
