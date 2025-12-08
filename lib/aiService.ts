@@ -146,13 +146,21 @@ export async function generateImageWithAI(options: AIImageGenerationOptions): Pr
   throw new Error('No AI image generation service configured. Please set OPENAI_API_KEY, STABILITY_API_KEY, or REPLICATE_API_TOKEN in environment variables.')
 }
 
-// AI-powered brand analysis with enhanced messaging
-export async function analyzeBrandWithAI(html: string, colors: string[], fonts: string[]): Promise<{
+// AI-powered brand analysis with enhanced messaging and deep context extraction
+export async function analyzeBrandWithAI(
+  html: string, 
+  colors: string[], 
+  fonts: string[],
+  styleVariation?: string
+): Promise<{
   style: string
   brandPersonality: string
   brandTone?: string
   messaging?: string[]
   recommendations: string[]
+  emotions?: string[]
+  values?: string[]
+  targetAudience?: string
 }> {
   // Use OpenAI for brand analysis if available
   if (process.env.OPENAI_API_KEY) {
@@ -171,10 +179,32 @@ export async function analyzeBrandWithAI(html: string, colors: string[], fonts: 
       const description = metaDescMatch ? metaDescMatch[1] : ''
       
       const h1Matches = html.match(/<h1[^>]*>([\s\S]*?)<\/h1>/gi)
-      const h1s = h1Matches ? h1Matches.map(h => h.replace(/<[^>]+>/g, '').trim()).slice(0, 3) : []
+      const h1s = h1Matches ? h1Matches.map(h => h.replace(/<[^>]+>/g, '').trim()).slice(0, 5) : []
       
-      // Get more context (up to 4000 chars of meaningful content)
-      const meaningfulContent = [title, description, ...h1s, textContent.substring(0, 3000)].filter(Boolean).join(' | ')
+      const h2Matches = html.match(/<h2[^>]*>([\s\S]*?)<\/h2>/gi)
+      const h2s = h2Matches ? h2Matches.map(h => h.replace(/<[^>]+>/g, '').trim()).slice(0, 5) : []
+      
+      // Extract more context: buttons, CTAs, key phrases
+      const buttonMatches = html.match(/<button[^>]*>([\s\S]*?)<\/button>/gi)
+      const buttons = buttonMatches ? buttonMatches.map(b => b.replace(/<[^>]+>/g, '').trim()).slice(0, 5) : []
+      
+      const linkMatches = html.match(/<a[^>]*class=["'][^"']*(?:cta|button|primary|action)[^"']*["'][^>]*>([\s\S]*?)<\/a>/gi)
+      const ctas = linkMatches ? linkMatches.map(l => l.replace(/<[^>]+>/g, '').trim()).slice(0, 5) : []
+      
+      // Get more context (up to 5000 chars of meaningful content)
+      const meaningfulContent = [
+        title, 
+        description, 
+        ...h1s, 
+        ...h2s,
+        ...buttons,
+        ...ctas,
+        textContent.substring(0, 4000)
+      ].filter(Boolean).join(' | ')
+      
+      const styleInstruction = styleVariation 
+        ? `\n\nSTYLE VARIATION REQUEST: Apply "${styleVariation}" style interpretation while maintaining brand authenticity.`
+        : ''
       
       const analysisPrompt = `You are a professional brand identity expert. Analyze this brand accurately based on the actual website data:
 
@@ -182,9 +212,11 @@ BRAND CONTEXT:
 - Website Title: ${title || 'Not available'}
 - Meta Description: ${description || 'Not available'}
 - Main Headings: ${h1s.join(', ') || 'Not available'}
-- Website Content Sample: ${meaningfulContent.substring(0, 2500)}
+- Subheadings: ${h2s.join(', ') || 'Not available'}
+- CTAs/Buttons: ${[...buttons, ...ctas].join(', ') || 'Not available'}
+- Website Content Sample: ${meaningfulContent.substring(0, 3500)}
 - Extracted Colors: ${colors.length > 0 ? colors.join(', ') : 'Limited color data available'}
-- Typography: ${fonts.length > 0 ? fonts.join(', ') : 'Standard fonts detected'}
+- Typography: ${fonts.length > 0 ? fonts.join(', ') : 'Standard fonts detected'}${styleInstruction}
 
 ANALYSIS REQUIREMENTS:
 Analyze the ACTUAL brand identity from the provided data. Be specific and accurate based on what you see, not generic.
@@ -195,6 +227,9 @@ Provide:
 3. Brand tone: 2-3 words for messaging tone that matches the brand (professional, friendly, bold, etc.)
 4. Messaging suggestions: 2-3 specific brand messaging recommendations based on actual content
 5. Design recommendations: 2-3 specific design recommendations based on actual brand elements
+6. Emotions: 3-5 emotions the brand evokes (e.g., "trust", "excitement", "calm", "confidence")
+7. Values: 3-5 core brand values inferred from content (e.g., "innovation", "authenticity", "quality")
+8. Target Audience: Brief description of primary audience based on content and design
 
 IMPORTANT: Base your analysis on the ACTUAL website content and design, not generic assumptions. If data is limited, acknowledge that in your recommendations.
 
@@ -203,7 +238,10 @@ Format as JSON only: {
   "brandPersonality": "...", 
   "brandTone": "...",
   "messaging": ["...", "..."],
-  "recommendations": ["...", "..."] 
+  "recommendations": ["...", "..."],
+  "emotions": ["...", "..."],
+  "values": ["...", "..."],
+  "targetAudience": "..."
 }`
 
       const response = await fetch('https://api.openai.com/v1/chat/completions', {
@@ -247,6 +285,9 @@ Format as JSON only: {
               brandTone: analysis.brandTone || analysis.brandPersonality || 'Professional',
               messaging: analysis.messaging || analysis.recommendations || ['Maintain consistent brand voice', 'Use clear and concise messaging'],
               recommendations: analysis.recommendations || ['Maintain consistent color usage', 'Use brand fonts across all assets'],
+              emotions: analysis.emotions || [],
+              values: analysis.values || [],
+              targetAudience: analysis.targetAudience || 'General audience',
             }
           } catch (e) {
             console.warn('Failed to parse AI analysis JSON:', e)
@@ -275,11 +316,14 @@ Format as JSON only: {
 
   // Fallback to rule-based analysis
   return {
-    style: 'Modern, Clean, Professional',
+    style: styleVariation ? `${styleVariation} Professional` : 'Modern, Clean, Professional',
     brandPersonality: 'Professional',
     brandTone: 'Professional',
     messaging: ['Maintain consistent brand voice', 'Use clear and concise messaging'],
     recommendations: ['Maintain consistent color usage', 'Use brand fonts across all assets'],
+    emotions: ['trust', 'professionalism'],
+    values: ['quality', 'consistency'],
+    targetAudience: 'General audience',
   }
 }
 

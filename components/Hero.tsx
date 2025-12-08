@@ -1,7 +1,7 @@
 'use client'
 
 import { motion } from 'framer-motion'
-import { Sparkles, ArrowRight, CheckCircle2, Zap, TrendingUp } from 'lucide-react'
+import { Sparkles, ArrowRight, CheckCircle2, Zap, TrendingUp, Infinity, Target as TargetIcon } from 'lucide-react'
 
 export default function Hero() {
   return (
@@ -42,12 +42,17 @@ export default function Hero() {
 
           {/* Main Headline */}
           <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold text-gray-900 mb-6 leading-tight text-balance">
-            One Click Gives You
+            Professional Brand System
             <br />
             <span className="gradient-text">
-              Complete Brand System
+              In Minutes, Not Days
             </span>
           </h1>
+          
+          <p className="text-xl sm:text-2xl text-gray-600 mb-8 max-w-3xl mx-auto leading-relaxed">
+            Extract your brand identity with <span className="font-bold text-purple-600">100% accuracy</span>, 
+            generate unlimited style variations, and explore endless possibilities—<span className="font-semibold">all free</span>.
+          </p>
 
           {/* Subheadline */}
           <p className="text-lg sm:text-xl md:text-2xl text-gray-700 max-w-3xl mx-auto mb-6 leading-relaxed font-medium text-balance">
@@ -111,6 +116,14 @@ export default function Hero() {
             <div className="flex items-center gap-2 px-4 py-2 bg-white/80 backdrop-blur-sm rounded-full shadow-sm">
               <Sparkles className="w-5 h-5 text-purple-600 flex-shrink-0" />
               <span>Professional quality</span>
+            </div>
+            <div className="flex items-center gap-2 px-4 py-2 bg-white/80 backdrop-blur-sm rounded-full shadow-sm">
+              <Infinity className="w-5 h-5 text-pink-600 flex-shrink-0" />
+              <span>Infinite regeneration</span>
+            </div>
+            <div className="flex items-center gap-2 px-4 py-2 bg-white/80 backdrop-blur-sm rounded-full shadow-sm">
+              <TargetIcon className="w-5 h-5 text-primary-600 flex-shrink-0" />
+              <span>100% accurate extraction</span>
             </div>
           </motion.div>
         </motion.div>

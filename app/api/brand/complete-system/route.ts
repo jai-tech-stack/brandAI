@@ -430,13 +430,16 @@ async function extractCompleteBrandSystem(url: string) {
   // AI Analysis
   let aiAnalysis
   try {
-    aiAnalysis = await analyzeBrandWithAI(html || '', extractedColors, extractedFonts)
+    aiAnalysis = await analyzeBrandWithAI(html || '', extractedColors, extractedFonts, styleVariation)
   } catch (aiError: unknown) {
     console.error('AI analysis failed:', aiError)
     aiAnalysis = {
-      style: 'Modern',
+      style: styleVariation ? `${styleVariation} Professional` : 'Modern',
       brandPersonality: 'Professional',
       recommendations: ['Focus on brand consistency', 'Maintain visual identity'],
+      emotions: [],
+      values: [],
+      targetAudience: 'General audience',
     }
   }
 
@@ -450,8 +453,11 @@ async function extractCompleteBrandSystem(url: string) {
     typographyPairings: [primaryFont, secondaryFont].filter(Boolean),
     style: aiAnalysis?.style || 'Modern',
     brandPersonality: aiAnalysis?.brandPersonality || 'Professional',
-    brandTone: aiAnalysis?.brandPersonality || 'Professional',
-    messaging: aiAnalysis?.recommendations || ['Focus on brand consistency'],
+    brandTone: aiAnalysis?.brandTone || aiAnalysis?.brandPersonality || 'Professional',
+    messaging: aiAnalysis?.messaging || aiAnalysis?.recommendations || ['Focus on brand consistency'],
+    emotions: aiAnalysis?.emotions || [],
+    values: aiAnalysis?.values || [],
+    targetAudience: aiAnalysis?.targetAudience || 'General audience',
     sourceUrl: validUrl.toString(),
   }
 }
@@ -601,7 +607,7 @@ async function generateAllBrandAssets(brandSystem: any) {
 
 export async function POST(request: NextRequest) {
   try {
-    const { url, userId } = await request.json()
+    const { url, userId, styleVariation } = await request.json()
 
     if (!url) {
       return NextResponse.json(

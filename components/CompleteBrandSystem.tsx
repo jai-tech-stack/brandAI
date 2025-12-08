@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
-import { Globe, Loader2, CheckCircle2, Palette, Type, Image as ImageIcon, Download, Sparkles, Layers, FileText, Instagram, Presentation, ArrowRight, Lock, Crown } from 'lucide-react'
+import { Globe, Loader2, CheckCircle2, Palette, Type, Image as ImageIcon, Download, Sparkles, Layers, FileText, Instagram, Presentation, ArrowRight, Lock, Crown, RefreshCw, Zap, Heart, Target, Users, Eye, FileJson, Code, Monitor } from 'lucide-react'
 import { supabaseClient } from '@/lib/auth/supabaseAuth'
 import Link from 'next/link'
 
@@ -19,6 +19,9 @@ interface BrandSystem {
   brandPersonality: string
   brandTone: string
   messaging: string[]
+  emotions?: string[]
+  values?: string[]
+  targetAudience?: string
   assets: Array<{
     type: string
     name: string
@@ -35,6 +38,134 @@ export default function CompleteBrandSystem() {
   const [userTier, setUserTier] = useState<'free' | 'pro' | 'enterprise'>('free')
   const [usageCount, setUsageCount] = useState(0)
   const [isAuthenticated, setIsAuthenticated] = useState(false)
+  const [selectedStyle, setSelectedStyle] = useState<string>('')
+  const [regenerating, setRegenerating] = useState(false)
+  const [showPreview, setShowPreview] = useState(false)
+  const [exporting, setExporting] = useState(false)
+  
+  // Export functions
+  const handleExportPDF = async () => {
+    if (!brandSystem) return
+    setExporting(true)
+    try {
+      const brandName = url.split('//')[1]?.split('/')[0]?.replace('www.', '') || 'Brand'
+      const response = await fetch('/api/export-kit', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          brandSystem: {
+            colors: {
+              primary: brandSystem.primaryColors,
+              secondary: brandSystem.secondaryColors,
+              accent: brandSystem.secondaryColors,
+              neutral: ['#FFFFFF', '#000000', '#F5F5F5'],
+            },
+            typography: {
+              primary: { name: brandSystem.primaryFont, weights: [400, 600, 700] },
+              secondary: { name: brandSystem.secondaryFont, weights: [400, 600] },
+            },
+            voice: {
+              tone: brandSystem.brandTone,
+              tagline: brandSystem.messaging[0] || '',
+              elevatorPitch: brandSystem.messaging.join(' '),
+              valueProps: brandSystem.messaging,
+              socialCaptions: brandSystem.messaging,
+              aboutParagraph: brandSystem.messaging.join(' '),
+            },
+            logos: { icon: [], horizontal: [], badge: [], symbol: [] },
+            moodboard: [],
+          },
+          brandName,
+        }),
+      })
+      if (response.ok) {
+        const result = await response.json()
+        const link = document.createElement('a')
+        link.href = result.data.pdfUrl
+        link.download = `${brandName}-brand-kit.pdf`
+        link.click()
+      }
+    } catch (error: unknown) {
+      console.error('PDF export failed:', error)
+      setError('Failed to export PDF')
+    } finally {
+      setExporting(false)
+    }
+  }
+  
+  const handleExportCSS = () => {
+    if (!brandSystem) return
+    const css = `:root {
+  /* Primary Colors */
+${brandSystem.primaryColors.map((c, i) => `  --color-primary-${i + 1}: ${c};`).join('\n')}
+  
+  /* Secondary Colors */
+${brandSystem.secondaryColors.map((c, i) => `  --color-secondary-${i + 1}: ${c};`).join('\n')}
+  
+  /* Typography */
+  --font-primary: '${brandSystem.primaryFont}', sans-serif;
+  --font-secondary: '${brandSystem.secondaryFont}', sans-serif;
+  
+  /* Brand Style */
+  --brand-style: ${brandSystem.style};
+  --brand-tone: ${brandSystem.brandTone};
+}`
+    const blob = new Blob([css], { type: 'text/css' })
+    const url = URL.createObjectURL(blob)
+    const link = document.createElement('a')
+    link.href = url
+    link.download = 'brand-variables.css'
+    link.click()
+    URL.revokeObjectURL(url)
+  }
+  
+  const handleExportJSON = () => {
+    if (!brandSystem) return
+    const json = JSON.stringify(brandSystem, null, 2)
+    const blob = new Blob([json], { type: 'application/json' })
+    const url = URL.createObjectURL(blob)
+    const link = document.createElement('a')
+    link.href = url
+    link.download = 'brand-system.json'
+    link.click()
+    URL.revokeObjectURL(url)
+  }
+  
+  const handleExportFigma = () => {
+    if (!brandSystem) return
+    // Generate Figma plugin URL or instructions
+    const figmaData = {
+      colors: {
+        primary: brandSystem.primaryColors,
+        secondary: brandSystem.secondaryColors,
+      },
+      fonts: {
+        primary: brandSystem.primaryFont,
+        secondary: brandSystem.secondaryFont,
+      },
+    }
+    const json = JSON.stringify(figmaData, null, 2)
+    const blob = new Blob([json], { type: 'application/json' })
+    const url = URL.createObjectURL(blob)
+    const link = document.createElement('a')
+    link.href = url
+    link.download = 'figma-brand-tokens.json'
+    link.click()
+    URL.revokeObjectURL(url)
+    // Show instructions
+    alert('Figma tokens exported! Import this JSON file into Figma using a plugin like "Figma Tokens" or "Design Tokens".')
+  }
+  
+  const STYLE_VARIATIONS = [
+    { value: '', label: 'Auto (Original)', description: 'Extract authentic brand style' },
+    { value: 'Modern Minimalist', label: 'Modern Minimalist', description: 'Clean, simple, contemporary' },
+    { value: 'Bold & Energetic', label: 'Bold & Energetic', description: 'Vibrant, dynamic, attention-grabbing' },
+    { value: 'Elegant Luxury', label: 'Elegant Luxury', description: 'Sophisticated, premium, refined' },
+    { value: 'Playful & Creative', label: 'Playful & Creative', description: 'Fun, innovative, expressive' },
+    { value: 'Professional Corporate', label: 'Professional Corporate', description: 'Trustworthy, formal, established' },
+    { value: 'Tech & Futuristic', label: 'Tech & Futuristic', description: 'Cutting-edge, digital, forward-thinking' },
+    { value: 'Warm & Friendly', label: 'Warm & Friendly', description: 'Approachable, inviting, human' },
+  ]
 
   // Check user subscription and usage
   useEffect(() => {
@@ -64,26 +195,32 @@ export default function CompleteBrandSystem() {
     checkUserStatus()
   }, [])
 
-  const handleGenerate = async () => {
+  const handleGenerate = async (styleOverride?: string) => {
     const trimmedUrl = url.trim()
     if (!trimmedUrl) {
       setError('Please enter a valid URL')
       return
     }
 
-    // Check feature access for free tier
-    if (userTier === 'free' && usageCount >= 1) {
+    // Check feature access for free tier (only on first generation)
+    if (!styleOverride && userTier === 'free' && usageCount >= 1) {
       setError('You\'ve reached your free limit. Upgrade to Pro for unlimited brand systems!')
       return
     }
 
-    setLoading(true)
+    if (styleOverride) {
+      setRegenerating(true)
+    } else {
+      setLoading(true)
+    }
     setError('')
-    setBrandSystem(null)
+    if (!styleOverride) {
+      setBrandSystem(null)
+    }
 
     try {
-      // Check subscription before generating
-      if (isAuthenticated && supabaseClient) {
+      // Check subscription before generating (only on first generation)
+      if (!styleOverride && isAuthenticated && supabaseClient) {
         try {
           const { data: { session } } = await supabaseClient.auth.getSession()
           if (session?.user?.id) {
@@ -116,7 +253,10 @@ export default function CompleteBrandSystem() {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ url: trimmedUrl }),
+        body: JSON.stringify({ 
+          url: trimmedUrl,
+          styleVariation: styleOverride || selectedStyle || undefined
+        }),
       })
 
       // Check if response is JSON
@@ -152,6 +292,7 @@ export default function CompleteBrandSystem() {
     } catch (err: any) {
       // Handle different error types
       let errorMessage = 'Failed to generate complete brand system. Please try again.'
+      setRegenerating(false)
       
       if (err.message?.includes('timeout') || err.message?.includes('Timeout')) {
         errorMessage = 'The request timed out. The website may be too complex or slow. Please try a simpler website or try again.'
@@ -253,8 +394,31 @@ export default function CompleteBrandSystem() {
               </div>
             )}
             
+            {/* Style Selector (Optional) */}
+            <div className="mt-4">
+              <label className="block text-sm font-semibold text-gray-700 mb-2">
+                Style Variation (Optional)
+              </label>
+              <select
+                value={selectedStyle}
+                onChange={(e) => setSelectedStyle(e.target.value)}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg bg-white text-sm font-medium text-gray-700 focus:outline-none focus:ring-2 focus:ring-primary-500"
+                disabled={loading}
+              >
+                {STYLE_VARIATIONS.map((style) => (
+                  <option key={style.value} value={style.value}>
+                    {style.label} {style.description ? `- ${style.description}` : ''}
+                  </option>
+                ))}
+              </select>
+              <p className="mt-1 text-xs text-gray-500">
+                Choose a style to apply, or leave as "Auto" to extract the authentic brand style. You can regenerate with different styles after generation!
+              </p>
+            </div>
+            
             <p className="mt-3 text-sm text-gray-500">
-              💡 Tip: Enter any website URL—BloomboxAI will extract the complete brand identity automatically.
+              💡 Tip: Enter any website URL—BloomboxAI will extract the complete brand identity automatically. 
+              <span className="font-semibold text-purple-600"> Infinite regeneration with different styles is free!</span>
             </p>
           </div>
         </div>
@@ -266,9 +430,58 @@ export default function CompleteBrandSystem() {
             animate={{ opacity: 1, y: 0 }}
             className="space-y-8 mt-8"
           >
-            <div className="flex items-center gap-2 mb-6">
-              <CheckCircle2 className="w-6 h-6 text-green-600" />
-              <h3 className="text-2xl font-bold text-gray-900">Complete Brand System Generated ✨</h3>
+            <div className="flex items-center justify-between mb-6">
+              <div className="flex items-center gap-2">
+                <CheckCircle2 className="w-6 h-6 text-green-600" />
+                <h3 className="text-2xl font-bold text-gray-900">Complete Brand System Generated ✨</h3>
+              </div>
+              
+              {/* Regeneration Section */}
+              <div className="flex items-center gap-3">
+                <select
+                  value={selectedStyle}
+                  onChange={(e) => setSelectedStyle(e.target.value)}
+                  className="px-4 py-2 border border-gray-300 rounded-lg bg-white text-sm font-medium text-gray-700 focus:outline-none focus:ring-2 focus:ring-primary-500"
+                  disabled={regenerating}
+                >
+                  {STYLE_VARIATIONS.map((style) => (
+                    <option key={style.value} value={style.value}>
+                      {style.label}
+                    </option>
+                  ))}
+                </select>
+                <button
+                  onClick={() => handleGenerate(selectedStyle || undefined)}
+                  disabled={regenerating || loading}
+                  className="px-6 py-2 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-lg hover:from-purple-700 hover:to-pink-700 transition-all flex items-center gap-2 font-semibold shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {regenerating ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      Regenerating...
+                    </>
+                  ) : (
+                    <>
+                      <RefreshCw className="w-4 h-4" />
+                      Regenerate
+                    </>
+                  )}
+                </button>
+              </div>
+            </div>
+            
+            {/* Infinite Regeneration Notice */}
+            <div className="mb-6 p-4 bg-gradient-to-r from-purple-50 to-pink-50 border border-purple-200 rounded-xl">
+              <div className="flex items-start gap-3">
+                <Zap className="w-5 h-5 text-purple-600 mt-0.5" />
+                <div>
+                  <p className="font-semibold text-purple-900 mb-1">✨ Infinite Regeneration</p>
+                  <p className="text-sm text-purple-700">
+                    Try different styles, refine your brand, and explore endless variations—all at no extra cost! 
+                    Select a style above and click "Regenerate" to see your brand in a new light.
+                  </p>
+                </div>
+              </div>
             </div>
 
             {/* Brand Colors */}
@@ -346,6 +559,185 @@ export default function CompleteBrandSystem() {
                   ))}
                 </ul>
               </div>
+            </div>
+
+            {/* Enhanced Brand Insights */}
+            {(brandSystem.emotions?.length > 0 || brandSystem.values?.length > 0 || brandSystem.targetAudience) && (
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                {brandSystem.emotions && brandSystem.emotions.length > 0 && (
+                  <div className="p-6 bg-gradient-to-br from-pink-50 to-rose-50 rounded-xl border border-pink-200">
+                    <div className="flex items-center gap-2 mb-3">
+                      <Heart className="w-5 h-5 text-pink-600" />
+                      <h4 className="font-bold text-pink-900">Brand Emotions</h4>
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                      {brandSystem.emotions.map((emotion, index) => (
+                        <span
+                          key={index}
+                          className="px-3 py-1 bg-pink-100 text-pink-800 rounded-full text-sm font-medium"
+                        >
+                          {emotion}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                
+                {brandSystem.values && brandSystem.values.length > 0 && (
+                  <div className="p-6 bg-gradient-to-br from-indigo-50 to-blue-50 rounded-xl border border-indigo-200">
+                    <div className="flex items-center gap-2 mb-3">
+                      <Sparkles className="w-5 h-5 text-indigo-600" />
+                      <h4 className="font-bold text-indigo-900">Core Values</h4>
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                      {brandSystem.values.map((value, index) => (
+                        <span
+                          key={index}
+                          className="px-3 py-1 bg-indigo-100 text-indigo-800 rounded-full text-sm font-medium"
+                        >
+                          {value}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                
+                {brandSystem.targetAudience && (
+                  <div className="p-6 bg-gradient-to-br from-emerald-50 to-teal-50 rounded-xl border border-emerald-200">
+                    <div className="flex items-center gap-2 mb-3">
+                      <Users className="w-5 h-5 text-emerald-600" />
+                      <h4 className="font-bold text-emerald-900">Target Audience</h4>
+                    </div>
+                    <p className="text-emerald-800">{brandSystem.targetAudience}</p>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Export Options */}
+            <div className="p-6 bg-gradient-to-br from-gray-50 to-purple-50 rounded-xl border-2 border-purple-200">
+              <h4 className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
+                <Download className="w-6 h-6 text-purple-600" />
+                Export Brand System
+              </h4>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                <button
+                  onClick={handleExportPDF}
+                  disabled={exporting}
+                  className="px-4 py-3 bg-white border-2 border-gray-200 rounded-lg hover:border-purple-300 hover:bg-purple-50 transition-all flex flex-col items-center gap-2 text-sm font-semibold disabled:opacity-50"
+                >
+                  <FileText className="w-5 h-5 text-red-600" />
+                  <span>PDF</span>
+                </button>
+                <button
+                  onClick={handleExportCSS}
+                  className="px-4 py-3 bg-white border-2 border-gray-200 rounded-lg hover:border-purple-300 hover:bg-purple-50 transition-all flex flex-col items-center gap-2 text-sm font-semibold"
+                >
+                  <Code className="w-5 h-5 text-blue-600" />
+                  <span>CSS</span>
+                </button>
+                <button
+                  onClick={handleExportJSON}
+                  className="px-4 py-3 bg-white border-2 border-gray-200 rounded-lg hover:border-purple-300 hover:bg-purple-50 transition-all flex flex-col items-center gap-2 text-sm font-semibold"
+                >
+                  <FileJson className="w-5 h-5 text-yellow-600" />
+                  <span>JSON</span>
+                </button>
+                <button
+                  onClick={handleExportFigma}
+                  className="px-4 py-3 bg-white border-2 border-gray-200 rounded-lg hover:border-purple-300 hover:bg-purple-50 transition-all flex flex-col items-center gap-2 text-sm font-semibold"
+                >
+                  <Monitor className="w-5 h-5 text-purple-600" />
+                  <span>Figma</span>
+                </button>
+              </div>
+            </div>
+
+            {/* Real-time Preview */}
+            <div className="p-6 bg-white rounded-xl border-2 border-gray-200">
+              <div className="flex items-center justify-between mb-4">
+                <h4 className="text-xl font-bold text-gray-900 flex items-center gap-2">
+                  <Eye className="w-6 h-6 text-primary-600" />
+                  Live Preview
+                </h4>
+                <button
+                  onClick={() => setShowPreview(!showPreview)}
+                  className="px-4 py-2 bg-gradient-to-r from-primary-600 to-purple-600 text-white rounded-lg hover:from-primary-700 hover:to-purple-700 transition-all text-sm font-semibold"
+                >
+                  {showPreview ? 'Hide Preview' : 'Show Preview'}
+                </button>
+              </div>
+              
+              {showPreview && brandSystem && (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-4">
+                  {/* Website Mockup */}
+                  <div className="border-2 border-gray-200 rounded-lg overflow-hidden bg-white shadow-lg">
+                    <div className="bg-gray-100 p-2 flex items-center gap-2">
+                      <div className="w-3 h-3 rounded-full bg-red-500"></div>
+                      <div className="w-3 h-3 rounded-full bg-yellow-500"></div>
+                      <div className="w-3 h-3 rounded-full bg-green-500"></div>
+                      <div className="flex-1 text-center text-xs text-gray-600 font-medium">Website Preview</div>
+                    </div>
+                    <div className="p-6" style={{ backgroundColor: brandSystem.primaryColors[0] || '#FFFFFF' }}>
+                      <div className="mb-4">
+                        <div className="h-8 rounded" style={{ backgroundColor: brandSystem.primaryColors[1] || '#000000', width: '60%' }}></div>
+                      </div>
+                      <div className="space-y-2 mb-4">
+                        <div className="h-4 rounded" style={{ backgroundColor: brandSystem.primaryColors[1] || '#000000', opacity: 0.7, width: '100%' }}></div>
+                        <div className="h-4 rounded" style={{ backgroundColor: brandSystem.primaryColors[1] || '#000000', opacity: 0.5, width: '85%' }}></div>
+                        <div className="h-4 rounded" style={{ backgroundColor: brandSystem.primaryColors[1] || '#000000', opacity: 0.5, width: '70%' }}></div>
+                      </div>
+                      <button className="px-4 py-2 rounded text-white text-sm font-semibold" style={{ backgroundColor: brandSystem.secondaryColors[0] || brandSystem.primaryColors[1] || '#000000' }}>
+                        Call to Action
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Social Media Post */}
+                  <div className="border-2 border-gray-200 rounded-lg overflow-hidden bg-white shadow-lg">
+                    <div className="bg-gradient-to-r from-blue-500 to-purple-600 p-4 text-white">
+                      <div className="flex items-center gap-2 mb-2">
+                        <div className="w-8 h-8 rounded-full bg-white/20"></div>
+                        <div className="flex-1">
+                          <div className="h-3 bg-white/30 rounded mb-1" style={{ width: '60%' }}></div>
+                          <div className="h-2 bg-white/20 rounded" style={{ width: '40%' }}></div>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="p-4" style={{ backgroundColor: brandSystem.primaryColors[0] || '#FFFFFF' }}>
+                      <p className="text-sm mb-3" style={{ color: brandSystem.primaryColors[1] || '#000000', fontFamily: brandSystem.primaryFont }}>
+                        {brandSystem.messaging[0] || 'Your brand message here'}
+                      </p>
+                      <div className="aspect-video rounded-lg mb-3" style={{ backgroundColor: brandSystem.secondaryColors[0] || '#F5F5F5' }}></div>
+                      <div className="flex items-center gap-4 text-xs" style={{ color: brandSystem.primaryColors[1] || '#000000' }}>
+                        <span>❤️</span>
+                        <span>💬</span>
+                        <span>📤</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Business Card */}
+                  <div className="border-2 border-gray-200 rounded-lg overflow-hidden bg-white shadow-lg">
+                    <div className="p-6 aspect-[3.5/2] flex flex-col justify-between" style={{ backgroundColor: brandSystem.primaryColors[0] || '#FFFFFF' }}>
+                      <div>
+                        <div className="text-2xl font-bold mb-2" style={{ color: brandSystem.primaryColors[1] || '#000000', fontFamily: brandSystem.primaryFont }}>
+                          Brand Name
+                        </div>
+                        <div className="text-sm mb-4" style={{ color: brandSystem.secondaryColors[0] || brandSystem.primaryColors[1] || '#000000', fontFamily: brandSystem.secondaryFont }}>
+                          {brandSystem.brandTone}
+                        </div>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <div className="text-xs" style={{ color: brandSystem.primaryColors[1] || '#000000' }}>
+                          email@brand.com
+                        </div>
+                        <div className="w-12 h-12 rounded" style={{ backgroundColor: brandSystem.secondaryColors[0] || brandSystem.primaryColors[1] || '#000000' }}></div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* Generated Assets */}
