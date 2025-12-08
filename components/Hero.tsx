@@ -5,30 +5,39 @@ import { Sparkles, ArrowRight, CheckCircle2, Zap, TrendingUp } from 'lucide-reac
 
 export default function Hero() {
   return (
-    <div className="relative overflow-hidden bg-gradient-to-b from-white via-primary-50/30 to-white pt-20 sm:pt-24 pb-16 sm:pb-20">
-      {/* Animated background elements */}
+    <div className="relative overflow-hidden bg-gradient-to-br from-white via-purple-50/40 via-pink-50/30 to-white pt-20 sm:pt-24 pb-20 sm:pb-24">
+      {/* Premium animated background elements */}
       <div className="absolute inset-0 overflow-hidden">
-        <div className="absolute top-0 left-1/4 w-96 h-96 bg-primary-200/20 rounded-full blur-3xl animate-float"></div>
-        <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-purple-200/20 rounded-full blur-3xl animate-float" style={{ animationDelay: '2s' }}></div>
-        <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808008_1px,transparent_1px),linear-gradient(to_bottom,#80808008_1px,transparent_1px)] bg-[size:24px_24px]"></div>
+        {/* Animated gradient orbs */}
+        <div className="absolute top-0 left-1/4 w-[500px] h-[500px] bg-gradient-to-br from-primary-400/30 via-purple-400/30 to-pink-400/30 rounded-full blur-3xl animate-float"></div>
+        <div className="absolute bottom-0 right-1/4 w-[600px] h-[600px] bg-gradient-to-br from-purple-400/30 via-pink-400/30 to-primary-400/30 rounded-full blur-3xl animate-float" style={{ animationDelay: '2s' }}></div>
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[400px] h-[400px] bg-gradient-to-br from-pink-300/20 to-purple-300/20 rounded-full blur-3xl animate-pulse-slow"></div>
+        
+        {/* Premium grid pattern */}
+        <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(139,92,246,0.03)_1px,transparent_1px),linear-gradient(to_bottom,rgba(139,92,246,0.03)_1px,transparent_1px)] bg-[size:40px_40px]"></div>
+        
+        {/* Shimmer effect */}
+        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -skew-x-12 animate-shimmer"></div>
       </div>
       
-      <div className="relative container-premium">
+      <div className="relative container-premium z-10">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6 }}
           className="text-center max-w-4xl mx-auto"
         >
-          {/* Badge */}
+          {/* Premium Badge */}
           <motion.div
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.5, delay: 0.2 }}
-            className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-primary-50 border border-primary-200 text-primary-700 text-sm font-medium mb-8"
+            className="inline-flex items-center gap-2 px-5 py-2 rounded-full glass border border-purple-200/50 text-purple-700 text-sm font-semibold mb-8 shadow-premium"
           >
-            <Sparkles className="w-4 h-4" />
-            <span>Your Brand Guardian Angel</span>
+            <Sparkles className="w-4 h-4 text-purple-600" />
+            <span className="bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent font-bold">
+              Your Brand Guardian Angel
+            </span>
           </motion.div>
 
           {/* Main Headline */}
@@ -64,11 +73,12 @@ export default function Hero() {
                   element.scrollIntoView({ behavior: 'smooth', block: 'start' })
                 }
               }}
-              className="group px-6 sm:px-8 py-3.5 sm:py-4 bg-gradient-to-r from-primary-600 to-purple-600 text-white rounded-xl font-bold text-base sm:text-lg hover:from-primary-700 hover:to-purple-700 transition-premium shadow-xl hover:shadow-2xl transform hover:scale-105 flex items-center gap-2 w-full sm:w-auto justify-center"
+              className="group px-8 sm:px-10 py-4 sm:py-5 bg-gradient-to-r from-primary-600 via-purple-600 to-pink-600 text-white rounded-2xl font-bold text-base sm:text-lg shadow-premium hover:shadow-glow-lg transition-premium transform hover:scale-105 flex items-center gap-3 w-full sm:w-auto justify-center relative overflow-hidden"
             >
-              <Zap className="w-5 h-5" />
-              Generate Your Brand System
-              <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+              <div className="absolute inset-0 bg-gradient-to-r from-primary-700 via-purple-700 to-pink-700 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+              <Zap className="w-5 h-5 relative z-10 group-hover:rotate-12 transition-transform" />
+              <span className="relative z-10">Generate Your Brand System</span>
+              <ArrowRight className="w-5 h-5 relative z-10 group-hover:translate-x-1 transition-transform" />
             </button>
             <button 
               onClick={() => {
@@ -77,7 +87,7 @@ export default function Hero() {
                   element.scrollIntoView({ behavior: 'smooth', block: 'start' })
                 }
               }}
-              className="px-6 sm:px-8 py-3.5 sm:py-4 bg-white text-gray-900 rounded-xl font-semibold text-base sm:text-lg hover:bg-gray-50 transition-premium shadow-lg border-2 border-gray-200 hover:border-primary-300 w-full sm:w-auto"
+              className="px-8 sm:px-10 py-4 sm:py-5 bg-white text-gray-900 rounded-2xl font-bold text-base sm:text-lg hover:bg-gradient-to-br hover:from-gray-50 hover:to-purple-50/30 transition-premium shadow-premium border-2 border-gray-200 hover:border-purple-300 hover:shadow-premium-lg w-full sm:w-auto"
             >
               See How It Works
             </button>

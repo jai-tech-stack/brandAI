@@ -6,8 +6,15 @@ import Link from 'next/link'
 
 export default function Pricing() {
   return (
-    <section id="pricing" className="py-24 bg-gradient-to-b from-white via-gray-50 to-white">
-      <div className="container-premium">
+    <section id="pricing" className="relative py-24 bg-gradient-to-b from-white via-purple-50/20 via-pink-50/10 to-white overflow-hidden">
+      {/* Premium background decorations */}
+      <div className="absolute inset-0 overflow-hidden">
+        <div className="absolute top-0 right-0 w-96 h-96 bg-purple-200/10 rounded-full blur-3xl"></div>
+        <div className="absolute bottom-0 left-0 w-96 h-96 bg-pink-200/10 rounded-full blur-3xl"></div>
+        <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(139,92,246,0.02)_1px,transparent_1px),linear-gradient(to_bottom,rgba(139,92,246,0.02)_1px,transparent_1px)] bg-[size:40px_40px]"></div>
+      </div>
+      
+      <div className="container-premium relative z-10">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
@@ -40,10 +47,11 @@ export default function Pricing() {
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            className="bg-white border-2 border-gray-200 rounded-3xl p-8 lg:p-10 hover:border-primary-300 transition-premium shadow-lg hover:shadow-xl relative overflow-hidden"
+            className="card-premium hover:border-purple-200 relative overflow-hidden group"
           >
-            <div className="absolute top-0 right-0 w-32 h-32 bg-primary-50 rounded-full -mr-16 -mt-16 opacity-50"></div>
-            <div className="relative">
+            {/* Premium decoration */}
+            <div className="absolute top-0 right-0 w-40 h-40 bg-gradient-to-br from-primary-100/50 to-purple-100/50 rounded-full -mr-20 -mt-20 blur-2xl group-hover:blur-3xl transition-all duration-500"></div>
+            <div className="relative z-10">
               <div className="flex items-center gap-3 mb-4">
                 <Zap className="w-6 h-6 text-primary-600" />
                 <h3 className="text-2xl font-bold text-gray-900">Free</h3>
@@ -83,21 +91,26 @@ export default function Pricing() {
             </div>
           </motion.div>
 
-          {/* Pro Plan */}
+          {/* Pro Plan - Premium */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ delay: 0.1 }}
-            className="bg-gradient-to-br from-primary-600 via-purple-600 to-pink-600 rounded-3xl p-8 lg:p-10 text-white relative transform scale-105 md:scale-110 shadow-2xl border-4 border-white"
+            className="bg-gradient-to-br from-primary-600 via-purple-600 to-pink-600 rounded-3xl p-8 lg:p-10 text-white relative transform scale-105 md:scale-110 shadow-premium-lg border-4 border-white/20 backdrop-blur-sm group overflow-hidden"
           >
-            <div className="absolute top-6 right-6">
-              <span className="px-4 py-1.5 bg-white/30 backdrop-blur-sm rounded-full text-xs font-bold uppercase tracking-wide">
-                Most Popular
+            {/* Animated gradient overlay */}
+            <div className="absolute inset-0 bg-gradient-to-br from-white/20 via-transparent to-transparent opacity-50 group-hover:opacity-70 transition-opacity duration-500"></div>
+            
+            {/* Shimmer effect */}
+            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -skew-x-12 translate-x-[-200%] group-hover:translate-x-[200%] transition-transform duration-1000"></div>
+            
+            <div className="absolute top-6 right-6 z-10">
+              <span className="px-5 py-2 bg-white/20 backdrop-blur-md rounded-full text-xs font-bold uppercase tracking-wider shadow-lg border border-white/30">
+                ⭐ Most Popular
               </span>
             </div>
-            <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-br from-white/10 to-transparent rounded-3xl"></div>
-            <div className="relative">
+            <div className="relative z-10">
               <div className="flex items-center gap-3 mb-4">
                 <Rocket className="w-6 h-6" />
                 <h3 className="text-2xl font-bold">Pro</h3>

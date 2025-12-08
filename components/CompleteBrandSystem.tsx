@@ -172,8 +172,11 @@ export default function CompleteBrandSystem() {
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="bg-white rounded-2xl shadow-2xl p-8 md:p-12 border border-gray-200"
+        className="card-premium p-8 md:p-12 lg:p-16 relative overflow-hidden group"
       >
+        {/* Premium decoration */}
+        <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-br from-primary-100/30 to-purple-100/30 rounded-full blur-3xl -mr-32 -mt-32 group-hover:scale-150 transition-transform duration-700"></div>
+        <div className="relative z-10">
 
         <div className="space-y-6 mb-8">
           <div>
@@ -186,14 +189,15 @@ export default function CompleteBrandSystem() {
                 value={url}
                 onChange={(e) => setUrl(e.target.value)}
                 placeholder="https://yourwebsite.com"
-                className="flex-1 px-5 py-4 border-2 border-gray-300 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-primary-500 text-lg transition-all"
+                className="input-premium flex-1"
                 onKeyPress={(e) => e.key === 'Enter' && handleGenerate()}
               />
               <button
                 onClick={handleGenerate}
                 disabled={loading || !url.trim()}
-                className="px-8 py-4 bg-gradient-to-r from-primary-600 to-purple-600 text-white rounded-xl font-bold text-lg hover:from-primary-700 hover:to-purple-700 transition-all shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 whitespace-nowrap"
+                className="px-8 py-4 bg-gradient-to-r from-primary-600 via-purple-600 to-pink-600 text-white rounded-xl font-bold text-lg shadow-premium hover:shadow-glow-lg transition-premium transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none flex items-center gap-2 whitespace-nowrap relative overflow-hidden group"
               >
+                <div className="absolute inset-0 bg-gradient-to-r from-primary-700 via-purple-700 to-pink-700 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
                 {loading ? (
                   <>
                     <Loader2 className="w-5 h-5 animate-spin" />
