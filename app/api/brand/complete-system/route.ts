@@ -355,21 +355,32 @@ async function extractCompleteBrandSystem(url: string) {
   // Skip logo URL validation to save time - just extract the URL
   // Logo validation can be done client-side if needed
 
-  // AI Analysis
-  const aiAnalysis = await analyzeBrandWithAI(html, extractedColors, extractedFonts)
+  // AI Analysis (with error handling)
+  let aiAnalysis
+  try {
+    aiAnalysis = await analyzeBrandWithAI(html, extractedColors, extractedFonts)
+  } catch (aiError: unknown) {
+    console.error('AI analysis failed:', aiError)
+    // Fallback to basic analysis
+    aiAnalysis = {
+      style: 'Modern',
+      brandPersonality: 'Professional',
+      recommendations: ['Focus on brand consistency', 'Maintain visual identity'],
+    }
+  }
 
   return {
-    logo: logoUrl,
-    primaryColors,
-    secondaryColors,
-    allColors: extractedColors,
-    primaryFont,
-    secondaryFont,
-    typographyPairings: [primaryFont, secondaryFont],
-    style: aiAnalysis.style,
-    brandPersonality: aiAnalysis.brandPersonality,
-    brandTone: aiAnalysis.brandPersonality,
-    messaging: aiAnalysis.recommendations,
+    logo: logoUrl || undefined,
+    primaryColors: primaryColors.length > 0 ? primaryColors : ['#000000', '#666666'],
+    secondaryColors: secondaryColors.length > 0 ? secondaryColors : ['#CCCCCC', '#EEEEEE'],
+    allColors: extractedColors.length > 0 ? extractedColors : ['#000000', '#666666', '#CCCCCC'],
+    primaryFont: primaryFont || 'Inter, sans-serif',
+    secondaryFont: secondaryFont || 'Roboto, sans-serif',
+    typographyPairings: [primaryFont || 'Inter, sans-serif', secondaryFont || 'Roboto, sans-serif'],
+    style: aiAnalysis?.style || 'Modern',
+    brandPersonality: aiAnalysis?.brandPersonality || 'Professional',
+    brandTone: aiAnalysis?.brandPersonality || 'Professional',
+    messaging: aiAnalysis?.recommendations || ['Focus on brand consistency'],
     sourceUrl: validUrl.toString(),
   }
 }
