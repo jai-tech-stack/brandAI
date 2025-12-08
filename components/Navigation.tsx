@@ -61,7 +61,7 @@ export default function Navigation() {
   }
 
   return (
-    <nav className="fixed top-0 left-0 right-0 z-50 bg-white/80 backdrop-blur-lg border-b border-gray-200">
+    <nav className="fixed top-0 left-0 right-0 z-50 glass border-b border-gray-200/50 shadow-sm">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
@@ -119,7 +119,7 @@ export default function Navigation() {
                 </Link>
                 <button 
                   onClick={scrollToGenerator}
-                  className="px-6 py-2 bg-gradient-to-r from-primary-600 to-purple-600 text-white rounded-lg font-semibold hover:from-primary-700 hover:to-purple-700 transition-all shadow-lg"
+                  className="px-6 py-2.5 bg-gradient-to-r from-primary-600 via-purple-600 to-pink-600 text-white rounded-xl font-bold hover:shadow-glow transition-premium transform hover:scale-105 shadow-premium"
                 >
                   Get Started
                 </button>
