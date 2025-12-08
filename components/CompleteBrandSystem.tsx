@@ -407,6 +407,7 @@ export default function CompleteBrandSystem() {
             )}
           </motion.div>
         )}
+        </div>
       </motion.div>
     </div>
   )
