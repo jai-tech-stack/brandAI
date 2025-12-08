@@ -2,6 +2,9 @@ import { NextRequest, NextResponse } from 'next/server'
 import { analyzeBrandWithAI } from '@/lib/aiService'
 import { generateImageWithAI, enhancePromptWithAI } from '@/lib/aiService'
 
+// Mark route as dynamic to prevent static analysis during build
+export const dynamic = 'force-dynamic'
+
 // Enhanced brand extraction with complete system
 async function extractCompleteBrandSystem(url: string) {
   // Normalize URL

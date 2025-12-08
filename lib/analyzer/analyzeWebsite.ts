@@ -7,18 +7,20 @@ import { extractImages } from './extractImages'
 // Playwright imports (optional - will use fallback if not available)
 // Using dynamic require to prevent webpack from trying to resolve it at build time
 function loadPlaywright() {
-  // Don't try to load playwright during build or if not in runtime
+  // Don't try to load playwright during build
+  // Check for build phase indicators
   if (process.env.NEXT_PHASE === 'phase-production-build' || 
-      process.env.NEXT_RUNTIME === undefined ||
-      typeof require === 'undefined') {
+      process.env.VERCEL === '1' && process.env.VERCEL_ENV === undefined) {
     return null
   }
   
   try {
     // Use Function constructor to prevent webpack from analyzing this require
+    // This pattern prevents webpack from statically analyzing the require call
     const requirePlaywright = new Function('moduleName', 'return require(moduleName)')
     return requirePlaywright('playwright')
   } catch (e) {
+    // Playwright not available - this is expected in many environments
     return null
   }
 }

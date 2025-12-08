@@ -4,7 +4,6 @@ import { createClient } from '@supabase/supabase-js'
 
 // Mark route as dynamic to prevent static analysis during build
 export const dynamic = 'force-dynamic'
-export const runtime = 'nodejs'
 
 const analyzeSchema = z.object({
   url: z.string().url(),

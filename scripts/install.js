@@ -56,7 +56,13 @@ npm.on('close', (code) => {
     // Ignore
   }
 
-  // Always exit successfully - canvas errors are expected and handled
-  console.log('✅ Installation process completed');
-  process.exit(0);
+  // Exit with the actual npm exit code, but only fail if it's not canvas-related
+  if (code !== 0 && !hasCanvasError) {
+    console.error('❌ Installation failed with code:', code);
+    process.exit(code);
+  } else {
+    // Always exit successfully if canvas was the only issue
+    console.log('✅ Installation process completed');
+    process.exit(0);
+  }
 });
