@@ -324,7 +324,7 @@ async function extractCompleteBrandSystem(url: string) {
   
   if (html) {
     // Extract from HTML source
-    extractColorsFromHTML(html, colorFrequency)
+    extractColorsFromHTML(html, colorFrequency, baseUrl)
     extractFontsFromHTML(html, fontFrequency)
     
     // Extract logo
