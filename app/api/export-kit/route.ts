@@ -45,21 +45,22 @@ export async function POST(request: NextRequest) {
         downloadUrl: dataUrl,
       },
     })
-  } catch (error: unknown) {
-    console.error('PDF export error:', error)
+  } catch (err: unknown) {
+    console.error('PDF export error:', err)
 
     // Dynamic import for error handling
     const { z } = await import('zod')
     
-    if (error instanceof z.ZodError) {
+    if (err instanceof z.ZodError) {
       return NextResponse.json(
-        { error: 'Invalid request data', details: error.errors },
+        { error: 'Invalid request data', details: err.errors },
         { status: 400 }
       )
     }
 
+    const errorMessage = err instanceof Error ? err.message : 'Failed to export brand kit'
     return NextResponse.json(
-      { error: error.message || 'Failed to export brand kit' },
+      { error: errorMessage },
       { status: 500 }
     )
   }
