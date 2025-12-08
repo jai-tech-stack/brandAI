@@ -298,8 +298,8 @@ async function extractCompleteBrandSystem(url: string) {
                 const fontFamily = computed.fontFamily
                 if (fontFamily) {
                   // Split by comma and get first font (actual font name, not fallback)
-                  const fonts = fontFamily.split(',').map(f => f.trim().replace(/['"]/g, ''))
-                  fonts.forEach((font, fontIndex) => {
+                  const fontList = fontFamily.split(',').map(f => f.trim().replace(/['"]/g, ''))
+                  fontList.forEach((font, fontIndex) => {
                     // Skip generic fonts
                     if (!font.match(/^(sans-serif|serif|monospace|system-ui|-apple-system|BlinkMacSystemFont|Segoe UI|Roboto|Arial|Helvetica|Times|Courier|inherit|initial|unset)$/i)) {
                       // Higher weight for first font in stack
