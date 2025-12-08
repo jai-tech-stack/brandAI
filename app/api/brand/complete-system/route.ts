@@ -28,7 +28,7 @@ function normalizeColorToHex(color: string): string | null {
 }
 
 // Extract colors from HTML source
-function extractColorsFromHTML(html: string, colorFrequency: Map<string, number>) {
+function extractColorsFromHTML(html: string, colorFrequency: Map<string, number>, baseUrl?: string) {
   // 1. CSS Variables (highest priority - these are brand colors)
   const cssVarRegex = /--[\w-]+-color[^:]*:\s*([^;]+)/gi
   let varMatch
@@ -98,19 +98,20 @@ function extractColorsFromHTML(html: string, colorFrequency: Map<string, number>
     })
   }
   
-  // 6. External CSS file links - extract and fetch
-  const cssLinkRegex = /<link[^>]+rel=["']stylesheet["'][^>]+href=["']([^"']+)["']/gi
-  let cssLinkMatch
-  const cssFiles: string[] = []
-  while ((cssLinkMatch = cssLinkRegex.exec(html)) !== null) {
-    let cssUrl = cssLinkMatch[1]
-    if (!cssUrl.startsWith('http')) {
-      cssUrl = cssUrl.startsWith('/') ? `${baseUrl}${cssUrl}` : `${baseUrl}/${cssUrl}`
+  // 6. External CSS file links - extract (if baseUrl provided)
+  // Note: CSS files are detected but not fetched here (can be used for future enhancement)
+  if (baseUrl) {
+    const cssLinkRegex = /<link[^>]+rel=["']stylesheet["'][^>]+href=["']([^"']+)["']/gi
+    let cssLinkMatch
+    while ((cssLinkMatch = cssLinkRegex.exec(html)) !== null) {
+      const cssUrl = cssLinkMatch[1]
+      if (!cssUrl.startsWith('http')) {
+        // CSS URL detected - can be used for future enhancement
+        const fullCssUrl = cssUrl.startsWith('/') ? `${baseUrl}${cssUrl}` : `${baseUrl}/${cssUrl}`
+        // Future: fetch CSS file and extract colors from it
+      }
     }
-    cssFiles.push(cssUrl)
   }
-  
-  return cssFiles
 }
 
 // Extract fonts from HTML source
