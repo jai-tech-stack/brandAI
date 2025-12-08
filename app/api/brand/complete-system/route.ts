@@ -33,6 +33,97 @@ async function extractCompleteBrandSystem(url: string) {
 
     if (fetchResponse.ok) {
       html = await fetchResponse.text()
+      
+      // Extract colors from HTML immediately (before Playwright check)
+      const colorFrequency = new Map<string, number>()
+      
+      // Helper function (must be defined before use)
+      function normalizeColorToHex(color: string): string | null {
+        color = color.trim()
+        if (color.startsWith('#')) {
+          if (color.length === 4) {
+            return `#${color[1]}${color[1]}${color[2]}${color[2]}${color[3]}${color[3]}`.toUpperCase()
+          }
+          return color.length === 7 ? color.toUpperCase() : null
+        }
+        const rgbMatch = color.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)/)
+        if (rgbMatch) {
+          const r = parseInt(rgbMatch[1]).toString(16).padStart(2, '0')
+          const g = parseInt(rgbMatch[2]).toString(16).padStart(2, '0')
+          const b = parseInt(rgbMatch[3]).toString(16).padStart(2, '0')
+          return `#${r}${g}${b}`.toUpperCase()
+        }
+        return null
+      }
+      
+      // Extract CSS variables (CRITICAL - these contain brand colors)
+      const cssVarRegex = /--[\w-]+-color[^:]*:\s*([^;]+)/gi
+      let varMatch
+      while ((varMatch = cssVarRegex.exec(html)) !== null) {
+        const value = varMatch[1].trim()
+        // Match hex colors, rgb/rgba, and var() references
+        if (value.match(/^#[0-9a-fA-F]{3,6}$|^rgb|^rgba/i)) {
+          const hex = normalizeColorToHex(value)
+          if (hex) {
+            // Don't filter out black/white - they might be brand colors
+            colorFrequency.set(hex, (colorFrequency.get(hex) || 0) + 10) // Very high weight for CSS vars
+          }
+        }
+      }
+      
+      // Also extract ALL CSS variables (not just color ones)
+      const allCssVarRegex = /--[\w-]+:\s*([^;]+)/gi
+      let allVarMatch
+      while ((allVarMatch = allCssVarRegex.exec(html)) !== null) {
+        const value = allVarMatch[1].trim()
+        if (value.match(/^#[0-9a-fA-F]{3,6}$|^rgb|^rgba/i)) {
+          const hex = normalizeColorToHex(value)
+          if (hex) {
+            colorFrequency.set(hex, (colorFrequency.get(hex) || 0) + 8) // High weight
+          }
+        }
+      }
+      
+      // Extract from style attributes
+      const styleAttrRegex = /style=["']([^"']+)["']/gi
+      let styleMatch
+      while ((styleMatch = styleAttrRegex.exec(html)) !== null) {
+        const styleContent = styleMatch[1]
+        const colorMatches = styleContent.match(/(?:color|background-color|background|border-color):\s*([^;]+)/gi) || []
+        colorMatches.forEach(match => {
+          const colorValue = match.split(':')[1]?.trim()
+          if (colorValue) {
+            const hex = normalizeColorToHex(colorValue)
+            if (hex) {
+              colorFrequency.set(hex, (colorFrequency.get(hex) || 0) + 2)
+            }
+          }
+        })
+      }
+      
+      // Extract from style tags
+      const styleTagRegex = /<style[^>]*>([\s\S]{0,50000})<\/style>/gi
+      let styleTagMatch
+      while ((styleTagMatch = styleTagRegex.exec(html)) !== null) {
+        const css = styleTagMatch[1]
+        const colorMatches = css.match(/(?:color|background-color|background|border-color):\s*([^;]+)/gi) || []
+        colorMatches.forEach(match => {
+          const colorValue = match.split(':')[1]?.trim()
+          if (colorValue) {
+            const hex = normalizeColorToHex(colorValue)
+            if (hex) {
+              colorFrequency.set(hex, (colorFrequency.get(hex) || 0) + 1)
+            }
+          }
+        })
+      }
+      
+      // Sort by frequency and get top colors (don't filter by brightness/saturation - include all)
+      extractedColors = Array.from(colorFrequency.entries())
+        .sort((a, b) => b[1] - a[1])
+        .map(([color]) => color)
+        .slice(0, 12) // Get more colors, then filter meaningful ones
+      
       usePlaywright = false // Use fast fetch method
     } else {
       throw new Error('Fetch failed')
@@ -184,15 +275,30 @@ async function extractCompleteBrandSystem(url: string) {
       // Fast CSS-based color extraction (optimized)
       const colorFrequency = new Map<string, number>()
       
-      // Extract CSS variables first (most important)
-      const cssVarRegex = /--[\w-]+:\s*([^;]+)/gi
+      // Extract CSS variables first (CRITICAL - these contain brand colors)
+      // Look for color-specific variables (primary, secondary, accent, etc.)
+      const cssVarRegex = /--[\w-]+-color[^:]*:\s*([^;]+)/gi
       let varMatch
       while ((varMatch = cssVarRegex.exec(html)) !== null) {
         const value = varMatch[1].trim()
         if (value.match(/^#[0-9a-fA-F]{3,6}$|^rgb|^rgba/i)) {
           const hex = normalizeColorToHex(value)
-          if (hex && hex !== '#FFFFFF' && hex !== '#000000') {
-            colorFrequency.set(hex, (colorFrequency.get(hex) || 0) + 3) // Higher weight for CSS vars
+          if (hex) {
+            // Don't filter out black/white - they might be brand colors
+            colorFrequency.set(hex, (colorFrequency.get(hex) || 0) + 10) // Very high weight
+          }
+        }
+      }
+      
+      // Also extract ALL CSS variables
+      const allCssVarRegex = /--[\w-]+:\s*([^;]+)/gi
+      let allVarMatch
+      while ((allVarMatch = allCssVarRegex.exec(html)) !== null) {
+        const value = allVarMatch[1].trim()
+        if (value.match(/^#[0-9a-fA-F]{3,6}$|^rgb|^rgba/i)) {
+          const hex = normalizeColorToHex(value)
+          if (hex) {
+            colorFrequency.set(hex, (colorFrequency.get(hex) || 0) + 8) // High weight
           }
         }
       }
@@ -207,7 +313,8 @@ async function extractCompleteBrandSystem(url: string) {
           const colorValue = match.split(':')[1]?.trim()
           if (colorValue) {
             const hex = normalizeColorToHex(colorValue)
-            if (hex && hex !== '#FFFFFF' && hex !== '#000000') {
+            if (hex) {
+              // Don't filter out black/white - include all colors
               colorFrequency.set(hex, (colorFrequency.get(hex) || 0) + 2)
             }
           }
@@ -224,28 +331,19 @@ async function extractCompleteBrandSystem(url: string) {
           const colorValue = match.split(':')[1]?.trim()
           if (colorValue) {
             const hex = normalizeColorToHex(colorValue)
-            if (hex && hex !== '#FFFFFF' && hex !== '#000000') {
+            if (hex) {
+              // Don't filter out black/white - include all colors
               colorFrequency.set(hex, (colorFrequency.get(hex) || 0) + 1)
             }
           }
         })
       }
       
-      // Sort by frequency and filter
+      // Sort by frequency and get top colors (don't filter - include all meaningful colors)
       extractedColors = Array.from(colorFrequency.entries())
         .sort((a, b) => b[1] - a[1])
         .map(([color]) => color)
-        .filter(color => {
-          const r = parseInt(color.substring(1, 3), 16)
-          const g = parseInt(color.substring(3, 5), 16)
-          const b = parseInt(color.substring(5, 7), 16)
-          const brightness = (r + g + b) / 3
-          const max = Math.max(r, g, b)
-          const min = Math.min(r, g, b)
-          const saturation = max === 0 ? 0 : (max - min) / max
-          return brightness > 40 && brightness < 220 && saturation > 15
-        })
-        .slice(0, 8)
+        .slice(0, 12) // Get top 12 colors
     } // Close catch block
   } // Close if (usePlaywright) block
 
@@ -264,6 +362,17 @@ async function extractCompleteBrandSystem(url: string) {
   const fontSet = new Set<string>()
   const fontFrequency = new Map<string, number>()
 
+  // Extract from CSS variables first (most reliable)
+  const fontVarRegex = /--[\w-]+-font[^:]*:\s*['"]?([^'";,]+)/gi
+  let fontVarMatch
+  while ((fontVarMatch = fontVarRegex.exec(html)) !== null) {
+    const fontName = fontVarMatch[1].trim().replace(/['"]/g, '')
+    if (fontName && !fontName.match(/^(sans-serif|serif|monospace|system-ui|-apple-system|BlinkMacSystemFont|Segoe UI|Roboto|Arial|Helvetica|Times|Courier|inherit)$/i)) {
+      fontSet.add(fontName)
+      fontFrequency.set(fontName, (fontFrequency.get(fontName) || 0) + 10) // High weight for CSS vars
+    }
+  }
+
   // Extract from CSS (inline styles and style tags)
   const fontRegex = /font-family:\s*([^;]+)/gi
   const fontMatches = html.match(fontRegex) || []
@@ -273,10 +382,11 @@ async function extractCompleteBrandSystem(url: string) {
     if (fontMatch) {
       const fontFamilies = fontMatch[1].split(',').map(f => f.trim().replace(/['"]/g, ''))
       fontFamilies.forEach(font => {
-        // Filter out generic fonts
-        if (font && !font.match(/^(sans-serif|serif|monospace|system-ui|-apple-system|BlinkMacSystemFont|Segoe UI|Roboto|Arial|Helvetica|Times|Courier)$/i)) {
-          const cleanFont = font.split(' ')[0] // Take first word (font name)
-          if (cleanFont && cleanFont.length > 2) {
+        // Filter out generic fonts but keep custom fonts
+        if (font && !font.match(/^(sans-serif|serif|monospace|system-ui|-apple-system|BlinkMacSystemFont|Segoe UI|Roboto|Arial|Helvetica|Times|Courier|inherit)$/i)) {
+          // Keep the full font name (including underscores, hyphens, etc.)
+          const cleanFont = font.trim()
+          if (cleanFont && cleanFont.length > 1) {
             fontSet.add(cleanFont)
             fontFrequency.set(cleanFont, (fontFrequency.get(cleanFont) || 0) + 1)
           }
@@ -369,14 +479,31 @@ async function extractCompleteBrandSystem(url: string) {
     }
   }
 
+  // If no colors extracted, throw error instead of using fallbacks
+  if (extractedColors.length === 0) {
+    throw new Error('Failed to extract colors from website. The website may not be accessible or may not contain extractable color information.')
+  }
+  
+  // If no fonts extracted, try to extract from HTML
+  if (!primaryFont && html) {
+    // Try to extract font from CSS
+    const fontFamilyMatch = html.match(/font-family:\s*['"]?([^'";,]+)/i)
+    if (fontFamilyMatch) {
+      const extractedFont = fontFamilyMatch[1].trim()
+      if (extractedFont && !extractedFont.match(/^(sans-serif|serif|monospace|system-ui)$/i)) {
+        primaryFont = extractedFont
+      }
+    }
+  }
+
   return {
     logo: logoUrl || undefined,
-    primaryColors: primaryColors.length > 0 ? primaryColors : ['#000000', '#666666'],
-    secondaryColors: secondaryColors.length > 0 ? secondaryColors : ['#CCCCCC', '#EEEEEE'],
-    allColors: extractedColors.length > 0 ? extractedColors : ['#000000', '#666666', '#CCCCCC'],
-    primaryFont: primaryFont || 'Inter, sans-serif',
-    secondaryFont: secondaryFont || 'Roboto, sans-serif',
-    typographyPairings: [primaryFont || 'Inter, sans-serif', secondaryFont || 'Roboto, sans-serif'],
+    primaryColors: primaryColors.length > 0 ? primaryColors : extractedColors.slice(0, 2),
+    secondaryColors: secondaryColors.length > 0 ? secondaryColors : extractedColors.slice(2, 4),
+    allColors: extractedColors,
+    primaryFont: primaryFont || undefined,
+    secondaryFont: secondaryFont || undefined,
+    typographyPairings: [primaryFont, secondaryFont].filter(Boolean),
     style: aiAnalysis?.style || 'Modern',
     brandPersonality: aiAnalysis?.brandPersonality || 'Professional',
     brandTone: aiAnalysis?.brandPersonality || 'Professional',
