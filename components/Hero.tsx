@@ -1,15 +1,19 @@
 'use client'
 
 import { motion } from 'framer-motion'
-import { Sparkles, ArrowRight, CheckCircle2 } from 'lucide-react'
+import { Sparkles, ArrowRight, CheckCircle2, Zap, TrendingUp } from 'lucide-react'
 
 export default function Hero() {
   return (
-    <div className="relative overflow-hidden bg-white pt-24 pb-20">
-      {/* Subtle background pattern */}
-      <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-[size:24px_24px]"></div>
+    <div className="relative overflow-hidden bg-gradient-to-b from-white via-primary-50/30 to-white pt-20 sm:pt-24 pb-16 sm:pb-20">
+      {/* Animated background elements */}
+      <div className="absolute inset-0 overflow-hidden">
+        <div className="absolute top-0 left-1/4 w-96 h-96 bg-primary-200/20 rounded-full blur-3xl animate-float"></div>
+        <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-purple-200/20 rounded-full blur-3xl animate-float" style={{ animationDelay: '2s' }}></div>
+        <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808008_1px,transparent_1px),linear-gradient(to_bottom,#80808008_1px,transparent_1px)] bg-[size:24px_24px]"></div>
+      </div>
       
-      <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="relative container-premium">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -28,21 +32,21 @@ export default function Hero() {
           </motion.div>
 
           {/* Main Headline */}
-          <h1 className="text-5xl sm:text-6xl lg:text-7xl font-bold text-gray-900 mb-6 leading-tight">
+          <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold text-gray-900 mb-6 leading-tight text-balance">
             One Click Gives You
             <br />
-            <span className="bg-gradient-to-r from-primary-600 via-purple-600 to-pink-600 bg-clip-text text-transparent">
+            <span className="gradient-text">
               Complete Brand System
             </span>
           </h1>
 
           {/* Subheadline */}
-          <p className="text-xl sm:text-2xl text-gray-700 max-w-3xl mx-auto mb-4 leading-relaxed font-medium">
+          <p className="text-lg sm:text-xl md:text-2xl text-gray-700 max-w-3xl mx-auto mb-6 leading-relaxed font-medium text-balance">
             Brand colors, logo directions, typography, social templates, visual identity—all generated from your website in seconds.
           </p>
 
           {/* Value Proposition */}
-          <p className="text-lg sm:text-xl text-gray-600 max-w-2xl mx-auto mb-10">
+          <p className="text-base sm:text-lg md:text-xl text-gray-600 max-w-2xl mx-auto mb-10 text-balance">
             For small teams, indie founders, and non-designers—this feels like having a full-time brand design team on standby.
           </p>
 
@@ -60,8 +64,9 @@ export default function Hero() {
                   element.scrollIntoView({ behavior: 'smooth', block: 'start' })
                 }
               }}
-              className="group px-8 py-4 bg-gradient-to-r from-primary-600 to-purple-600 text-white rounded-xl font-semibold text-lg hover:from-primary-700 hover:to-purple-700 transition-all shadow-xl hover:shadow-2xl transform hover:scale-105 flex items-center gap-2"
+              className="group px-6 sm:px-8 py-3.5 sm:py-4 bg-gradient-to-r from-primary-600 to-purple-600 text-white rounded-xl font-bold text-base sm:text-lg hover:from-primary-700 hover:to-purple-700 transition-premium shadow-xl hover:shadow-2xl transform hover:scale-105 flex items-center gap-2 w-full sm:w-auto justify-center"
             >
+              <Zap className="w-5 h-5" />
               Generate Your Brand System
               <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
             </button>
@@ -72,7 +77,7 @@ export default function Hero() {
                   element.scrollIntoView({ behavior: 'smooth', block: 'start' })
                 }
               }}
-              className="px-8 py-4 bg-white text-gray-900 rounded-xl font-semibold text-lg hover:bg-gray-50 transition-colors shadow-lg border-2 border-gray-200 hover:border-primary-300"
+              className="px-6 sm:px-8 py-3.5 sm:py-4 bg-white text-gray-900 rounded-xl font-semibold text-base sm:text-lg hover:bg-gray-50 transition-premium shadow-lg border-2 border-gray-200 hover:border-primary-300 w-full sm:w-auto"
             >
               See How It Works
             </button>
@@ -83,18 +88,18 @@ export default function Hero() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 0.8, delay: 0.6 }}
-            className="flex flex-wrap justify-center items-center gap-6 text-sm text-gray-600"
+            className="flex flex-wrap justify-center items-center gap-4 sm:gap-6 text-sm sm:text-base text-gray-600"
           >
-            <div className="flex items-center gap-2">
-              <CheckCircle2 className="w-5 h-5 text-green-600" />
+            <div className="flex items-center gap-2 px-4 py-2 bg-white/80 backdrop-blur-sm rounded-full shadow-sm">
+              <CheckCircle2 className="w-5 h-5 text-green-600 flex-shrink-0" />
               <span>No credit card required</span>
             </div>
-            <div className="flex items-center gap-2">
-              <CheckCircle2 className="w-5 h-5 text-green-600" />
+            <div className="flex items-center gap-2 px-4 py-2 bg-white/80 backdrop-blur-sm rounded-full shadow-sm">
+              <TrendingUp className="w-5 h-5 text-primary-600 flex-shrink-0" />
               <span>Generate in seconds</span>
             </div>
-            <div className="flex items-center gap-2">
-              <CheckCircle2 className="w-5 h-5 text-green-600" />
+            <div className="flex items-center gap-2 px-4 py-2 bg-white/80 backdrop-blur-sm rounded-full shadow-sm">
+              <Sparkles className="w-5 h-5 text-purple-600 flex-shrink-0" />
               <span>Professional quality</span>
             </div>
           </motion.div>

@@ -1,9 +1,11 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
-import { Globe, Loader2, CheckCircle2, Palette, Type, Image as ImageIcon, Download, Sparkles, Layers, FileText, Instagram, Presentation, ArrowRight } from 'lucide-react'
+import { Globe, Loader2, CheckCircle2, Palette, Type, Image as ImageIcon, Download, Sparkles, Layers, FileText, Instagram, Presentation, ArrowRight, Lock, Crown } from 'lucide-react'
+import { supabaseClient } from '@/lib/auth/supabaseAuth'
+import Link from 'next/link'
 
 interface BrandSystem {
   logo?: string
@@ -30,6 +32,37 @@ export default function CompleteBrandSystem() {
   const [loading, setLoading] = useState(false)
   const [brandSystem, setBrandSystem] = useState<BrandSystem | null>(null)
   const [error, setError] = useState('')
+  const [userTier, setUserTier] = useState<'free' | 'pro' | 'enterprise'>('free')
+  const [usageCount, setUsageCount] = useState(0)
+  const [isAuthenticated, setIsAuthenticated] = useState(false)
+
+  // Check user subscription and usage
+  useEffect(() => {
+    const checkUserStatus = async () => {
+      if (!supabaseClient) return
+
+      try {
+        const { data: { session } } = await supabaseClient.auth.getSession()
+        if (session) {
+          setIsAuthenticated(true)
+          // Fetch user tier and usage from API
+          const response = await fetch('/api/subscription/check', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ userId: session.user.id, action: 'maxBrandSystems' }),
+          })
+          if (response.ok) {
+            const data = await response.json()
+            setUserTier(data.tier || 'free')
+          }
+        }
+      } catch (error) {
+        console.error('Error checking user status:', error)
+      }
+    }
+
+    checkUserStatus()
+  }, [])
 
   const handleGenerate = async () => {
     const trimmedUrl = url.trim()
@@ -38,11 +71,38 @@ export default function CompleteBrandSystem() {
       return
     }
 
+    // Check feature access for free tier
+    if (userTier === 'free' && usageCount >= 1) {
+      setError('You\'ve reached your free limit. Upgrade to Pro for unlimited brand systems!')
+      return
+    }
+
     setLoading(true)
     setError('')
     setBrandSystem(null)
 
     try {
+      // Check subscription before generating
+      if (isAuthenticated) {
+        const checkResponse = await fetch('/api/subscription/check', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ 
+            userId: (await supabaseClient?.auth.getSession())?.data.session?.user.id,
+            action: 'maxBrandSystems',
+            currentUsage: usageCount 
+          }),
+        })
+        
+        if (checkResponse.ok) {
+          const checkData = await checkResponse.json()
+          if (!checkData.allowed) {
+            setError(checkData.reason || 'Upgrade required')
+            setLoading(false)
+            return
+          }
+        }
+      }
       const response = await fetch('/api/brand/complete-system', {
         method: 'POST',
         headers: {
@@ -65,6 +125,11 @@ export default function CompleteBrandSystem() {
       }
 
       setBrandSystem(result.data)
+      
+      // Update usage count for free tier
+      if (userTier === 'free') {
+        setUsageCount(prev => prev + 1)
+      }
       
       // Store in sessionStorage for navigation (optional)
       sessionStorage.setItem('brandSystem', JSON.stringify(result.data))
@@ -134,7 +199,46 @@ export default function CompleteBrandSystem() {
                 )}
               </button>
             </div>
-            {error && <p className="mt-3 text-sm text-red-600 bg-red-50 p-3 rounded-lg border border-red-200">{error}</p>}
+            {error && (
+              <div className="mt-3 p-4 rounded-lg border-2 border-red-200 bg-red-50">
+                <p className="text-sm text-red-600 font-medium mb-2">{error}</p>
+                {error.includes('limit') || error.includes('Upgrade') ? (
+                  <Link
+                    href="/#pricing"
+                    className="inline-flex items-center gap-2 text-sm font-semibold text-primary-600 hover:text-primary-700"
+                  >
+                    <Crown className="w-4 h-4" />
+                    Upgrade to Pro for Unlimited Access
+                  </Link>
+                ) : null}
+              </div>
+            )}
+            
+            {/* Usage Indicator for Free Tier */}
+            {userTier === 'free' && isAuthenticated && (
+              <div className="mt-3 p-3 bg-primary-50 border border-primary-200 rounded-lg">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-sm font-semibold text-gray-700">Free Plan Usage</span>
+                  <span className="text-sm font-bold text-primary-600">{usageCount}/1</span>
+                </div>
+                <div className="w-full bg-gray-200 rounded-full h-2">
+                  <div
+                    className="bg-gradient-to-r from-primary-600 to-purple-600 h-2 rounded-full transition-all duration-300"
+                    style={{ width: `${(usageCount / 1) * 100}%` }}
+                  ></div>
+                </div>
+                {usageCount >= 1 && (
+                  <Link
+                    href="/#pricing"
+                    className="mt-2 inline-flex items-center gap-2 text-sm font-semibold text-primary-600 hover:text-primary-700"
+                  >
+                    <Crown className="w-4 h-4" />
+                    Upgrade to Pro for Unlimited Generations
+                  </Link>
+                )}
+              </div>
+            )}
+            
             <p className="mt-3 text-sm text-gray-500">
               💡 Tip: Enter any website URL—BloomboxAI will extract the complete brand identity automatically.
             </p>
