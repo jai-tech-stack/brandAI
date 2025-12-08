@@ -325,10 +325,10 @@ async function extractCompleteBrandSystem(url: string) {
         })
         
         // Merge computed data
-        computedData.colors.forEach((color, index) => {
+        computedData.colors.forEach((color: string, index: number) => {
           colorFrequency.set(color, (colorFrequency.get(color) || 0) + (20 - index))
         })
-        computedData.fonts.forEach((font, index) => {
+        computedData.fonts.forEach((font: string, index: number) => {
           fontFrequency.set(font, (fontFrequency.get(font) || 0) + (15 - index))
         })
         
