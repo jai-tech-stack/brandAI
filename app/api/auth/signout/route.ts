@@ -5,9 +5,10 @@ export async function POST(request: NextRequest) {
   try {
     await signOut()
     return NextResponse.json({ success: true })
-  } catch (error: any) {
+  } catch (err: unknown) {
+    const errorMessage = err instanceof Error ? err.message : 'Failed to sign out'
     return NextResponse.json(
-      { error: error.message || 'Failed to sign out' },
+      { error: errorMessage },
       { status: 400 }
     )
   }

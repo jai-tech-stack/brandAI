@@ -28,18 +28,19 @@ export async function POST(request: NextRequest) {
       success: true,
       data: brandSystem,
     })
-  } catch (error: any) {
-    console.error('Brand system generation error:', error)
+  } catch (err: unknown) {
+    console.error('Brand system generation error:', err)
 
-    if (error instanceof z.ZodError) {
+    if (err instanceof z.ZodError) {
       return NextResponse.json(
-        { error: 'Invalid request data', details: error.errors },
+        { error: 'Invalid request data', details: err.errors },
         { status: 400 }
       )
     }
 
+    const errorMessage = err instanceof Error ? err.message : 'Failed to generate brand system'
     return NextResponse.json(
-      { error: error.message || 'Failed to generate brand system' },
+      { error: errorMessage },
       { status: 500 }
     )
   }

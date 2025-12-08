@@ -355,7 +355,8 @@ export async function POST(request: NextRequest) {
         { status: 500 }
       )
     }
-  } catch (error: any) {
+  } catch (err: unknown) {
+    const error = err instanceof Error ? err : new Error('Unknown error')
     console.error('Brand extraction error:', {
       message: error.message,
       stack: error.stack,

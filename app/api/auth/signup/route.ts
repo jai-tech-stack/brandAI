@@ -20,11 +20,14 @@ export async function POST(request: NextRequest) {
       user: data.user,
       session: data.session,
     })
-  } catch (error: any) {
-    console.error('Signup error:', error)
+  } catch (err: unknown) {
+    console.error('Signup error:', err)
+    
+    const error = err instanceof Error ? err : new Error('Unknown error')
+    const errorStatus = (err as any)?.status || 400
     
     // Handle rate limiting
-    if (error.status === 429 || error.message?.includes('rate limit') || error.message?.includes('429')) {
+    if (errorStatus === 429 || error.message?.includes('rate limit') || error.message?.includes('429')) {
       return NextResponse.json(
         { 
           error: 'Too many signup attempts. Please wait a few minutes and try again.',
@@ -51,7 +54,7 @@ export async function POST(request: NextRequest) {
         error: error.message || 'Failed to sign up. Please check your email and password.',
         code: 'SIGNUP_ERROR'
       },
-      { status: error.status || 400 }
+      { status: errorStatus }
     )
   }
 }

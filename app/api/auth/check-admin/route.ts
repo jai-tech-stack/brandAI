@@ -33,9 +33,10 @@ export async function GET(request: NextRequest) {
     }
 
     return NextResponse.json({ isAdmin: data.role === 'admin' })
-  } catch (error: any) {
+  } catch (err: unknown) {
+    const errorMessage = err instanceof Error ? err.message : 'Failed to check admin status'
     return NextResponse.json(
-      { isAdmin: false, error: error.message || 'Failed to check admin status' }
+      { isAdmin: false, error: errorMessage }
     )
   }
 }

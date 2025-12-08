@@ -210,8 +210,9 @@ async function analyzeWebsiteFallback(
         ogImage,
       },
     }
-  } catch (error: any) {
-    throw new Error(`Fallback analysis failed: ${error.message}`)
+  } catch (err: unknown) {
+    const errorMessage = err instanceof Error ? err.message : 'Unknown error'
+    throw new Error(`Fallback analysis failed: ${errorMessage}`)
   }
 }
 

@@ -307,10 +307,11 @@ Format as JSON only: {
         const errorData = await response.json().catch(() => ({}))
         console.warn('OpenAI API error:', response.status, errorData)
       }
-    } catch (error: any) {
-      console.error('AI brand analysis error:', error.message || error)
+    } catch (err: unknown) {
+      const errorMessage = err instanceof Error ? err.message : String(err)
+      console.error('AI brand analysis error:', errorMessage)
       // Re-throw to let caller handle fallback
-      throw error
+      throw err
     }
   }
 

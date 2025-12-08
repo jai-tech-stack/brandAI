@@ -23,13 +23,15 @@ export async function GET(request: NextRequest) {
     const { data: { session }, error } = await supabase.auth.getSession()
 
     if (error) {
-      return NextResponse.json({ session: null, error: error.message })
+      const errorMsg = error instanceof Error ? error.message : 'Session error'
+      return NextResponse.json({ session: null, error: errorMsg })
     }
 
     return NextResponse.json({ session })
-  } catch (error: any) {
+  } catch (err: unknown) {
+    const errorMessage = err instanceof Error ? err.message : 'Failed to get session'
     return NextResponse.json(
-      { session: null, error: error.message || 'Failed to get session' }
+      { session: null, error: errorMessage }
     )
   }
 }
