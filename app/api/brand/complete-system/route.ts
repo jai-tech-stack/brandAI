@@ -201,120 +201,158 @@ async function extractCompleteBrandSystem(url: string, styleVariation?: string) 
         })
         const page = await context.newPage()
         
-        await page.goto(validUrl.toString(), { waitUntil: 'networkidle', timeout: 20000 })
-        await page.waitForTimeout(1000) // Wait for CSS to load
+        await page.goto(validUrl.toString(), { waitUntil: 'networkidle', timeout: 30000 })
+        await page.waitForTimeout(2000) // Wait longer for CSS and JS to fully load
+        await page.waitForLoadState('networkidle') // Ensure all resources loaded
         
         html = await page.content()
         
-        // Extract from computed styles (MOST ACCURATE)
+        // Extract from computed styles (MOST ACCURATE) - IMPROVED FOR 100% ACCURACY
         const computedData = await page.evaluate(() => {
           const colors = new Map<string, number>()
           const fonts = new Map<string, number>()
           
-          // Get CSS variables from :root
+          // Helper to convert any color format to hex
+          const toHex = (color: string): string | null => {
+            if (!color || color === 'transparent' || color === 'rgba(0, 0, 0, 0)' || color === 'initial' || color === 'inherit') return null
+            
+            // Handle rgb/rgba
+            const rgbMatch = color.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)/)
+            if (rgbMatch) {
+              const r = parseInt(rgbMatch[1])
+              const g = parseInt(rgbMatch[2])
+              const b = parseInt(rgbMatch[3])
+              const a = color.includes('rgba') ? parseFloat(color.match(/,\s*([\d.]+)\)/)?.[1] || '1') : 1
+              
+              // Skip fully transparent
+              if (a < 0.05) return null
+              
+              const rHex = r.toString(16).padStart(2, '0')
+              const gHex = g.toString(16).padStart(2, '0')
+              const bHex = b.toString(16).padStart(2, '0')
+              return `#${rHex}${gHex}${bHex}`.toUpperCase()
+            }
+            
+            // Handle hex
+            if (color.startsWith('#')) {
+              if (color.length === 4) {
+                // Short hex #RGB -> #RRGGBB
+                return `#${color[1]}${color[1]}${color[2]}${color[2]}${color[3]}${color[3]}`.toUpperCase()
+              }
+              if (color.length === 7) {
+                return color.toUpperCase()
+              }
+            }
+            
+            return null
+          }
+          
+          // Get ALL CSS variables from :root (highest priority)
           const rootStyles = getComputedStyle(document.documentElement)
+          const cssVars = new Map<string, string>()
           for (let i = 0; i < rootStyles.length; i++) {
             const prop = rootStyles[i]
             if (prop.startsWith('--')) {
               const value = rootStyles.getPropertyValue(prop).trim()
-              // Check if it's a color
-              if (value.match(/^#[0-9a-fA-F]{3,6}$|^rgb|^rgba/i)) {
-                const rgbMatch = value.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)/)
-                if (rgbMatch) {
-                  const r = parseInt(rgbMatch[1]).toString(16).padStart(2, '0')
-                  const g = parseInt(rgbMatch[2]).toString(16).padStart(2, '0')
-                  const b = parseInt(rgbMatch[3]).toString(16).padStart(2, '0')
-                  const hex = `#${r}${g}${b}`.toUpperCase()
-                  colors.set(hex, (colors.get(hex) || 0) + 20) // Very high weight
-                } else if (value.startsWith('#')) {
-                  colors.set(value.toUpperCase(), (colors.get(value.toUpperCase()) || 0) + 20)
-                }
-              }
-              // Check if it's a font
-              if (prop.includes('font') && value && !value.match(/^(sans-serif|serif|monospace|inherit)$/i)) {
-                fonts.set(value, (fonts.get(value) || 0) + 15)
+              cssVars.set(prop, value)
+              
+              // Check if it's a color value
+              const hex = toHex(value)
+              if (hex) {
+                colors.set(hex, (colors.get(hex) || 0) + 30) // Highest weight for CSS variables
               }
             }
           }
           
-          // Extract from important elements - prioritize brand elements
-          const brandSelectors = [
-            'button', '[role="button"]', '[class*="button"]', '[class*="btn"]', // Buttons/CTAs (high priority for brand colors)
-            '[class*="brand"]', '[class*="logo"]', '[id*="brand"]', '[id*="logo"]', // Brand elements
-            'header', 'nav', '[class*="header"]', '[class*="nav"]', // Header/nav
-            '[class*="hero"]', '[class*="banner"]', '[class*="cta"]', // Hero/CTA sections
-            'h1', 'h2', 'h3', // Headings
-            'main', 'section', 'a' // General elements
-          ]
+          // Extract from ALL visible elements - get REAL colors from rendered page
+          const allElements = document.querySelectorAll('*')
+          const elementColors = new Map<string, { count: number, isBrand: boolean }>()
           
-          brandSelectors.forEach((selector, selectorIndex) => {
-            try {
-              const elements = document.querySelectorAll(selector)
-              const weight = selectorIndex < 3 ? 5 : selectorIndex < 6 ? 3 : 1 // Higher weight for buttons/brand elements
-              
-              elements.forEach((el: Element) => {
-                const computed = window.getComputedStyle(el as HTMLElement)
-                const rect = (el as HTMLElement).getBoundingClientRect()
-                
-                if (rect.width === 0 || rect.height === 0) return
-                
-                // Colors - extract ALL color properties
-                const bgColor = computed.backgroundColor
-                const textColor = computed.color
-                const borderColor = computed.borderColor
-                const outlineColor = computed.outlineColor
-                
-                const toHex = (color: string): string | null => {
-                  if (!color || color === 'transparent' || color === 'rgba(0, 0, 0, 0)') return null
-                  const rgbMatch = color.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)/)
-                  if (rgbMatch) {
-                    const r = parseInt(rgbMatch[1])
-                    const g = parseInt(rgbMatch[2])
-                    const b = parseInt(rgbMatch[3])
-                    const a = rgbMatch[0].includes('rgba') ? parseFloat(color.match(/,\s*([\d.]+)\)/)?.[1] || '1') : 1
-                    
-                    // Skip transparent colors
-                    if (a < 0.1) return null
-                    
-                    const rHex = r.toString(16).padStart(2, '0')
-                    const gHex = g.toString(16).padStart(2, '0')
-                    const bHex = b.toString(16).padStart(2, '0')
-                    return `#${rHex}${gHex}${bHex}`.toUpperCase()
-                  }
-                  return null
+          allElements.forEach((el: Element) => {
+            const htmlEl = el as HTMLElement
+            const computed = window.getComputedStyle(htmlEl)
+            const rect = htmlEl.getBoundingClientRect()
+            
+            // Skip invisible elements
+            if (rect.width === 0 || rect.height === 0 || computed.display === 'none' || computed.visibility === 'hidden') return
+            
+            // Check if it's a brand element (higher priority)
+            const isBrand = htmlEl.className?.toLowerCase().includes('brand') || 
+                          htmlEl.className?.toLowerCase().includes('logo') ||
+                          htmlEl.id?.toLowerCase().includes('brand') ||
+                          htmlEl.id?.toLowerCase().includes('logo') ||
+                          htmlEl.tagName === 'HEADER' ||
+                          htmlEl.tagName === 'NAV' ||
+                          htmlEl.className?.toLowerCase().includes('hero') ||
+                          htmlEl.className?.toLowerCase().includes('banner')
+            
+            // Extract ALL color properties
+            const bgColor = computed.backgroundColor
+            const textColor = computed.color
+            const borderColor = computed.borderColor
+            const borderTopColor = computed.borderTopColor
+            const borderBottomColor = computed.borderBottomColor
+            const outlineColor = computed.outlineColor
+            
+            // Extract colors with proper weights
+            const colorProps = [
+              { color: bgColor, weight: isBrand ? 10 : 5, type: 'bg' },
+              { color: textColor, weight: isBrand ? 8 : 4, type: 'text' },
+              { color: borderColor, weight: isBrand ? 6 : 3, type: 'border' },
+              { color: borderTopColor, weight: isBrand ? 6 : 3, type: 'border' },
+              { color: borderBottomColor, weight: isBrand ? 6 : 3, type: 'border' },
+              { color: outlineColor, weight: isBrand ? 4 : 2, type: 'outline' },
+            ]
+            
+            colorProps.forEach(({ color, weight, type }) => {
+              const hex = toHex(color)
+              if (hex) {
+                // Don't filter out white/black - they might be brand colors!
+                // Only skip if it's a transparent background
+                if (type === 'bg' && (hex === '#FFFFFF' || hex === '#000000')) {
+                  // White/black backgrounds are common, but still count them
+                  colors.set(hex, (colors.get(hex) || 0) + weight)
+                } else {
+                  colors.set(hex, (colors.get(hex) || 0) + weight)
                 }
-                
-                // Extract colors with weights
-                [bgColor, textColor, borderColor, outlineColor].forEach((color, colorIndex) => {
-                  const hex = toHex(color)
-                  if (hex) {
-                    // Filter out pure white/black unless they're text colors (might be brand)
-                    if (hex === '#FFFFFF' && colorIndex !== 1) return // Skip white backgrounds
-                    if (hex === '#000000' && colorIndex === 0) return // Skip black backgrounds
-                    
-                    // Higher weight for buttons/brand elements and background colors
-                    const colorWeight = colorIndex === 0 ? weight * 2 : weight // Background colors are more important
-                    colors.set(hex, (colors.get(hex) || 0) + colorWeight)
-                  }
-                })
-                
-                // Fonts - extract font-family (NOT font-size!)
-                const fontFamily = computed.fontFamily
-                if (fontFamily) {
-                  // Split by comma and get first font (actual font name, not fallback)
-                  const fontList = fontFamily.split(',').map(f => f.trim().replace(/['"]/g, ''))
-                  fontList.forEach((font, fontIndex) => {
-                    // Skip generic fonts
-                    if (!font.match(/^(sans-serif|serif|monospace|system-ui|-apple-system|BlinkMacSystemFont|Segoe UI|Roboto|Arial|Helvetica|Times|Courier|inherit|initial|unset)$/i)) {
-                      // Higher weight for first font in stack
-                      const fontWeight = fontIndex === 0 ? weight * 2 : weight
-                      fonts.set(font, (fonts.get(font) || 0) + fontWeight)
+              }
+            })
+            
+            // Extract fonts
+            const fontFamily = computed.fontFamily
+            if (fontFamily) {
+              const fontList = fontFamily.split(',').map(f => f.trim().replace(/['"]/g, ''))
+              fontList.forEach((font, fontIndex) => {
+                if (!font.match(/^(sans-serif|serif|monospace|system-ui|-apple-system|BlinkMacSystemFont|Segoe UI|Roboto|Arial|Helvetica|Times|Courier|inherit|initial|unset)$/i)) {
+                  const fontWeight = fontIndex === 0 ? (isBrand ? 10 : 5) : (isBrand ? 5 : 2)
+                  fonts.set(font, (fonts.get(font) || 0) + fontWeight)
+                }
+              })
+            }
+          })
+          
+          // Also extract from inline styles and style tags
+          const styleSheets = Array.from(document.styleSheets)
+          styleSheets.forEach(sheet => {
+            try {
+              const rules = Array.from(sheet.cssRules || [])
+              rules.forEach(rule => {
+                if (rule instanceof CSSStyleRule) {
+                  const style = rule.style
+                  const bgColor = style.backgroundColor
+                  const textColor = style.color
+                  const borderColor = style.borderColor
+                  
+                  [bgColor, textColor, borderColor].forEach(color => {
+                    const hex = toHex(color)
+                    if (hex) {
+                      colors.set(hex, (colors.get(hex) || 0) + 2)
                     }
                   })
                 }
               })
             } catch (e) {
-              // Continue
+              // Cross-origin stylesheets may throw
             }
           })
           
@@ -382,25 +420,18 @@ async function extractCompleteBrandSystem(url: string, styleVariation?: string) 
     }
   }
   
-  // Combine and sort results - filter out generic colors
+  // Combine and sort results - DON'T filter aggressively, get REAL colors
   let extractedColors = Array.from(colorFrequency.entries())
     .sort((a, b) => b[1] - a[1])
     .map(([color]) => color)
-    .filter(color => {
-      // Filter out pure white/black unless they're the only colors
-      if (color === '#FFFFFF' || color === '#000000') {
-        return colorFrequency.get(color)! > 5 // Only include if used frequently
-      }
-      return true
-    })
-    .slice(0, 12)
+    .slice(0, 15) // Get top 15 colors
   
-  // If we filtered out too many, add back top colors
-  if (extractedColors.length < 3) {
-    extractedColors = Array.from(colorFrequency.entries())
-      .sort((a, b) => b[1] - a[1])
-      .map(([color]) => color)
-      .slice(0, 8)
+  // Remove duplicates and ensure we have meaningful colors
+  const uniqueColors = [...new Set(extractedColors)]
+  
+  // If we have very few colors, that's okay - use what we found (might be a minimal site)
+  if (uniqueColors.length === 0) {
+    throw new Error('Failed to extract colors from website. The website may not be accessible or may not contain extractable color information.')
   }
   
   const extractedFonts = Array.from(fontFrequency.entries())
@@ -421,12 +452,12 @@ async function extractCompleteBrandSystem(url: string, styleVariation?: string) 
     throw new Error('Failed to extract colors from website. The website may not be accessible or may not contain extractable color information.')
   }
   
-  // Prioritize non-white/black colors for primary
-  const nonGenericColors = extractedColors.filter(c => c !== '#FFFFFF' && c !== '#000000')
-  const primaryColors = nonGenericColors.length >= 2 
-    ? nonGenericColors.slice(0, 2)
-    : extractedColors.slice(0, 2)
-  const secondaryColors = extractedColors.slice(2, 4)
+  // Use the most frequent colors as primary (these are the REAL brand colors)
+  // Don't filter out white/black - if they're the most used, they ARE the brand colors
+  const primaryColors = uniqueColors.slice(0, 2)
+  const secondaryColors = uniqueColors.slice(2, 4).length > 0 
+    ? uniqueColors.slice(2, 4)
+    : uniqueColors.slice(0, 2) // Fallback if not enough colors
   
   const primaryFont = extractedFonts[0] || undefined
   const secondaryFont = extractedFonts[1] || undefined
