@@ -59,9 +59,26 @@ export async function generateImageWithAI(options: AIImageGenerationOptions): Pr
             model: 'dall-e-3',
           }
         }
+      } else {
+        // Handle specific error codes
+        const errorData = await response.json().catch(() => ({}))
+        const errorCode = response.status
+        
+        if (errorCode === 401) {
+          console.warn('OpenAI API: Invalid API key or unauthorized. Check your OPENAI_API_KEY.')
+        } else if (errorCode === 402) {
+          console.warn('OpenAI API: Payment required. Your account has no credits or billing is required.')
+        } else if (errorCode === 429) {
+          console.warn('OpenAI API: Rate limit exceeded. Please wait before retrying.')
+        } else {
+          console.warn('OpenAI DALL-E API error:', errorCode, errorData)
+        }
+        // Continue to fallback providers
       }
     } catch (error: unknown) {
-      console.error('OpenAI DALL-E error:', error)
+      const errorMessage = error instanceof Error ? error.message : String(error)
+      console.error('OpenAI DALL-E request error:', errorMessage)
+      // Continue to fallback providers
     }
   }
 
@@ -304,14 +321,25 @@ Format as JSON only: {
           }
         }
       } else {
+        // Handle specific error codes
         const errorData = await response.json().catch(() => ({}))
-        console.warn('OpenAI API error:', response.status, errorData)
+        const errorCode = response.status
+        
+        if (errorCode === 401) {
+          console.warn('OpenAI API: Invalid API key or unauthorized. Falling back to rule-based analysis.')
+        } else if (errorCode === 402) {
+          console.warn('OpenAI API: Payment required. Your account has no credits. Falling back to rule-based analysis.')
+        } else if (errorCode === 429) {
+          console.warn('OpenAI API: Rate limit exceeded. Falling back to rule-based analysis.')
+        } else {
+          console.warn('OpenAI API error:', errorCode, errorData)
+        }
+        // Fall through to rule-based fallback (don't throw)
       }
     } catch (err: unknown) {
       const errorMessage = err instanceof Error ? err.message : String(err)
       console.error('AI brand analysis error:', errorMessage)
-      // Re-throw to let caller handle fallback
-      throw err
+      // Don't re-throw - fall through to rule-based fallback
     }
   }
 

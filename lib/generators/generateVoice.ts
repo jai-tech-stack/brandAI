@@ -109,8 +109,24 @@ Format as JSON only:
         console.warn('Failed to parse AI response:', e)
       }
     }
+  } else {
+    // Handle specific error codes
+    const errorData = await response.json().catch(() => ({}))
+    const errorCode = response.status
+    
+    if (errorCode === 401) {
+      console.warn('OpenAI API: Invalid API key or unauthorized. Using fallback voice generation.')
+    } else if (errorCode === 402) {
+      console.warn('OpenAI API: Payment required. Your account has no credits. Using fallback voice generation.')
+    } else if (errorCode === 429) {
+      console.warn('OpenAI API: Rate limit exceeded. Using fallback voice generation.')
+    } else {
+      console.warn('OpenAI API error:', errorCode, errorData)
+    }
+    // Fall through to fallback (don't throw)
   }
 
+  // Fallback to rule-based generation
   throw new Error('AI generation failed')
 }
 
