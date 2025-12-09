@@ -116,12 +116,21 @@ function extractColorsFromHTML(html: string, colorFrequency: Map<string, number>
 
 // Extract fonts from HTML source
 function extractFontsFromHTML(html: string, fontFrequency: Map<string, number>) {
-  // 1. CSS Variables for fonts
-  const fontVarRegex = /--[\w-]+-font[^:]*:\s*['"]?([^'";,]+)/gi
+  // 1. CSS Variables for fonts - ONLY font-family, NOT font-size!
+  // Match: --font-family, --primary-font, --heading-font, etc. (NOT --font-size)
+  const fontFamilyVarRegex = /--(?:[\w-]*font-family|[\w-]*font|primary-font|secondary-font|heading-font|body-font|text-font)[^:]*:\s*['"]?([^'";,]+)/gi
   let fontVarMatch
-  while ((fontVarMatch = fontVarRegex.exec(html)) !== null) {
+  while ((fontVarMatch = fontFamilyVarRegex.exec(html)) !== null) {
     const fontName = fontVarMatch[1].trim().replace(/['"]/g, '')
-    if (fontName && !fontName.match(/^(sans-serif|serif|monospace|system-ui|-apple-system|BlinkMacSystemFont|Segoe UI|Roboto|Arial|Helvetica|Times|Courier|inherit)$/i)) {
+    // CRITICAL: Filter out font-size values (numbers, px, rem, em, etc.)
+    if (fontName && 
+        !fontName.match(/^\d+px?$/i) && // Not "13px" or "0"
+        !fontName.match(/^\d+rem$/i) && // Not "1rem"
+        !fontName.match(/^\d+em$/i) && // Not "1em"
+        !fontName.match(/^var\(/i) && // Not CSS variable references
+        !fontName.match(/^--[\w-]+$/i) && // Not CSS variable names
+        !fontName.match(/^(sans-serif|serif|monospace|system-ui|-apple-system|BlinkMacSystemFont|Segoe UI|Roboto|Arial|Helvetica|Times|Courier|inherit|initial|unset)$/i) &&
+        fontName.length > 2) {
       fontFrequency.set(fontName, (fontFrequency.get(fontName) || 0) + 15)
     }
   }
@@ -256,10 +265,32 @@ async function extractCompleteBrandSystem(url: string, styleVariation?: string) 
               const value = rootStyles.getPropertyValue(prop).trim()
               cssVars.set(prop, value)
               
-              // Check if it's a color value
-              const hex = toHex(value)
-              if (hex) {
-                colors.set(hex, (colors.get(hex) || 0) + 30) // Highest weight for CSS variables
+              // Check if it's a color value (ONLY colors, not font-size or other properties)
+              // Skip font-size, font-weight, spacing, etc. variables
+              if (!prop.toLowerCase().includes('font-size') && 
+                  !prop.toLowerCase().includes('font-weight') &&
+                  !prop.toLowerCase().includes('spacing') &&
+                  !prop.toLowerCase().includes('size') &&
+                  !prop.toLowerCase().includes('width') &&
+                  !prop.toLowerCase().includes('height')) {
+                const hex = toHex(value)
+                if (hex) {
+                  colors.set(hex, (colors.get(hex) || 0) + 30) // Highest weight for CSS variables
+                }
+              }
+              
+              // Check if it's a font-family variable (NOT font-size!)
+              if ((prop.toLowerCase().includes('font-family') || 
+                   prop.toLowerCase().includes('font') && !prop.toLowerCase().includes('size')) &&
+                  value && 
+                  !value.match(/^\d+px?$/i) &&
+                  !value.match(/^var\(/i) &&
+                  !value.match(/^--[\w-]+$/i)) {
+                // Only add if it's a real font name, not a CSS variable reference or size
+                if (!value.match(/^(sans-serif|serif|monospace|system-ui|-apple-system|BlinkMacSystemFont|Segoe UI|Roboto|Arial|Helvetica|Times|Courier|inherit|initial|unset)$/i) &&
+                    value.length > 2) {
+                  fonts.set(value, (fonts.get(value) || 0) + 20) // High weight for CSS variable fonts
+                }
               }
             }
           }
@@ -318,12 +349,20 @@ async function extractCompleteBrandSystem(url: string, styleVariation?: string) 
               }
             })
             
-            // Extract fonts
+            // Extract fonts - ONLY font-family, NOT font-size!
             const fontFamily = computed.fontFamily
             if (fontFamily) {
               const fontList = fontFamily.split(',').map(f => f.trim().replace(/['"]/g, ''))
               fontList.forEach((font, fontIndex) => {
-                if (!font.match(/^(sans-serif|serif|monospace|system-ui|-apple-system|BlinkMacSystemFont|Segoe UI|Roboto|Arial|Helvetica|Times|Courier|inherit|initial|unset)$/i)) {
+                // CRITICAL: Filter out font-size values, CSS variables, and generic fonts
+                if (font && 
+                    !font.match(/^\d+px?$/i) && // Not "13px" or "0"
+                    !font.match(/^\d+rem$/i) && // Not "1rem"
+                    !font.match(/^\d+em$/i) && // Not "1em"
+                    !font.match(/^var\(/i) && // Not CSS variable references like "var(--wp--preset--font-size--medium)"
+                    !font.match(/^--[\w-]+$/i) && // Not CSS variable names
+                    !font.match(/^(sans-serif|serif|monospace|system-ui|-apple-system|BlinkMacSystemFont|Segoe UI|Roboto|Arial|Helvetica|Times|Courier|inherit|initial|unset)$/i) &&
+                    font.length > 2) {
                   const fontWeight = fontIndex === 0 ? (isBrand ? 10 : 5) : (isBrand ? 5 : 2)
                   fonts.set(font, (fonts.get(font) || 0) + fontWeight)
                 }
@@ -439,14 +478,24 @@ async function extractCompleteBrandSystem(url: string, styleVariation?: string) 
     .sort((a, b) => b[1] - a[1])
     .map(([font]) => font)
     .filter(font => {
-      // Filter out invalid font names (numbers, sizes, etc.)
+      // CRITICAL: Filter out invalid font names (CSS variables, sizes, numbers, etc.)
       return font && 
              !font.match(/^\d+px?$/i) && // Not "13px" or "0"
+             !font.match(/^\d+rem$/i) && // Not "1rem"
+             !font.match(/^\d+em$/i) && // Not "1em"
              !font.match(/^\d+$/i) && // Not just numbers
+             !font.match(/^var\(/i) && // Not CSS variable references like "var(--wp--preset--font-size--medium)"
+             !font.match(/^--[\w-]+$/i) && // Not CSS variable names
              font.length > 2 && // At least 3 characters
-             !font.match(/^(normal|bold|italic|inherit|initial|unset)$/i) // Not CSS keywords
+             !font.match(/^(normal|bold|italic|inherit|initial|unset|medium|x-large|small|large)$/i) && // Not CSS keywords or sizes
+             !font.includes('!important') // Not CSS with !important
     })
     .slice(0, 3)
+  
+  // If no valid fonts found, throw error (don't use fake fonts!)
+  if (extractedFonts.length === 0) {
+    console.warn('No valid fonts extracted - this is unusual but acceptable')
+  }
   
   // Validate extraction
   if (extractedColors.length === 0) {
@@ -454,11 +503,17 @@ async function extractCompleteBrandSystem(url: string, styleVariation?: string) 
   }
   
   // Use the most frequent colors as primary (these are the REAL brand colors)
-  // Don't filter out white/black - if they're the most used, they ARE the brand colors
-  const primaryColors = uniqueColors.slice(0, 2)
-  const secondaryColors = uniqueColors.slice(2, 4).length > 0 
-    ? uniqueColors.slice(2, 4)
-    : uniqueColors.slice(0, 2) // Fallback if not enough colors
+  // Prioritize non-white/black colors for primary, but include them if they're the only colors
+  const nonGenericColors = uniqueColors.filter(c => c !== '#FFFFFF' && c !== '#000000' && c !== '#F5F5F5' && c !== '#FAFAFA')
+  const primaryColors = nonGenericColors.length >= 2 
+    ? nonGenericColors.slice(0, 2)
+    : uniqueColors.slice(0, 2) // Use what we have if no non-generic colors
+  
+  const secondaryColors = nonGenericColors.length >= 4
+    ? nonGenericColors.slice(2, 4)
+    : nonGenericColors.length >= 2
+    ? nonGenericColors.slice(0, 2) // Reuse primary if not enough
+    : uniqueColors.slice(0, 2) // Last resort: use what we have
   
   const primaryFont = extractedFonts[0] || undefined
   const secondaryFont = extractedFonts[1] || undefined
