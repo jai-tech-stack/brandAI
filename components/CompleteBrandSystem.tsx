@@ -310,46 +310,49 @@ ${brandSystem.secondaryColors.map((c, i) => `  --color-secondary-${i + 1}: ${c};
   }
 
   return (
-    <div className="max-w-5xl mx-auto">
+    <div className="w-full max-w-5xl mx-auto">
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="card-premium p-8 md:p-12 lg:p-16 relative overflow-hidden group"
+        transition={{ duration: 0.6 }}
+        className="card-premium-enhanced relative overflow-hidden group"
       >
-        {/* Premium decoration */}
-        <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-br from-primary-100/30 to-purple-100/30 rounded-full blur-3xl -mr-32 -mt-32 group-hover:scale-150 transition-transform duration-700"></div>
+        {/* Enhanced Premium decoration */}
+        <div className="absolute top-0 right-0 w-64 h-64 sm:w-80 sm:h-80 bg-gradient-to-br from-primary-100/40 via-purple-100/30 to-pink-100/40 rounded-full blur-3xl -mr-32 -mt-32 group-hover:scale-150 transition-transform duration-700"></div>
+        <div className="absolute bottom-0 left-0 w-48 h-48 sm:w-64 sm:h-64 bg-gradient-to-tr from-pink-100/30 to-purple-100/30 rounded-full blur-2xl -ml-24 -mb-24 opacity-50"></div>
         <div className="relative z-10">
 
-        <div className="space-y-6 mb-8">
+        <div className="space-y-6 sm:space-y-8 mb-8 sm:mb-10">
           <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-2">
+            <label className="block text-sm sm:text-base font-bold text-high-contrast mb-3 sm:mb-4">
               Enter Your Website URL
             </label>
-            <div className="flex gap-3">
+            <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
               <input
                 type="url"
                 value={url}
                 onChange={(e) => setUrl(e.target.value)}
                 placeholder="https://yourwebsite.com"
-                className="input-premium flex-1"
+                className="input-premium-enhanced flex-1"
                 onKeyPress={(e) => e.key === 'Enter' && handleGenerate()}
+                disabled={loading || regenerating}
               />
               <button
                 onClick={() => handleGenerate()}
-                disabled={loading || !url.trim()}
-                className="px-8 py-4 bg-gradient-to-r from-primary-600 via-purple-600 to-pink-600 text-white rounded-xl font-bold text-lg shadow-premium hover:shadow-glow-lg transition-premium transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none flex items-center gap-2 whitespace-nowrap relative overflow-hidden group"
+                disabled={loading || !url.trim() || regenerating}
+                className="btn-premium-enhanced disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none flex items-center justify-center gap-2 whitespace-nowrap w-full sm:w-auto min-w-[140px]"
               >
-                <div className="absolute inset-0 bg-gradient-to-r from-primary-700 via-purple-700 to-pink-700 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
                 <span className="relative z-10 flex items-center gap-2">
                   {loading ? (
                     <>
                       <Loader2 className="w-5 h-5 animate-spin" />
-                      Generating...
+                      <span className="hidden sm:inline">Generating...</span>
+                      <span className="sm:hidden">Generate</span>
                     </>
                   ) : (
                     <>
                       <Sparkles className="w-5 h-5" />
-                      Generate
+                      <span>Generate</span>
                     </>
                   )}
                 </span>
