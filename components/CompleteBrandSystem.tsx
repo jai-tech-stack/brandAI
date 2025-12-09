@@ -171,12 +171,22 @@ ${brandSystem.secondaryColors.map((c, i) => `  --color-secondary-${i + 1}: ${c};
   // Check user subscription and usage
   useEffect(() => {
     const checkUserStatus = async () => {
+      // Check anonymous usage from localStorage
+      const storedAnonymousUsage = localStorage.getItem('bloombox_anonymous_usage')
+      if (storedAnonymousUsage) {
+        setAnonymousUsageCount(parseInt(storedAnonymousUsage, 10) || 0)
+      }
+
       if (!supabaseClient) return
 
       try {
         const { data: { session } } = await supabaseClient.auth.getSession()
         if (session) {
           setIsAuthenticated(true)
+          // Clear anonymous usage when user logs in
+          localStorage.removeItem('bloombox_anonymous_usage')
+          setAnonymousUsageCount(0)
+          
           // Fetch user tier and usage from API
           const response = await fetch('/api/subscription/check', {
             method: 'POST',
@@ -186,7 +196,10 @@ ${brandSystem.secondaryColors.map((c, i) => `  --color-secondary-${i + 1}: ${c};
           if (response.ok) {
             const data = await response.json()
             setUserTier(data.tier || 'free')
+            setUsageCount(data.currentUsage || 0)
           }
+        } else {
+          setIsAuthenticated(false)
         }
       } catch (error: unknown) {
         console.error('Error checking user status:', error)
@@ -284,8 +297,15 @@ ${brandSystem.secondaryColors.map((c, i) => `  --color-secondary-${i + 1}: ${c};
 
       setBrandSystem(result.data)
       
-      // Update usage count for free tier
-      if (userTier === 'free') {
+      // Update usage count for non-logged-in users
+      if (!isAuthenticated && !styleOverride) {
+        const newCount = anonymousUsageCount + 1
+        setAnonymousUsageCount(newCount)
+        localStorage.setItem('bloombox_anonymous_usage', newCount.toString())
+      }
+      
+      // Update usage count for free tier logged-in users
+      if (isAuthenticated && userTier === 'free' && !styleOverride) {
         setUsageCount(prev => prev + 1)
       }
       
