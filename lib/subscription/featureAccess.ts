@@ -18,7 +18,7 @@ export interface FeatureLimits {
 
 export const FEATURE_LIMITS: Record<SubscriptionTier, FeatureLimits> = {
   free: {
-    maxBrandSystems: 1,
+    maxBrandSystems: 3,
     maxAssetsPerSystem: 3,
     allowLogoGeneration: false,
     allowSocialTemplates: false,

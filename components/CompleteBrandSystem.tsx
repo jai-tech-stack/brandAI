@@ -216,18 +216,18 @@ ${brandSystem.secondaryColors.map((c, i) => `  --color-secondary-${i + 1}: ${c};
       return
     }
 
-    // Check feature access for non-logged-in users (3 free generations)
+    // Check feature access for non-logged-in users (1 free generation)
     if (!styleOverride && !isAuthenticated) {
-      const ANONYMOUS_LIMIT = 3
+      const ANONYMOUS_LIMIT = 1
       if (anonymousUsageCount >= ANONYMOUS_LIMIT) {
-        setError(`You've reached your free limit of ${ANONYMOUS_LIMIT} brand systems. Sign up for free to get 1 more, or upgrade to Pro for unlimited generations!`)
+        setError(`You've reached your free limit of ${ANONYMOUS_LIMIT} brand system. Sign up for free to get 3 more, or upgrade to Pro for unlimited generations!`)
         return
       }
     }
 
-    // Check feature access for free tier logged-in users (only on first generation)
-    if (!styleOverride && isAuthenticated && userTier === 'free' && usageCount >= 1) {
-      setError('You\'ve reached your free limit. Upgrade to Pro for unlimited brand systems!')
+    // Check feature access for free tier logged-in users (3 free generations)
+    if (!styleOverride && isAuthenticated && userTier === 'free' && usageCount >= 3) {
+      setError('You\'ve reached your free limit of 3 brand systems. Upgrade to Pro for unlimited brand systems!')
       return
     }
 
@@ -408,22 +408,22 @@ ${brandSystem.secondaryColors.map((c, i) => `  --color-secondary-${i + 1}: ${c};
               <div className="mt-3 p-3 bg-gradient-to-br from-purple-50 to-pink-50 border border-purple-200 rounded-lg">
                 <div className="flex items-center justify-between mb-2">
                   <span className="text-sm font-semibold text-gray-700">Free Generations (No Sign Up Required)</span>
-                  <span className="text-sm font-bold text-purple-600">{anonymousUsageCount}/3</span>
+                  <span className="text-sm font-bold text-purple-600">{anonymousUsageCount}/1</span>
                 </div>
                 <div className="w-full bg-gray-200 rounded-full h-2">
                   <div
                     className="bg-gradient-to-r from-purple-600 to-pink-600 h-2 rounded-full transition-all duration-300"
-                    style={{ width: `${(anonymousUsageCount / 3) * 100}%` }}
+                    style={{ width: `${(anonymousUsageCount / 1) * 100}%` }}
                   ></div>
                 </div>
-                {anonymousUsageCount >= 3 ? (
+                {anonymousUsageCount >= 1 ? (
                   <div className="mt-2 space-y-2">
                     <Link
                       href="/signup"
                       className="inline-flex items-center gap-2 text-sm font-semibold text-purple-600 hover:text-purple-700"
                     >
                       <Crown className="w-4 h-4" />
-                      Sign Up Free for 1 More Generation
+                      Sign Up Free for 3 More Generations
                     </Link>
                     <span className="text-xs text-gray-600 block">or</span>
                     <Link
@@ -436,7 +436,7 @@ ${brandSystem.secondaryColors.map((c, i) => `  --color-secondary-${i + 1}: ${c};
                   </div>
                 ) : (
                   <p className="mt-2 text-xs text-gray-600">
-                    {3 - anonymousUsageCount} free generation{3 - anonymousUsageCount !== 1 ? 's' : ''} remaining. Sign up for more!
+                    {1 - anonymousUsageCount} free generation remaining. Sign up for 3 more!
                   </p>
                 )}
               </div>
@@ -447,15 +447,15 @@ ${brandSystem.secondaryColors.map((c, i) => `  --color-secondary-${i + 1}: ${c};
               <div className="mt-3 p-3 bg-primary-50 border border-primary-200 rounded-lg">
                 <div className="flex items-center justify-between mb-2">
                   <span className="text-sm font-semibold text-gray-700">Free Plan Usage</span>
-                  <span className="text-sm font-bold text-primary-600">{usageCount}/1</span>
+                  <span className="text-sm font-bold text-primary-600">{usageCount}/3</span>
                 </div>
                 <div className="w-full bg-gray-200 rounded-full h-2">
                   <div
                     className="bg-gradient-to-r from-primary-600 to-purple-600 h-2 rounded-full transition-all duration-300"
-                    style={{ width: `${(usageCount / 1) * 100}%` }}
+                    style={{ width: `${(usageCount / 3) * 100}%` }}
                   ></div>
                 </div>
-                {usageCount >= 1 && (
+                {usageCount >= 3 ? (
                   <Link
                     href="/#pricing"
                     className="mt-2 inline-flex items-center gap-2 text-sm font-semibold text-primary-600 hover:text-primary-700"
@@ -463,6 +463,10 @@ ${brandSystem.secondaryColors.map((c, i) => `  --color-secondary-${i + 1}: ${c};
                     <Crown className="w-4 h-4" />
                     Upgrade to Pro for Unlimited Generations
                   </Link>
+                ) : (
+                  <p className="mt-2 text-xs text-gray-600">
+                    {3 - usageCount} free generation{3 - usageCount !== 1 ? 's' : ''} remaining.
+                  </p>
                 )}
               </div>
             )}
