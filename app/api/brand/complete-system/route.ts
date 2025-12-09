@@ -339,11 +339,12 @@ async function extractCompleteBrandSystem(url: string, styleVariation?: string) 
               rules.forEach(rule => {
                 if (rule instanceof CSSStyleRule) {
                   const style = rule.style
-                  const bgColor = style.backgroundColor
-                  const textColor = style.color
-                  const borderColor = style.borderColor
+                  const bgColor: string = style.backgroundColor
+                  const textColor: string = style.color
+                  const borderColor: string = style.borderColor
                   
-                  [bgColor, textColor, borderColor].forEach(color => {
+                  const colorArray: string[] = [bgColor, textColor, borderColor]
+                  colorArray.forEach((color: string) => {
                     const hex = toHex(color)
                     if (hex) {
                       colors.set(hex, (colors.get(hex) || 0) + 2)
@@ -427,7 +428,7 @@ async function extractCompleteBrandSystem(url: string, styleVariation?: string) 
     .slice(0, 15) // Get top 15 colors
   
   // Remove duplicates and ensure we have meaningful colors
-  const uniqueColors = [...new Set(extractedColors)]
+  const uniqueColors = Array.from(new Set(extractedColors))
   
   // If we have very few colors, that's okay - use what we found (might be a minimal site)
   if (uniqueColors.length === 0) {
