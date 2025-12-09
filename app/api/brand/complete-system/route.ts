@@ -503,9 +503,10 @@ async function extractCompleteBrandSystem(url: string, styleVariation?: string) 
   }
   
   // Combine and sort results - DON'T filter aggressively, get REAL colors
-  let extractedColors: string[] = Array.from(colorFrequency.entries())
-    .sort((a: [string, number], b: [string, number]) => b[1] - a[1])
-    .map(([color]: [string, number]) => color)
+  const colorEntries: [string, number][] = Array.from(colorFrequency.entries())
+  let extractedColors: string[] = colorEntries
+    .sort((a, b) => b[1] - a[1])
+    .map(([color]) => color)
     .slice(0, 15) // Get top 15 colors
   
   // Remove duplicates and ensure we have meaningful colors
@@ -516,9 +517,10 @@ async function extractCompleteBrandSystem(url: string, styleVariation?: string) 
     throw new Error('Failed to extract colors from website. The website may not be accessible or may not contain extractable color information.')
   }
   
-  const extractedFonts: string[] = Array.from(fontFrequency.entries())
-    .sort((a: [string, number], b: [string, number]) => b[1] - a[1])
-    .map(([font]: [string, number]) => font)
+  const fontEntries: [string, number][] = Array.from(fontFrequency.entries())
+  const extractedFonts: string[] = fontEntries
+    .sort((a, b) => b[1] - a[1])
+    .map(([font]) => font)
     .filter((font: string) => {
       // CRITICAL: Filter out invalid font names (CSS variables, sizes, numbers, etc.)
       return font && 
