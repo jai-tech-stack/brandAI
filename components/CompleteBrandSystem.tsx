@@ -334,7 +334,7 @@ ${brandSystem.secondaryColors.map((c, i) => `  --color-secondary-${i + 1}: ${c};
                 onKeyPress={(e) => e.key === 'Enter' && handleGenerate()}
               />
               <button
-                onClick={handleGenerate}
+                onClick={() => handleGenerate()}
                 disabled={loading || !url.trim()}
                 className="px-8 py-4 bg-gradient-to-r from-primary-600 via-purple-600 to-pink-600 text-white rounded-xl font-bold text-lg shadow-premium hover:shadow-glow-lg transition-premium transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none flex items-center gap-2 whitespace-nowrap relative overflow-hidden group"
               >
