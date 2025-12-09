@@ -454,7 +454,6 @@ async function extractCompleteBrandSystem(url: string, styleVariation?: string) 
         
         await browser.close()
       }
-    }
   } catch (playwrightError) {
     console.warn('Playwright extraction failed, using HTML source:', playwrightError)
   }
