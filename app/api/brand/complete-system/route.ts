@@ -503,23 +503,23 @@ async function extractCompleteBrandSystem(url: string, styleVariation?: string) 
   }
   
   // Combine and sort results - DON'T filter aggressively, get REAL colors
-  let extractedColors = Array.from(colorFrequency.entries())
-    .sort((a, b) => b[1] - a[1])
-    .map(([color]) => color)
+  let extractedColors: string[] = Array.from(colorFrequency.entries())
+    .sort((a: [string, number], b: [string, number]) => b[1] - a[1])
+    .map(([color]: [string, number]) => color)
     .slice(0, 15) // Get top 15 colors
   
   // Remove duplicates and ensure we have meaningful colors
-  const uniqueColors = Array.from(new Set(extractedColors))
+  const uniqueColors: string[] = Array.from(new Set(extractedColors))
   
   // If we have very few colors, that's okay - use what we found (might be a minimal site)
   if (uniqueColors.length === 0) {
     throw new Error('Failed to extract colors from website. The website may not be accessible or may not contain extractable color information.')
   }
   
-  const extractedFonts = Array.from(fontFrequency.entries())
-    .sort((a, b) => b[1] - a[1])
-    .map(([font]) => font)
-    .filter(font => {
+  const extractedFonts: string[] = Array.from(fontFrequency.entries())
+    .sort((a: [string, number], b: [string, number]) => b[1] - a[1])
+    .map(([font]: [string, number]) => font)
+    .filter((font: string) => {
       // CRITICAL: Filter out invalid font names (CSS variables, sizes, numbers, etc.)
       return font && 
              !font.match(/^\d+px?$/i) && // Not "13px" or "0"
