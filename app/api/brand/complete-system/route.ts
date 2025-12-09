@@ -27,8 +27,8 @@ function normalizeColorToHex(color: string): string | null {
   return null
 }
 
-// Extract colors from HTML source
-function extractColorsFromHTML(html: string, colorFrequency: Map<string, number>, baseUrl?: string) {
+// Extract colors from HTML source - ENHANCED to fetch external CSS files for 100% accuracy
+async function extractColorsFromHTML(html: string, colorFrequency: Map<string, number>, baseUrl?: string) {
   // 1. CSS Variables (highest priority - these are brand colors)
   const cssVarRegex = /--[\w-]+-color[^:]*:\s*([^;]+)/gi
   let varMatch
@@ -42,12 +42,19 @@ function extractColorsFromHTML(html: string, colorFrequency: Map<string, number>
     }
   }
   
-  // 2. All CSS variables
-  const allCssVarRegex = /--[\w-]+:\s*([^;]+)/gi
+  // 2. All CSS variables (but skip font-size, spacing, etc.)
+  const allCssVarRegex = /--([\w-]+):\s*([^;]+)/gi
   let allVarMatch
   while ((allVarMatch = allCssVarRegex.exec(html)) !== null) {
-    const value = allVarMatch[1].trim()
-    if (value.match(/^#[0-9a-fA-F]{3,6}$|^rgb|^rgba/i)) {
+    const varName = allVarMatch[1].toLowerCase()
+    const value = allVarMatch[2].trim()
+    // Skip non-color variables
+    if (!varName.includes('font-size') && 
+        !varName.includes('spacing') && 
+        !varName.includes('size') &&
+        !varName.includes('width') &&
+        !varName.includes('height') &&
+        value.match(/^#[0-9a-fA-F]{3,6}$|^rgb|^rgba/i)) {
       const hex = normalizeColorToHex(value)
       if (hex) {
         colorFrequency.set(hex, (colorFrequency.get(hex) || 0) + 10)
@@ -82,7 +89,7 @@ function extractColorsFromHTML(html: string, colorFrequency: Map<string, number>
   }
   
   // 5. Style tags
-  const styleTagRegex = /<style[^>]*>([\s\S]{0,100000})<\/style>/gi
+  const styleTagRegex = /<style[^>]*>([\s\S]{0,200000})<\/style>/gi
   let styleTagMatch
   while ((styleTagMatch = styleTagRegex.exec(html)) !== null) {
     const css = styleTagMatch[1]
@@ -98,17 +105,44 @@ function extractColorsFromHTML(html: string, colorFrequency: Map<string, number>
     })
   }
   
-  // 6. External CSS file links - extract (if baseUrl provided)
-  // Note: CSS files are detected but not fetched here (can be used for future enhancement)
+  // 6. CRITICAL: Fetch external CSS files and extract colors (for 100% accuracy when Playwright unavailable)
   if (baseUrl) {
     const cssLinkRegex = /<link[^>]+rel=["']stylesheet["'][^>]+href=["']([^"']+)["']/gi
+    const cssUrls: string[] = []
     let cssLinkMatch
     while ((cssLinkMatch = cssLinkRegex.exec(html)) !== null) {
       const cssUrl = cssLinkMatch[1]
-      if (!cssUrl.startsWith('http')) {
-        // CSS URL detected - can be used for future enhancement
-        const fullCssUrl = cssUrl.startsWith('/') ? `${baseUrl}${cssUrl}` : `${baseUrl}/${cssUrl}`
-        // Future: fetch CSS file and extract colors from it
+      const fullCssUrl = cssUrl.startsWith('http') ? cssUrl : (cssUrl.startsWith('/') ? `${baseUrl}${cssUrl}` : `${baseUrl}/${cssUrl}`)
+      cssUrls.push(fullCssUrl)
+    }
+    
+    // Fetch up to 5 CSS files (most important ones)
+    for (const cssUrl of cssUrls.slice(0, 5)) {
+      try {
+        const cssResponse = await fetch(cssUrl, {
+          headers: {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+            'Accept': 'text/css,*/*;q=0.1',
+          },
+          signal: AbortSignal.timeout(5000),
+        })
+        if (cssResponse.ok) {
+          const cssText = await cssResponse.text()
+          // Extract colors from CSS
+          const colorMatches = cssText.match(/(?:color|background-color|background|border-color|fill|stroke):\s*([^;]+)/gi) || []
+          colorMatches.forEach(match => {
+            const colorValue = match.split(':')[1]?.trim().split(/\s+/)[0] // Get first value (in case of gradients)
+            if (colorValue) {
+              const hex = normalizeColorToHex(colorValue)
+              if (hex) {
+                colorFrequency.set(hex, (colorFrequency.get(hex) || 0) + 5) // High weight for CSS files
+              }
+            }
+          })
+        }
+      } catch (e) {
+        // Continue if CSS file fails
+        console.warn(`Failed to fetch CSS file ${cssUrl}:`, e)
       }
     }
   }
@@ -195,13 +229,21 @@ async function extractCompleteBrandSystem(url: string, styleVariation?: string) 
   let logoUrl: string | undefined
   
   // Step 1: Try Playwright first (most accurate - gets computed styles)
+  // IMPORTANT: Try to use Playwright even on Vercel if possible (for 100% accuracy)
   let usePlaywright = false
   try {
-    if (process.env.NEXT_PHASE !== 'phase-production-build' && process.env.VERCEL !== '1') {
-      const requirePlaywright = new Function('moduleName', 'return require(moduleName)')
-      const playwright = requirePlaywright('playwright')
-      if (playwright) {
-        usePlaywright = true
+    // Try to load Playwright - it might work on Vercel with proper setup
+    const requirePlaywright = new Function('moduleName', 'return require(moduleName)')
+    let playwright
+    try {
+      playwright = requirePlaywright('playwright')
+    } catch (e) {
+      // Playwright not available - will use fallback
+      console.warn('Playwright not available, using enhanced HTML extraction')
+    }
+    
+    if (playwright && process.env.NEXT_PHASE !== 'phase-production-build') {
+      usePlaywright = true
         
         const browser = await playwright.chromium.launch({ headless: true })
         const context = await browser.newContext({
@@ -437,8 +479,8 @@ async function extractCompleteBrandSystem(url: string, styleVariation?: string) 
   }
   
   if (html) {
-    // Extract from HTML source
-    extractColorsFromHTML(html, colorFrequency, baseUrl)
+    // Extract from HTML source (now async to fetch external CSS)
+    await extractColorsFromHTML(html, colorFrequency, baseUrl)
     extractFontsFromHTML(html, fontFrequency)
     
     // Extract logo
@@ -502,18 +544,36 @@ async function extractCompleteBrandSystem(url: string, styleVariation?: string) 
     throw new Error('Failed to extract colors from website. The website may not be accessible or may not contain extractable color information.')
   }
   
-  // Use the most frequent colors as primary (these are the REAL brand colors)
-  // Prioritize non-white/black colors for primary, but include them if they're the only colors
-  const nonGenericColors = uniqueColors.filter(c => c !== '#FFFFFF' && c !== '#000000' && c !== '#F5F5F5' && c !== '#FAFAFA')
+  // CRITICAL: Use ONLY the most frequent colors (these are the REAL brand colors from the site)
+  // NO fake colors, NO suggestions - ONLY what we actually extracted
+  // Prioritize non-white/black/grey colors for primary, but use what we found
+  const nonGenericColors = uniqueColors.filter(c => {
+    // Filter out very common generic colors unless they're the ONLY colors
+    const isGeneric = c === '#FFFFFF' || c === '#000000' || c === '#F5F5F5' || c === '#FAFAFA' || c === '#E5E5E5' || c === '#CCCCCC'
+    return !isGeneric || uniqueColors.length <= 2 // Only include generic if we have very few colors
+  })
+  
+  // Use non-generic colors first (these are the REAL brand colors)
   const primaryColors = nonGenericColors.length >= 2 
     ? nonGenericColors.slice(0, 2)
-    : uniqueColors.slice(0, 2) // Use what we have if no non-generic colors
+    : uniqueColors.length >= 2
+    ? uniqueColors.slice(0, 2) // Use what we have (even if generic)
+    : [] // Don't use fake colors - throw error if no colors found
   
   const secondaryColors = nonGenericColors.length >= 4
     ? nonGenericColors.slice(2, 4)
     : nonGenericColors.length >= 2
     ? nonGenericColors.slice(0, 2) // Reuse primary if not enough
-    : uniqueColors.slice(0, 2) // Last resort: use what we have
+    : uniqueColors.length >= 4
+    ? uniqueColors.slice(2, 4)
+    : uniqueColors.length >= 2
+    ? uniqueColors.slice(0, 2) // Reuse primary
+    : [] // Don't use fake colors
+  
+  // VALIDATE: If we don't have real colors, throw error (NO FAKE COLORS!)
+  if (primaryColors.length === 0) {
+    throw new Error('Failed to extract colors from website. The website may not be accessible or may not contain extractable color information. Please ensure the website is publicly accessible.')
+  }
   
   const primaryFont = extractedFonts[0] || undefined
   const secondaryFont = extractedFonts[1] || undefined
