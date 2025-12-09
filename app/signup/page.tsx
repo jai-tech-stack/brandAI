@@ -81,8 +81,9 @@ export default function SignUpPage() {
         // Email confirmation might be required
         setError('Please check your email to confirm your account.')
       }
-    } catch (err: any) {
-      setError(err.message || 'Failed to sign up. Please try again.')
+    } catch (err: unknown) {
+      const errorMessage = err instanceof Error ? err.message : 'Failed to sign up. Please try again.'
+      setError(errorMessage)
     } finally {
       setLoading(false)
     }

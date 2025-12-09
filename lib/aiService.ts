@@ -386,7 +386,7 @@ Return only the enhanced prompt, no explanations.`
 
   // Fallback to rule-based enhancement
   let enhanced = userPrompt
-  if (brandKit.colors?.length > 0) {
+  if (brandKit.colors && brandKit.colors.length > 0) {
     enhanced += ` Use brand colors: ${brandKit.colors.slice(0, 3).join(', ')}.`
   }
   if (brandKit.style) {

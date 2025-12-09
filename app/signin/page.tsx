@@ -74,8 +74,9 @@ export default function SignInPage() {
       } else {
         throw new Error('No session created')
       }
-    } catch (err: any) {
-      setError(err.message || 'Failed to sign in. Please try again.')
+    } catch (err: unknown) {
+      const errorMessage = err instanceof Error ? err.message : 'Failed to sign in. Please try again.'
+      setError(errorMessage)
     } finally {
       setLoading(false)
     }

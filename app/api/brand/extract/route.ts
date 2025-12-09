@@ -290,8 +290,9 @@ export async function POST(request: NextRequest) {
       try {
         aiAnalysis = await analyzeBrandWithAI(html, finalColors, sortedFonts)
         aiPowered = true
-      } catch (aiError: any) {
-        console.warn('AI analysis failed, using fallback:', aiError.message)
+      } catch (aiError: unknown) {
+        const errorMsg = aiError instanceof Error ? aiError.message : 'Unknown error'
+        console.warn('AI analysis failed, using fallback:', errorMsg)
         // Fallback to rule-based analysis
         const htmlLower = html.toLowerCase()
         let style = 'Modern, Clean, Professional'
@@ -341,16 +342,17 @@ export async function POST(request: NextRequest) {
       }
 
       return NextResponse.json({ success: true, data: brandData })
-    } catch (fetchError: any) {
+    } catch (fetchError: unknown) {
+      const error = fetchError instanceof Error ? fetchError : new Error('Unknown error')
       console.error('Brand extraction fetch error:', {
-        message: fetchError.message,
-        stack: fetchError.stack,
-        name: fetchError.name,
+        message: error.message,
+        stack: error.stack,
+        name: error.name,
       })
       return NextResponse.json(
         { 
-          error: `Failed to extract brand data: ${fetchError.message || 'Unknown error'}. Please ensure the website is accessible and try again.`,
-          details: process.env.NODE_ENV === 'development' ? fetchError.stack : undefined
+          error: `Failed to extract brand data: ${error.message || 'Unknown error'}. Please ensure the website is accessible and try again.`,
+          details: process.env.NODE_ENV === 'development' ? error.stack : undefined
         },
         { status: 500 }
       )

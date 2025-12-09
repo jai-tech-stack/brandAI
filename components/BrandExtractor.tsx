@@ -64,8 +64,9 @@ export default function BrandExtractor() {
         setBrandData(result.data)
         setSourceUrl(result.data.sourceUrl || url)
       }
-    } catch (err: any) {
-      setError(err.message || 'Failed to extract brand data. Please try again.')
+    } catch (err: unknown) {
+      const errorMessage = err instanceof Error ? err.message : 'Failed to extract brand data. Please try again.'
+      setError(errorMessage)
     } finally {
       setLoading(false)
     }
@@ -111,8 +112,9 @@ export default function BrandExtractor() {
         // Refresh the page to show updated brand kits
         window.location.reload()
       }, 2000)
-    } catch (err: any) {
-      setError(err.message || 'Failed to save brand kit. Please try again.')
+    } catch (err: unknown) {
+      const errorMessage = err instanceof Error ? err.message : 'Failed to save brand kit. Please try again.'
+      setError(errorMessage)
     } finally {
       setSaving(false)
     }

@@ -57,8 +57,9 @@ export default function BrandViewerPage() {
 
       const result = await response.json()
       window.open(result.data.pdfUrl, '_blank')
-    } catch (err: any) {
-      setError(err.message || 'Failed to export PDF')
+    } catch (err: unknown) {
+      const errorMessage = err instanceof Error ? err.message : 'Failed to export PDF'
+      setError(errorMessage)
     }
   }
 

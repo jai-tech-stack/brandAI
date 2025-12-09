@@ -289,17 +289,18 @@ ${brandSystem.secondaryColors.map((c, i) => `  --color-secondary-${i + 1}: ${c};
           resultsElement.scrollIntoView({ behavior: 'smooth', block: 'start' })
         }
       }, 100)
-    } catch (err: any) {
+    } catch (err: unknown) {
       // Handle different error types
+      const error = err instanceof Error ? err : new Error('Unknown error')
       let errorMessage = 'Failed to generate complete brand system. Please try again.'
       setRegenerating(false)
       
-      if (err.message?.includes('timeout') || err.message?.includes('Timeout')) {
+      if (error.message?.includes('timeout') || error.message?.includes('Timeout')) {
         errorMessage = 'The request timed out. The website may be too complex or slow. Please try a simpler website or try again.'
-      } else if (err.message?.includes('JSON') || err.message?.includes('parse')) {
+      } else if (error.message?.includes('JSON') || error.message?.includes('parse')) {
         errorMessage = 'Server error occurred. Please try again or contact support.'
-      } else if (err.message) {
-        errorMessage = err.message
+      } else if (error.message) {
+        errorMessage = error.message
       }
       
       setError(errorMessage)

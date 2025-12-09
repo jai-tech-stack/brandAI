@@ -60,8 +60,9 @@ export default function AnalyzePage() {
         sessionStorage.setItem('brandSystem', JSON.stringify(brandResult.data))
         router.push('/brand/temp')
       }
-    } catch (err: any) {
-      setError(err.message || 'Failed to analyze website. Please try again.')
+    } catch (err: unknown) {
+      const errorMessage = err instanceof Error ? err.message : 'Failed to analyze website. Please try again.'
+      setError(errorMessage)
       setLoading(false)
     }
   }
