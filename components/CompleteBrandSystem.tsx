@@ -562,7 +562,7 @@ ${brandSystem.secondaryColors.map((c, i) => `  --color-secondary-${i + 1}: ${c};
             </div>
 
             {/* Enhanced Brand Insights */}
-            {(brandSystem.emotions?.length > 0 || brandSystem.values?.length > 0 || brandSystem.targetAudience) && (
+            {((brandSystem.emotions && brandSystem.emotions.length > 0) || (brandSystem.values && brandSystem.values.length > 0) || brandSystem.targetAudience) && (
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 {brandSystem.emotions && brandSystem.emotions.length > 0 && (
                   <div className="p-6 bg-gradient-to-br from-pink-50 to-rose-50 rounded-xl border border-pink-200">
