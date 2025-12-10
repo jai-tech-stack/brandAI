@@ -9,6 +9,27 @@ export const dynamic = 'force-dynamic'
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || ''
 const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || ''
 
+// Email notification helpers (placeholder - requires email service configuration)
+async function sendInvitationEmail(email: string, teamName: string, inviterEmail: string) {
+  // TODO: Implement with your email service (SendGrid, Resend, etc.)
+  // Example:
+  // await emailService.send({
+  //   to: email,
+  //   subject: `You've been invited to join ${teamName}`,
+  //   html: `...`
+  // })
+  console.log(`[Email] Invitation sent to ${email} for team ${teamName} by ${inviterEmail}`)
+}
+
+async function sendApprovalRequestEmail(approverEmail: string, requesterEmail: string, approvalType: string) {
+  // TODO: Implement with your email service
+  console.log(`[Email] Approval request sent to ${approverEmail} from ${requesterEmail} for ${approvalType}`)
+}
+
+async function sendApprovalResponseEmail(requesterEmail: string, status: string, comments: string) {
+  // TODO: Implement with your email service
+  console.log(`[Email] Approval response (${status}) sent to ${requesterEmail}`)
+}
 
 // Get user's teams
 export async function GET(request: NextRequest) {
@@ -200,7 +221,21 @@ export async function PUT(request: NextRequest) {
 
     if (memberError) throw memberError
 
-    // TODO: Send invitation email
+    // Send invitation email (if email service is configured)
+    try {
+      const { data: team } = await supabase
+        .from('teams')
+        .select('name')
+        .eq('id', teamId)
+        .single()
+      
+      if (team?.name) {
+        await sendInvitationEmail(email, team.name, user.email || 'Team Admin')
+      }
+    } catch (emailError) {
+      console.warn('Failed to send invitation email:', emailError)
+      // Continue even if email fails - member is still added
+    }
 
     return NextResponse.json({ success: true, data: newMember })
   } catch (error: unknown) {
@@ -311,7 +346,7 @@ export async function approvalPOST(request: NextRequest) {
     }
 
     const body = await request.json()
-    const { action, projectId, approverId, approvalId, status, comments } = body
+    const { action, projectId, approverId, approvalId, status, comments, approvalType = 'project' } = body
 
     if (action === 'request') {
       // Request approval
@@ -329,7 +364,21 @@ export async function approvalPOST(request: NextRequest) {
 
       if (error) throw error
 
-      // TODO: Send notification to approver
+      // Send notification to approver (if email service is configured)
+      try {
+        const { data: approver } = await supabase
+          .from('users')
+          .select('email')
+          .eq('id', approverId)
+          .single()
+        
+        if (approver?.email) {
+          await sendApprovalRequestEmail(approver.email, user.email || 'Team Member', approvalType)
+        }
+      } catch (emailError) {
+        console.warn('Failed to send approval request email:', emailError)
+        // Continue even if email fails
+      }
 
       return NextResponse.json({ success: true, data: approval })
     } else if (action === 'respond') {
@@ -348,7 +397,21 @@ export async function approvalPOST(request: NextRequest) {
 
       if (error) throw error
 
-      // TODO: Notify requester
+      // Notify requester of approval decision (if email service is configured)
+      try {
+        const { data: requester } = await supabase
+          .from('users')
+          .select('email')
+          .eq('id', approval.requester_id)
+          .single()
+        
+        if (requester?.email) {
+          await sendApprovalResponseEmail(requester.email, status, comments || '')
+        }
+      } catch (emailError) {
+        console.warn('Failed to send approval response email:', emailError)
+        // Continue even if email fails
+      }
 
       return NextResponse.json({ success: true, data: approval })
     } else if (action === 'list') {

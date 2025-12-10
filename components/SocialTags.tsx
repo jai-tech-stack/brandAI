@@ -9,7 +9,7 @@ const hashtags = [
   '#AITech',
   '#TechInnovation',
   '#AIRevolution',
-  '#BloomboxAI',
+  '#BrandForge',
   '#BrandAI',
   '#TechBreakthrough',
   '#Innovation',
@@ -40,7 +40,7 @@ export default function SocialTags() {
       <div className="flex items-center justify-between mb-4">
         <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
           <Twitter className="w-5 h-5 text-primary-600" />
-          Share BloomboxAI
+          Share BrandForge
         </h3>
         <button
           onClick={handleCopy}

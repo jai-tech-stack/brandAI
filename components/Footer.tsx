@@ -3,11 +3,6 @@
 import { Sparkles } from 'lucide-react'
 import Link from 'next/link'
 
-'use client'
-
-import { Sparkles } from 'lucide-react'
-import Link from 'next/link'
-
 export default function Footer() {
   return (
     <footer className="bg-white border-t border-gray-200 py-8">
@@ -26,7 +21,7 @@ export default function Footer() {
           {/* Social Media Icons */}
           <div className="flex items-center gap-4">
             <a
-              href="https://twitter.com/bloomboxai"
+              href="https://twitter.com/brandforge"
               target="_blank"
               rel="noopener noreferrer"
               className="w-8 h-8 flex items-center justify-center text-gray-600 hover:text-gray-900 transition-colors"
@@ -37,7 +32,7 @@ export default function Footer() {
               </svg>
             </a>
             <a
-              href="https://discord.gg/bloomboxai"
+              href="https://discord.gg/brandforge"
               target="_blank"
               rel="noopener noreferrer"
               className="w-8 h-8 flex items-center justify-center text-gray-600 hover:text-gray-900 transition-colors"

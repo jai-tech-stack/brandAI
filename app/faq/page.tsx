@@ -10,12 +10,12 @@ const faqs = [
     category: 'Getting Started',
     questions: [
       {
-        q: 'How does BloomboxAI work?',
+        q: 'How does BrandForge work?',
         a: 'Simply enter your website URL. Our autonomous AI agents analyze your site, extract colors, fonts, and content, then generate a complete brand system including logos, templates, and messaging suggestions—all in seconds.',
       },
       {
-        q: 'Do I need design skills to use BloomboxAI?',
-        a: 'No! BloomboxAI is designed for non-designers. Just enter your website URL and get a complete brand system automatically. No design skills required.',
+        q: 'Do I need design skills to use BrandForge?',
+        a: 'No! BrandForge is designed for non-designers. Just enter your website URL and get a complete brand system automatically. No design skills required.',
       },
       {
         q: 'How long does it take to generate a brand system?',
@@ -28,7 +28,7 @@ const faqs = [
     questions: [
       {
         q: 'How unique are the generated logos and designs?',
-        a: 'AI-generated designs are professional starting points. Real users report getting cohesive brand kits quickly, but for truly unique, memorable brand identities, manual refinement is recommended. BloomboxAI is perfect for MVPs and early-stage projects—many users generate in hours what would take weeks with designers.',
+        a: 'AI-generated designs are professional starting points. Real users report getting cohesive brand kits quickly, but for truly unique, memorable brand identities, manual refinement is recommended. BrandForge is perfect for MVPs and early-stage projects—many users generate in hours what would take weeks with designers.',
       },
       {
         q: 'Will the templates work across all platforms?',
@@ -40,7 +40,7 @@ const faqs = [
       },
       {
         q: 'Do the outputs look generic or template-driven?',
-        a: 'AI tools can produce similar-looking outputs. BloomboxAI generates based on YOUR unique website, which helps. However, for maximum uniqueness, we recommend refining outputs manually. Many users successfully use AI outputs as a foundation, then customize for distinctiveness.',
+        a: 'AI tools can produce similar-looking outputs. BrandForge generates based on YOUR unique website, which helps. However, for maximum uniqueness, we recommend refining outputs manually. Many users successfully use AI outputs as a foundation, then customize for distinctiveness.',
       },
     ],
   },
@@ -65,19 +65,19 @@ const faqs = [
     category: 'Best Use Cases',
     questions: [
       {
-        q: 'Who is BloomboxAI best for?',
+        q: 'Who is BrandForge best for?',
         a: 'Perfect for indie developers, solo founders, small startups, content creators, and anyone who needs professional branding fast without design skills or large budgets. Real users report building complete brand kits in hours instead of weeks, at a fraction of designer costs.',
       },
       {
-        q: 'Is BloomboxAI suitable for established brands?',
-        a: 'BloomboxAI is best for MVPs, early-stage projects, and rapid prototyping. Real user feedback shows AI tools shine for prototypes and early-stage, but established brands typically need more custom, unique branding. Many users use AI as a starting point, then refine with human designers.',
+        q: 'Is BrandForge suitable for established brands?',
+        a: 'BrandForge is best for MVPs, early-stage projects, and rapid prototyping. Real user feedback shows AI tools shine for prototypes and early-stage, but established brands typically need more custom, unique branding. Many users use AI as a starting point, then refine with human designers.',
       },
       {
         q: 'What if my website is minimal or poorly designed?',
         a: 'The quality of your website affects the output. For best results, ensure your website represents your brand well. Consider refining your site before generating a brand system. Better input = better output.',
       },
       {
-        q: 'Can I use BloomboxAI for long-term brand identity?',
+        q: 'Can I use BrandForge for long-term brand identity?',
         a: 'AI tools are great for MVPs and early-stage, but for long-term brand building (uniqueness, emotional resonance, print materials), treat AI output as a starting point. Plan to refine design manually or with a human designer for final brand identity.',
       },
     ],
@@ -87,7 +87,7 @@ const faqs = [
     questions: [
       {
         q: 'What if Supabase is not configured?',
-        a: 'BloomboxAI works in demo mode without authentication. You can test brand generation, but full features (saving projects, user accounts) require Supabase setup.',
+        a: 'BrandForge works in demo mode without authentication. You can test brand generation, but full features (saving projects, user accounts) require Supabase setup.',
       },
       {
         q: 'Can I regenerate brand systems?',
@@ -121,7 +121,7 @@ export default function FAQPage() {
               Everything You Need to Know
             </h1>
             <p className="text-xl text-gray-600">
-              Transparent answers about BloomboxAI's capabilities, limitations, and best use cases
+              Transparent answers about BrandForge's capabilities, limitations, and best use cases
             </p>
           </motion.div>
 
@@ -137,7 +137,7 @@ export default function FAQPage() {
               <div>
                 <h3 className="font-bold text-blue-900 mb-2">Transparency Notice</h3>
                 <p className="text-blue-800 text-sm leading-relaxed mb-3">
-                  BloomboxAI is designed for speed, accessibility, and rapid iteration. Based on real user feedback: AI tools excel at rapid brand-kit creation (hours vs. weeks) and cost-effectiveness, but outputs may need refinement for uniqueness. Perfect for MVPs, early-stage projects, and rapid prototyping. For long-term brand identity, treat AI output as a starting point and refine with human design expertise.
+                  BrandForge is designed for speed, accessibility, and rapid iteration. Based on real user feedback: AI tools excel at rapid brand-kit creation (hours vs. weeks) and cost-effectiveness, but outputs may need refinement for uniqueness. Perfect for MVPs, early-stage projects, and rapid prototyping. For long-term brand identity, treat AI output as a starting point and refine with human design expertise.
                 </p>
                 <div className="bg-blue-100 rounded-lg p-3 mt-3">
                   <p className="text-blue-900 text-xs font-semibold mb-1">Real User Insights:</p>

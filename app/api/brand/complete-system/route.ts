@@ -910,34 +910,73 @@ export async function POST(request: NextRequest) {
       throw extractError // Re-throw to be caught by outer catch
     }
 
-    // Step 2: Generate all brand assets (logo, moodboard, templates, pitch-deck)
+    // Step 2: Generate 3 intelligent starter assets (better than competitor)
+    // Competitor generates random 3 assets - we generate smart ones based on brand type
+    let starterAssets: any[] = []
     let assets: any[] = []
+    
+    // Only generate starter assets if user is authenticated (for credit tracking)
+    if (userId) {
+      try {
+        const { generateStarterAssets } = await import('@/lib/generators/generateStarterAssets')
+        const { hasEnoughCredits, deductCredits } = await import('@/lib/credits/creditManager')
+        
+        // Check if user has enough credits (3 credits for 3 starter assets)
+        const hasCredits = await hasEnoughCredits(userId, 3)
+        
+        if (hasCredits) {
+          // Generate intelligent starter assets based on brand type
+          starterAssets = await generateStarterAssets(brandSystem)
+          
+          // Deduct credits for each successful asset generation
+          for (const asset of starterAssets) {
+            if (asset.imageUrl) {
+              await deductCredits(userId, 1, undefined, undefined, `Starter asset: ${asset.name}`)
+            }
+          }
+        } else {
+          console.warn('User does not have enough credits for starter assets')
+        }
+      } catch (starterError) {
+        console.warn('Starter asset generation failed, continuing with brand system:', starterError)
+        // Continue without starter assets - brand system is still complete
+      }
+    }
+    
+    // Also generate traditional brand assets (logo, moodboard, etc.) if time permits
     try {
-      // Generate assets with a shorter timeout to prevent overall timeout
       const assetsPromise = generateAllBrandAssets(brandSystem)
       const assetsTimeout = new Promise((_, reject) => {
-        setTimeout(() => reject(new Error('Asset generation timeout')), 20000) // 20 second timeout for assets
+        setTimeout(() => reject(new Error('Asset generation timeout')), 15000) // 15 second timeout
       })
       
       try {
         assets = await Promise.race([assetsPromise, assetsTimeout]) as any[]
       } catch (assetError) {
-        console.warn('Asset generation timed out or failed, continuing with brand system:', assetError)
-        // Continue without assets - brand system is still complete
-        assets = []
+        console.warn('Traditional asset generation timed out or failed:', assetError)
+        // Continue without traditional assets
       }
     } catch (assetError) {
-      console.warn('Asset generation failed, continuing with brand system:', assetError)
-      assets = []
+      console.warn('Traditional asset generation failed:', assetError)
     }
+    
+    // Combine starter assets with traditional assets
+    const allAssets = [...starterAssets, ...assets]
 
     const completeSystem = {
       ...brandSystem,
-      assets,
+      assets: allAssets,
+      starterAssets: starterAssets, // Separate starter assets for UI display
       generatedAt: new Date().toISOString(),
       aiPowered: true,
       autonomous: true,
-      note: assets.length === 0 ? 'Brand system extracted successfully. Assets can be generated on-demand via the asset generator.' : undefined,
+      starterAssetsGenerated: starterAssets.length > 0,
+      creditsUsed: starterAssets.length, // Track credits used
+      note: allAssets.length === 0 
+        ? 'Brand system extracted successfully. Assets can be generated on-demand via the asset generator.' 
+        : starterAssets.length > 0 
+          ? `Generated ${starterAssets.length} intelligent starter assets based on your brand type.` 
+          : undefined,
     }
 
     // Save to database if user is logged in

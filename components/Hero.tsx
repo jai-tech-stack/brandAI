@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
-import { ArrowRight, Loader2 } from 'lucide-react'
+import { ArrowRight, Loader2, Sparkles } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { supabaseClient } from '@/lib/auth/supabaseAuth'
 
@@ -130,99 +130,142 @@ export default function Hero() {
   }
 
   return (
-    <div className="relative overflow-hidden bg-white min-h-[90vh] flex items-center">
-      {/* Beautiful illustrated background - serene landscape */}
-      <div className="absolute inset-0 overflow-hidden">
-        {/* Simplified gradient background with nature-inspired colors */}
-        <div className="absolute inset-0 bg-gradient-to-b from-green-50/30 via-purple-50/20 to-blue-50/30"></div>
-        
-        {/* Decorative elements - simplified */}
-        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-purple-200/10 rounded-full blur-3xl"></div>
-        <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-green-200/10 rounded-full blur-3xl"></div>
-      </div>
+    <div className="relative overflow-hidden bg-gradient-to-br from-gray-50 via-white to-violet-50/30 min-h-[92vh] flex items-center">
+      {/* Animated gradient mesh background */}
+      <div className="absolute inset-0 gradient-mesh opacity-60"></div>
       
-      <div className="relative z-10 w-full max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
+      {/* Floating orbs for visual interest */}
+      <div className="absolute top-20 left-10 w-72 h-72 bg-violet-200/30 rounded-full blur-3xl animate-pulse"></div>
+      <div className="absolute bottom-20 right-10 w-96 h-96 bg-purple-200/30 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }}></div>
+      
+      <div className="relative z-10 w-full max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
+          initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6 }}
+          transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
           className="text-center"
         >
-          {/* Main Headline - Large serif font */}
-          <h1 className="text-6xl sm:text-7xl md:text-8xl lg:text-9xl font-serif font-bold text-gray-900 mb-4 leading-tight">
-            Brand Assets
+          {/* Badge */}
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ delay: 0.2, duration: 0.5 }}
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-violet-100/80 backdrop-blur-sm border border-violet-200/50 mb-8"
+          >
+            <Sparkles className="w-4 h-4 text-violet-600" />
+            <span className="text-sm font-medium text-violet-700">AI-Powered Brand Creation</span>
+          </motion.div>
+
+          {/* Main Headline - Modern, bold typography */}
+          <h1 className="text-6xl sm:text-7xl md:text-8xl lg:text-9xl font-bold tracking-tight mb-8 leading-[0.95]">
+            <span className="block text-gray-900">Transform</span>
+            <span className="block gradient-text">Your Brand</span>
+            <span className="block text-gray-900">in Seconds</span>
           </h1>
           
-          {/* Sub-headline - Purple italicized */}
-          <h2 className="text-4xl sm:text-5xl md:text-6xl font-serif font-normal italic text-purple-600 mb-8">
-            made effortless
-          </h2>
-          
-          {/* Descriptive Text - Simple and clean */}
-          <p className="text-lg sm:text-xl md:text-2xl text-gray-700 max-w-2xl mx-auto mb-12 leading-relaxed">
-            Distill your website into a living brand system.
-            <br />
-            Generate brand assets in seconds.
+          {/* Descriptive Text */}
+          <p className="text-xl sm:text-2xl text-gray-600 max-w-3xl mx-auto mb-12 leading-relaxed font-light">
+            Extract your complete brand DNA—colors, fonts, logos, and style. 
+            <span className="font-medium text-gray-900"> Edit in real-time</span> and generate unlimited on-brand assets.
           </p>
 
-          {/* Input Field - Clean and prominent */}
-          <div className="max-w-2xl mx-auto mb-6">
-            <div className="flex gap-3 items-center bg-white rounded-2xl shadow-lg border border-gray-200 p-2">
-              <input
-                type="text"
-                placeholder="yourwebsite.com"
-                value={url}
-                onChange={(e) => setUrl(e.target.value)}
-                onKeyPress={(e) => {
-                  if (e.key === 'Enter' && !loading) {
-                    handleGenerate()
-                  }
-                }}
-                disabled={loading}
-                className="flex-1 px-6 py-4 text-lg border-none outline-none bg-transparent text-gray-900 placeholder-gray-400 disabled:opacity-50"
-              />
-              <button
-                onClick={handleGenerate}
-                disabled={loading || !url.trim()}
-                className="w-12 h-12 bg-purple-600 hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed rounded-xl flex items-center justify-center text-white transition-colors shadow-md"
-              >
-                {loading ? (
-                  <Loader2 className="w-5 h-5 animate-spin" />
-                ) : (
-                  <ArrowRight className="w-5 h-5" />
-                )}
-              </button>
-            </div>
+          {/* Modern input field with glass effect */}
+          <div className="max-w-2xl mx-auto mb-8">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.4, duration: 0.6 }}
+              className="glass rounded-2xl p-2 shadow-modern-xl"
+            >
+              <div className="flex gap-2 items-center">
+                <input
+                  type="text"
+                  placeholder="Enter your website URL..."
+                  value={url}
+                  onChange={(e) => setUrl(e.target.value)}
+                  onKeyPress={(e) => {
+                    if (e.key === 'Enter' && !loading) {
+                      handleGenerate()
+                    }
+                  }}
+                  disabled={loading}
+                  className="flex-1 px-6 py-5 text-lg border-none outline-none bg-transparent text-gray-900 placeholder-gray-400 disabled:opacity-50 font-normal"
+                />
+                <motion.button
+                  onClick={handleGenerate}
+                  disabled={loading || !url.trim()}
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  className="btn-modern min-w-[140px] disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
+                >
+                  <span className="flex items-center justify-center gap-2">
+                    {loading ? (
+                      <>
+                        <Loader2 className="w-5 h-5 animate-spin" />
+                        <span>Generating</span>
+                      </>
+                    ) : (
+                      <>
+                        <span>Generate</span>
+                        <ArrowRight className="w-5 h-5" />
+                      </>
+                    )}
+                  </span>
+                </motion.button>
+              </div>
+            </motion.div>
             
-            {/* Progress Indicator */}
+            {/* Modern progress indicator */}
             {progress && loading && (
-              <div className="mt-4 max-w-2xl mx-auto">
-                <div className="flex items-center justify-between mb-2">
-                  <span className="text-sm text-gray-600">{progress.message}</span>
-                  <span className="text-sm font-medium text-purple-600">{progress.progress}%</span>
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="mt-6 max-w-2xl mx-auto"
+              >
+                <div className="flex items-center justify-between mb-3">
+                  <motion.span
+                    key={progress.message}
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    className="text-sm font-medium text-gray-700"
+                  >
+                    {progress.message}
+                  </motion.span>
+                  <span className="text-sm font-mono font-semibold text-violet-600">
+                    {progress.progress}%
+                  </span>
                 </div>
-                <div className="w-full bg-gray-200 rounded-full h-2 overflow-hidden">
-                  <div
-                    className="bg-gradient-to-r from-purple-600 to-pink-600 h-2 rounded-full transition-all duration-300"
-                    style={{ width: `${progress.progress}%` }}
+                <div className="w-full bg-gray-100 rounded-full h-2 overflow-hidden">
+                  <motion.div
+                    initial={{ width: 0 }}
+                    animate={{ width: `${progress.progress}%` }}
+                    transition={{ duration: 0.5, ease: "easeOut" }}
+                    className="h-full rounded-full bg-gradient-to-r from-violet-600 to-purple-600"
                   />
                 </div>
-              </div>
+              </motion.div>
             )}
             
             {error && (
-              <div className="mt-4 max-w-2xl mx-auto p-4 bg-red-50 border border-red-200 rounded-xl">
-                <p className="text-red-600 text-sm">{error}</p>
-              </div>
+              <motion.div
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="mt-4 max-w-2xl mx-auto p-4 bg-red-50 border border-red-200 rounded-xl"
+              >
+                <p className="text-red-700 text-sm font-medium">{error}</p>
+              </motion.div>
             )}
           </div>
 
-          {/* "or continue with" option */}
+          {/* Recent brands */}
           {recentBrands.length > 0 && (
-            <>
-              <p className="text-gray-500 mb-4">or continue with</p>
-              
-              {/* Recent brand dropdown */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.6 }}
+              className="mt-8"
+            >
+              <p className="text-sm text-gray-500 mb-3">or continue with</p>
               <div className="max-w-xs mx-auto">
                 <select
                   onChange={(e) => {
@@ -230,7 +273,7 @@ export default function Hero() {
                       router.push(`/brand/${e.target.value}`)
                     }
                   }}
-                  className="w-full bg-white rounded-xl shadow-md border border-gray-200 p-4 cursor-pointer hover:shadow-lg transition-shadow text-gray-600 outline-none"
+                  className="w-full glass rounded-xl p-3 cursor-pointer hover:shadow-modern-lg transition-modern text-gray-700 outline-none border-0 font-medium"
                 >
                   <option value="">Recent brand</option>
                   {recentBrands.map((brand) => (
@@ -240,7 +283,7 @@ export default function Hero() {
                   ))}
                 </select>
               </div>
-            </>
+            </motion.div>
           )}
         </motion.div>
       </div>

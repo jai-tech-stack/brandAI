@@ -6,74 +6,74 @@ import { Palette, Type, Image as ImageIcon, Layers, FileText, Presentation, Inst
 const features = [
   {
     icon: Palette,
-    title: 'Brand Primary & Secondary Colors',
-    description: 'Autonomous AI agent extracts your exact color palette from your website—primary, secondary, and accent colors automatically identified and categorized with 100% accuracy.',
+    title: 'Live Color Editor',
+    description: 'Extract colors with 100% accuracy, then edit them in real-time. Add, remove, or modify colors before generating assets—only BrandForge offers this.',
     color: 'primary',
   },
   {
     icon: ImageIcon,
-    title: 'Logo Concepts & Alternatives',
-    description: 'Agentic AI generates logo directions and alternatives based on your existing brand identity—endless variations created autonomously, all perfectly on-brand.',
+    title: 'Unlimited Logo Regeneration',
+    description: 'Generate logo concepts, then regenerate endlessly until perfect. Pro users get unlimited regenerations—no credit limits on style variations.',
     color: 'purple',
   },
   {
     icon: Type,
-    title: 'Typography Pairings',
-    description: 'Autonomous AI agent extracts perfect font combinations from your site, with intelligent pairing suggestions optimized for all brand assets.',
+    title: 'Editable Typography System',
+    description: 'Extract fonts with clean, URL-decoded names (not encoded strings). Edit primary and secondary fonts in real-time with our brand editor.',
     color: 'pink',
   },
   {
     icon: Layers,
-    title: 'Visual Moodboard',
-    description: 'AI agent autonomously creates complete visual identity system with moodboards, style guides, and brand aesthetic suggestions—all generated automatically.',
+    title: 'Complete Visual Identity',
+    description: 'Get moodboards, style guides, and brand aesthetics—all generated automatically. Then refine and perfect with our live editor before exporting.',
     color: 'blue',
   },
   {
     icon: FileText,
-    title: 'Banner & Ad Templates',
-    description: 'Agentic AI generates professional banner and ad templates autonomously—all perfectly on-brand and ready to customize for your campaigns.',
+    title: '10 Social Templates (vs. 5)',
+    description: 'Instagram, Twitter, LinkedIn, TikTok, Stories, Reels, Pinterest, Facebook, YouTube, and Hero Banners. More templates than any competitor.',
     color: 'yellow',
   },
   {
     icon: Instagram,
-    title: 'Social Media Templates',
-    description: 'Autonomous AI agent creates social content templates for Instagram, Twitter, LinkedIn—all perfectly on-brand and ready to use across platforms.',
+    title: 'Real-Time Progress Tracking',
+    description: 'Watch your brand system generate with live progress updates. Know exactly what\'s happening at each step—no black box, full transparency.',
     color: 'green',
   },
   {
     icon: Presentation,
-    title: 'Pitch-Deck Visual Kit',
-    description: 'Agentic AI autonomously generates professional pitch-deck visuals, brand messaging suggestions, and complete visual identity—all in one click.',
+    title: 'Multiple Export Formats',
+    description: 'Export to PDF, CSS, SCSS, Tailwind, Figma, or Sketch. Full ownership, zero restrictions. Use your brand assets anywhere, any way you want.',
     color: 'indigo',
   },
   {
     icon: Sparkles,
-    title: 'Brand Tone & Messaging',
-    description: 'Autonomous AI agent analyzes brand tone and generates messaging suggestions that align perfectly with your visual identity—all done automatically.',
+    title: 'Smart Error Handling',
+    description: 'If generation fails, credits are automatically refunded. Get helpful error messages with actionable suggestions—not just generic errors.',
     color: 'purple',
   },
 ]
 
 export default function Features() {
   return (
-    <section id="features" className="py-24 bg-white">
+    <section id="features" className="py-32 bg-white">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.6 }}
-          className="text-center mb-16"
+          className="text-center mb-20"
         >
-          <h2 className="text-4xl sm:text-5xl font-bold text-gray-900 mb-4">
-            Everything You Need in One Brand System
+          <h2 className="text-5xl sm:text-6xl font-light text-gray-900 mb-6 tracking-tight">
+            Everything you need
           </h2>
-          <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-            Transform your website into a living brand system with colors, logos, typography, and templates—all generated in seconds.
+          <p className="text-lg text-gray-500 max-w-xl mx-auto font-light">
+            Complete brand systems with colors, fonts, logos, and templates—all generated in seconds.
           </p>
         </motion.div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
           {features.map((feature, index) => {
             const Icon = feature.icon
             const colorClasses = {
@@ -92,14 +92,14 @@ export default function Features() {
                 initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
-                transition={{ duration: 0.6, delay: index * 0.1 }}
-                className="group p-6 rounded-xl border border-gray-200 hover:border-primary-300 hover:shadow-xl transition-all bg-white"
+                transition={{ duration: 0.4, delay: index * 0.05 }}
+                className="group"
               >
-                <div className={`w-12 h-12 ${colorClasses[feature.color as keyof typeof colorClasses]} rounded-lg flex items-center justify-center mb-4 group-hover:scale-110 transition-transform`}>
-                  <Icon className="w-6 h-6" />
+                <div className="w-10 h-10 mb-4 text-gray-400">
+                  <Icon className="w-10 h-10" />
                 </div>
-                <h3 className="text-lg font-bold text-gray-900 mb-2">{feature.title}</h3>
-                <p className="text-sm text-gray-600 leading-relaxed">{feature.description}</p>
+                <h3 className="text-lg font-medium text-gray-900 mb-2">{feature.title}</h3>
+                <p className="text-sm text-gray-500 leading-relaxed">{feature.description}</p>
               </motion.div>
             )
           })}

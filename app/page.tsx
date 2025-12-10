@@ -1,25 +1,11 @@
 'use client'
 
-import { useState } from 'react'
-import { motion } from 'framer-motion'
-import Navigation from '@/components/Navigation'
-import Hero from '@/components/Hero'
-import Features from '@/components/Features'
-import HowItWorks from '@/components/HowItWorks'
-import WhyBloomboxAI from '@/components/WhyBloomboxAI'
-import Pricing from '@/components/Pricing'
-import CompleteBrandSystem from '@/components/CompleteBrandSystem'
-import Footer from '@/components/Footer'
-
-'use client'
-
 import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import Navigation from '@/components/Navigation'
 import Hero from '@/components/Hero'
 import Features from '@/components/Features'
 import HowItWorks from '@/components/HowItWorks'
-import WhyBloomboxAI from '@/components/WhyBloomboxAI'
 import Pricing from '@/components/Pricing'
 import CompleteBrandSystem from '@/components/CompleteBrandSystem'
 import Footer from '@/components/Footer'
@@ -59,7 +45,6 @@ export default function Home() {
           <>
             <Features />
             <HowItWorks />
-            <WhyBloomboxAI />
             <Pricing />
           </>
         )}

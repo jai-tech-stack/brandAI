@@ -3,7 +3,7 @@
 import { motion } from 'framer-motion'
 import { CheckCircle2, Users, Zap, Award } from 'lucide-react'
 
-export default function WhyBloomboxAI() {
+export default function WhyBrandForge() {
   return (
     <section className="py-24 bg-gradient-to-b from-white to-gray-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -14,26 +14,29 @@ export default function WhyBloomboxAI() {
           className="text-center mb-16"
         >
           <h2 className="text-4xl sm:text-5xl font-bold text-gray-900 mb-4">
-            Why BloomboxAI is Blowing Up
+            Why BrandForge Beats the Competition
           </h2>
+          <p className="text-xl text-gray-600 max-w-3xl mx-auto mb-8">
+            We're not just another brand generator. We're the only platform that gives you <span className="font-semibold text-purple-600">complete control</span> over your brand before you generate assets.
+          </p>
         </motion.div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-16">
           {[
             {
               icon: Users,
-              title: 'Every Startup Needs Branding',
-              description: 'But hiring a designer is expensive and slow. BloomboxAI gives you a professional brand system in minutes.',
+              title: 'Live Brand Editor (We\'re the Only One)',
+              description: 'Edit colors and fonts in real-time before generating assets. Other tools lock you into their output—we give you control.',
             },
             {
               icon: Zap,
-              title: 'Launch Fast & Iterate Fast',
-              description: 'AI lets you get a complete brand identity instantly, then regenerate and refine endlessly—no extra cost.',
+              title: '10 Social Templates vs. Their 5',
+              description: 'More templates, unlimited regenerations, and real-time progress tracking. We don\'t just generate—we help you perfect.',
             },
             {
               icon: Award,
-              title: 'Genuinely Good Results',
-              description: 'Not random collages—the AI pulls your site\'s content, tone, and visual cues, then extends it into a consistent brand identity.',
+              title: '100% Accurate Extraction',
+              description: 'Multi-method color extraction, URL-decoded fonts, and intelligent filtering. We get your brand right the first time, every time.',
             },
           ].map((reason, index) => {
             const Icon = reason.icon
@@ -63,7 +66,7 @@ export default function WhyBloomboxAI() {
           viewport={{ once: true }}
           className="bg-gradient-to-br from-primary-50 to-purple-50 rounded-2xl p-8 md:p-12 border border-primary-200"
         >
-          <h3 className="text-2xl font-bold text-gray-900 mb-6 text-center">Who is BloomboxAI Perfect For?</h3>
+          <h3 className="text-2xl font-bold text-gray-900 mb-6 text-center">Who is BrandForge Perfect For?</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {[
               'Indie developers',
@@ -91,7 +94,7 @@ export default function WhyBloomboxAI() {
           <div className="bg-blue-50 border-2 border-blue-200 rounded-2xl p-6">
             <h3 className="text-lg font-bold text-blue-900 mb-3">💡 Important to Know</h3>
             <p className="text-blue-800 text-sm leading-relaxed mb-3">
-              BloomboxAI generates professional brand systems quickly—perfect for MVPs, early-stage projects, and rapid iteration. AI outputs are great starting points that may need refinement for truly unique brand identities. For established brands or highly custom needs, consider combining AI generation with human design expertise.
+              BrandForge generates professional brand systems quickly—perfect for MVPs, early-stage projects, and rapid iteration. AI outputs are great starting points that may need refinement for truly unique brand identities. For established brands or highly custom needs, consider combining AI generation with human design expertise.
             </p>
             <p className="text-blue-700 text-xs">
               <strong>Best for:</strong> Indie builders, startups, content creators | <strong>Consider refinement for:</strong> Highly unique identities, complex brand strategies, legal requirements
@@ -109,7 +112,7 @@ export default function WhyBloomboxAI() {
           <div className="inline-block bg-white rounded-2xl p-8 shadow-xl border-2 border-primary-200">
             <p className="text-xl font-bold text-gray-900 mb-2">🪄 One-Sentence Summary</p>
             <p className="text-2xl text-gray-800 mb-4">
-              <strong className="text-primary-600">BloomboxAI = "Turning branding from a week-long process into a few minutes."</strong>
+              <strong className="text-primary-600">BrandForge = "Turning branding from a week-long process into a few minutes."</strong>
             </p>
             <p className="text-lg text-gray-600">
               In the AI era, even branding is automatic now.

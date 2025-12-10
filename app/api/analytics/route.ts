@@ -71,10 +71,27 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Failed to fetch projects' }, { status: 500 })
     }
 
-    // Get exports/views from a separate table if it exists, or calculate from projects
-    // For now, we'll use mock data for exports/views as they might be tracked separately
-    const totalDownloads = 0 // TODO: Track downloads separately
-    const totalViews = 0 // TODO: Track views separately
+    // Track downloads and views from assets table
+    const projectIds = (projects || []).map((p: any) => p.id)
+    let totalDownloads = 0
+    let totalViews = 0
+    
+    if (projectIds.length > 0) {
+      const { data: assets, error: assetsError } = await supabase
+        .from('assets')
+        .select('download_count, view_count')
+        .in('project_id', projectIds)
+      
+      if (!assetsError && assets) {
+        totalDownloads = assets.reduce((sum: number, asset: any) => sum + (asset.download_count || 0), 0)
+        totalViews = assets.reduce((sum: number, asset: any) => sum + (asset.view_count || 0), 0)
+      }
+      
+      // Also count project views if available
+      if (projects) {
+        totalViews += projects.reduce((sum: number, project: any) => sum + (project.view_count || 0), 0)
+      }
+    }
 
     // Process analytics data
     const analytics = processAnalytics(projects || [], totalDownloads, totalViews)

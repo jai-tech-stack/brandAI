@@ -89,7 +89,7 @@ export default function Pricing() {
             <div className="relative z-10">
               <div className="mb-4">
                 <h3 className="text-2xl font-bold text-gray-900 mb-1">Free</h3>
-                <p className="text-sm text-gray-600">Get started with BloomboxAI</p>
+                <p className="text-sm text-gray-600">Get started with BrandForge</p>
               </div>
               <div className="mb-6">
                 <span className="text-5xl font-bold text-gray-900">$0</span>

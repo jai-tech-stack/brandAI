@@ -141,7 +141,7 @@ export default function BrandViewerPage() {
             <div>
               <h3 className="text-lg font-semibold text-gray-700 mb-4">Primary Colors</h3>
               <div className="flex flex-wrap gap-4">
-                {brandSystem.colors.primary.map((color, index) => (
+                {(brandSystem.primaryColors || brandSystem.colors?.primary || []).map((color: string, index: number) => (
                   <div key={index} className="flex flex-col items-center">
                     <div
                       className="w-20 h-20 rounded-lg border-2 border-gray-300 shadow-md"
@@ -156,7 +156,7 @@ export default function BrandViewerPage() {
             <div>
               <h3 className="text-lg font-semibold text-gray-700 mb-4">Secondary Colors</h3>
               <div className="flex flex-wrap gap-4">
-                {brandSystem.colors.secondary.map((color, index) => (
+                {(brandSystem.secondaryColors || brandSystem.colors?.secondary || []).map((color: string, index: number) => (
                   <div key={index} className="flex flex-col items-center">
                     <div
                       className="w-20 h-20 rounded-lg border-2 border-gray-300 shadow-md"
@@ -187,12 +187,12 @@ export default function BrandViewerPage() {
               <h3 className="text-lg font-semibold text-gray-700 mb-4">Primary Font</h3>
               <p
                 className="text-4xl font-bold mb-2"
-                style={{ fontFamily: brandSystem.typography.primary.name }}
+                style={{ fontFamily: brandSystem.primaryFont || brandSystem.typography?.primary?.name || 'Arial' }}
               >
-                {brandSystem.typography.primary.name}
+                {brandSystem.primaryFont || brandSystem.typography?.primary?.name || 'Arial'}
               </p>
               <p className="text-sm text-gray-600">
-                Weights: {brandSystem.typography.primary.weights.join(', ')}
+                {brandSystem.typography?.primary?.weights ? `Weights: ${brandSystem.typography.primary.weights.join(', ')}` : 'Font family'}
               </p>
             </div>
 
@@ -200,12 +200,12 @@ export default function BrandViewerPage() {
               <h3 className="text-lg font-semibold text-gray-700 mb-4">Secondary Font</h3>
               <p
                 className="text-3xl mb-2"
-                style={{ fontFamily: brandSystem.typography.secondary.name }}
+                style={{ fontFamily: brandSystem.secondaryFont || brandSystem.typography?.secondary?.name || 'Arial' }}
               >
-                {brandSystem.typography.secondary.name}
+                {brandSystem.secondaryFont || brandSystem.typography?.secondary?.name || 'Arial'}
               </p>
               <p className="text-sm text-gray-600">
-                Weights: {brandSystem.typography.secondary.weights.join(', ')}
+                {brandSystem.typography?.secondary?.weights ? `Weights: ${brandSystem.typography.secondary.weights.join(', ')}` : 'Font family'}
               </p>
             </div>
           </div>
@@ -224,21 +224,53 @@ export default function BrandViewerPage() {
           </div>
 
           <div className="space-y-6">
-            <div>
-              <h3 className="text-lg font-semibold text-gray-700 mb-2">Tagline</h3>
-              <p className="text-xl text-gray-900">{brandSystem.voice.tagline}</p>
-            </div>
+            {brandSystem.brandTone && (
+              <div>
+                <h3 className="text-lg font-semibold text-gray-700 mb-2">Brand Tone</h3>
+                <p className="text-xl text-gray-900">{brandSystem.brandTone}</p>
+              </div>
+            )}
+            
+            {brandSystem.brandPersonality && (
+              <div>
+                <h3 className="text-lg font-semibold text-gray-700 mb-2">Brand Personality</h3>
+                <p className="text-gray-700">{brandSystem.brandPersonality}</p>
+              </div>
+            )}
 
-            <div>
-              <h3 className="text-lg font-semibold text-gray-700 mb-2">Elevator Pitch</h3>
-              <p className="text-gray-700">{brandSystem.voice.elevatorPitch}</p>
-            </div>
+            {brandSystem.messaging && brandSystem.messaging.length > 0 && (
+              <div>
+                <h3 className="text-lg font-semibold text-gray-700 mb-3">Messaging</h3>
+                <ul className="space-y-2">
+                  {brandSystem.messaging.map((msg: string, index: number) => (
+                    <li key={index} className="flex items-start gap-2">
+                      <span className="text-primary-600 mt-1">•</span>
+                      <span className="text-gray-700">{msg}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
 
-            {brandSystem.voice.valueProps.length > 0 && (
+            {brandSystem.voice?.tagline && (
+              <div>
+                <h3 className="text-lg font-semibold text-gray-700 mb-2">Tagline</h3>
+                <p className="text-xl text-gray-900">{brandSystem.voice.tagline}</p>
+              </div>
+            )}
+
+            {brandSystem.voice?.elevatorPitch && (
+              <div>
+                <h3 className="text-lg font-semibold text-gray-700 mb-2">Elevator Pitch</h3>
+                <p className="text-gray-700">{brandSystem.voice.elevatorPitch}</p>
+              </div>
+            )}
+
+            {brandSystem.voice?.valueProps && brandSystem.voice.valueProps.length > 0 && (
               <div>
                 <h3 className="text-lg font-semibold text-gray-700 mb-3">Value Propositions</h3>
                 <ul className="space-y-2">
-                  {brandSystem.voice.valueProps.map((prop, index) => (
+                  {brandSystem.voice.valueProps.map((prop: string, index: number) => (
                     <li key={index} className="flex items-start gap-2">
                       <span className="text-primary-600 mt-1">•</span>
                       <span className="text-gray-700">{prop}</span>
