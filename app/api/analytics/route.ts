@@ -153,10 +153,8 @@ function processAnalytics(
 
   // Get export formats (mock data for now - should track separately)
   const exportFormats = [
-    { format: 'PDF', count: Math.floor(totalGenerations * 0.4) },
-    { format: 'CSS', count: Math.floor(totalGenerations * 0.3) },
-    { format: 'JSON', count: Math.floor(totalGenerations * 0.2) },
-    { format: 'Figma', count: Math.floor(totalGenerations * 0.1) },
+    { format: 'PDF', count: Math.floor(totalGenerations * 0.6) },
+    { format: 'Figma', count: Math.floor(totalGenerations * 0.4) },
   ].filter(f => f.count > 0)
 
   return {

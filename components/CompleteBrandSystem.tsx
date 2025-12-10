@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
-import { Globe, Loader2, CheckCircle2, Palette, Type, Image as ImageIcon, Download, Sparkles, Layers, FileText, Instagram, Presentation, ArrowRight, Lock, Crown, RefreshCw, Zap, Heart, Target, Users, Eye, FileJson, Code, Monitor } from 'lucide-react'
+import { Globe, Loader2, CheckCircle2, Palette, Type, Image as ImageIcon, Download, Sparkles, Layers, FileText, Instagram, Presentation, ArrowRight, Lock, Crown, RefreshCw, Zap, Heart, Target, Users, Eye, Monitor } from 'lucide-react'
 import { supabaseClient } from '@/lib/auth/supabaseAuth'
 import Link from 'next/link'
 
@@ -92,44 +92,6 @@ export default function CompleteBrandSystem() {
     } finally {
       setExporting(false)
     }
-  }
-  
-  const handleExportCSS = () => {
-    if (!brandSystem) return
-    const css = `:root {
-  /* Primary Colors */
-${brandSystem.primaryColors.map((c, i) => `  --color-primary-${i + 1}: ${c};`).join('\n')}
-  
-  /* Secondary Colors */
-${brandSystem.secondaryColors.map((c, i) => `  --color-secondary-${i + 1}: ${c};`).join('\n')}
-  
-  /* Typography */
-  --font-primary: '${brandSystem.primaryFont}', sans-serif;
-  --font-secondary: '${brandSystem.secondaryFont}', sans-serif;
-  
-  /* Brand Style */
-  --brand-style: ${brandSystem.style};
-  --brand-tone: ${brandSystem.brandTone};
-}`
-    const blob = new Blob([css], { type: 'text/css' })
-    const url = URL.createObjectURL(blob)
-    const link = document.createElement('a')
-    link.href = url
-    link.download = 'brand-variables.css'
-    link.click()
-    URL.revokeObjectURL(url)
-  }
-  
-  const handleExportJSON = () => {
-    if (!brandSystem) return
-    const json = JSON.stringify(brandSystem, null, 2)
-    const blob = new Blob([json], { type: 'application/json' })
-    const url = URL.createObjectURL(blob)
-    const link = document.createElement('a')
-    link.href = url
-    link.download = 'brand-system.json'
-    link.click()
-    URL.revokeObjectURL(url)
   }
   
   const handleExportFigma = () => {
@@ -709,7 +671,7 @@ ${brandSystem.secondaryColors.map((c, i) => `  --color-secondary-${i + 1}: ${c};
                 <Download className="w-6 h-6 text-purple-600" />
                 Export Brand System
               </h4>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+              <div className="grid grid-cols-2 gap-3">
                 <button
                   onClick={handleExportPDF}
                   disabled={exporting}
@@ -717,20 +679,6 @@ ${brandSystem.secondaryColors.map((c, i) => `  --color-secondary-${i + 1}: ${c};
                 >
                   <FileText className="w-5 h-5 text-red-600" />
                   <span>PDF</span>
-                </button>
-                <button
-                  onClick={handleExportCSS}
-                  className="px-4 py-3 bg-white border-2 border-gray-200 rounded-lg hover:border-purple-300 hover:bg-purple-50 transition-all flex flex-col items-center gap-2 text-sm font-semibold"
-                >
-                  <Code className="w-5 h-5 text-blue-600" />
-                  <span>CSS</span>
-                </button>
-                <button
-                  onClick={handleExportJSON}
-                  className="px-4 py-3 bg-white border-2 border-gray-200 rounded-lg hover:border-purple-300 hover:bg-purple-50 transition-all flex flex-col items-center gap-2 text-sm font-semibold"
-                >
-                  <FileJson className="w-5 h-5 text-yellow-600" />
-                  <span>JSON</span>
                 </button>
                 <button
                   onClick={handleExportFigma}
