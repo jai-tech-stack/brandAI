@@ -69,7 +69,7 @@ export async function storageSet(
       value: typeof value === 'string' ? value : JSON.stringify(value),
       shared,
       userId: shared ? undefined : user?.id,
-      updated_at: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
     }
 
     const { data, error } = await storageClient
