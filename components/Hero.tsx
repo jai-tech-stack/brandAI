@@ -5,127 +5,85 @@ import { Sparkles, ArrowRight, CheckCircle2, Zap, TrendingUp, Infinity, Target a
 
 export default function Hero() {
   return (
-    <div className="relative overflow-hidden bg-gradient-to-br from-white via-purple-50/40 via-pink-50/30 to-white pt-20 sm:pt-24 pb-20 sm:pb-24">
-      {/* Premium animated background elements */}
+    <div className="relative overflow-hidden bg-white min-h-[90vh] flex items-center">
+      {/* Beautiful illustrated background - serene landscape */}
       <div className="absolute inset-0 overflow-hidden">
-        {/* Animated gradient orbs */}
-        <div className="absolute top-0 left-1/4 w-[500px] h-[500px] bg-gradient-to-br from-primary-400/30 via-purple-400/30 to-pink-400/30 rounded-full blur-3xl animate-float"></div>
-        <div className="absolute bottom-0 right-1/4 w-[600px] h-[600px] bg-gradient-to-br from-purple-400/30 via-pink-400/30 to-primary-400/30 rounded-full blur-3xl animate-float" style={{ animationDelay: '2s' }}></div>
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[400px] h-[400px] bg-gradient-to-br from-pink-300/20 to-purple-300/20 rounded-full blur-3xl animate-pulse-slow"></div>
+        {/* Simplified gradient background with nature-inspired colors */}
+        <div className="absolute inset-0 bg-gradient-to-b from-green-50/30 via-purple-50/20 to-blue-50/30"></div>
         
-        {/* Premium grid pattern */}
-        <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(139,92,246,0.03)_1px,transparent_1px),linear-gradient(to_bottom,rgba(139,92,246,0.03)_1px,transparent_1px)] bg-[size:40px_40px]"></div>
-        
-        {/* Shimmer effect */}
-        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -skew-x-12 animate-shimmer"></div>
+        {/* Decorative elements - simplified */}
+        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-purple-200/10 rounded-full blur-3xl"></div>
+        <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-green-200/10 rounded-full blur-3xl"></div>
       </div>
       
-      <div className="relative container-premium z-10">
+      <div className="relative z-10 w-full max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6 }}
-          className="text-center max-w-4xl mx-auto"
+          className="text-center"
         >
-          {/* Premium Badge */}
-          <motion.div
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.5, delay: 0.2 }}
-            className="inline-flex items-center gap-2 px-5 py-2 rounded-full glass border border-purple-200/50 text-purple-700 text-sm font-semibold mb-8 shadow-premium"
-          >
-            <Sparkles className="w-4 h-4 text-purple-600" />
-            <span className="bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent font-bold">
-              Your Brand Guardian Angel
-            </span>
-          </motion.div>
-
-          {/* Main Headline */}
-          <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold text-gray-900 mb-6 leading-tight text-balance">
-            Professional Brand System
-            <br />
-            <span className="gradient-text">
-              In Minutes, Not Days
-            </span>
+          {/* Main Headline - Large serif font */}
+          <h1 className="text-6xl sm:text-7xl md:text-8xl lg:text-9xl font-serif font-bold text-gray-900 mb-4 leading-tight">
+            Brand Assets
           </h1>
           
-          <p className="text-xl sm:text-2xl text-gray-600 mb-8 max-w-3xl mx-auto leading-relaxed">
-            Extract your brand identity with <span className="font-bold text-purple-600">100% accuracy</span>, 
-            generate unlimited style variations, and explore endless possibilities—<span className="font-semibold">all free</span>.
+          {/* Sub-headline - Purple italicized */}
+          <h2 className="text-4xl sm:text-5xl md:text-6xl font-serif font-normal italic text-purple-600 mb-8">
+            made effortless
+          </h2>
+          
+          {/* Descriptive Text - Simple and clean */}
+          <p className="text-lg sm:text-xl md:text-2xl text-gray-700 max-w-2xl mx-auto mb-12 leading-relaxed">
+            Distill your website into a living brand system.
+            <br />
+            Generate brand assets in seconds.
           </p>
 
-          {/* Subheadline */}
-          <p className="text-lg sm:text-xl md:text-2xl text-gray-700 max-w-3xl mx-auto mb-6 leading-relaxed font-medium text-balance">
-            Brand colors, logo directions, typography, social templates, visual identity—all generated from your website in seconds.
-          </p>
+          {/* Input Field - Clean and prominent */}
+          <div className="max-w-2xl mx-auto mb-6">
+            <div className="flex gap-3 items-center bg-white rounded-2xl shadow-lg border border-gray-200 p-2">
+              <input
+                type="text"
+                placeholder="yourwebsite.com"
+                className="flex-1 px-6 py-4 text-lg border-none outline-none bg-transparent text-gray-900 placeholder-gray-400"
+                onKeyPress={(e) => {
+                  if (e.key === 'Enter') {
+                    const element = document.getElementById('generator')
+                    if (element) {
+                      element.scrollIntoView({ behavior: 'smooth', block: 'start' })
+                    }
+                  }
+                }}
+              />
+              <button
+                onClick={() => {
+                  const element = document.getElementById('generator')
+                  if (element) {
+                    element.scrollIntoView({ behavior: 'smooth', block: 'start' })
+                  }
+                }}
+                className="w-12 h-12 bg-purple-600 hover:bg-purple-700 rounded-xl flex items-center justify-center text-white transition-colors shadow-md"
+              >
+                <ArrowRight className="w-5 h-5" />
+              </button>
+            </div>
+          </div>
 
-          {/* Value Proposition */}
-          <p className="text-base sm:text-lg md:text-xl text-gray-600 max-w-2xl mx-auto mb-10 text-balance">
-            For small teams, indie founders, and non-designers—this feels like having a full-time brand design team on standby.
-          </p>
-
-          {/* CTA Buttons */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.4 }}
-            className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-12"
-          >
-            <button
-              onClick={() => {
-                const element = document.getElementById('generator')
-                if (element) {
-                  element.scrollIntoView({ behavior: 'smooth', block: 'start' })
-                }
-              }}
-              className="group px-8 sm:px-10 py-4 sm:py-5 bg-gradient-to-r from-primary-600 via-purple-600 to-pink-600 text-white rounded-2xl font-bold text-base sm:text-lg shadow-premium hover:shadow-glow-lg transition-premium transform hover:scale-105 flex items-center gap-3 w-full sm:w-auto justify-center relative overflow-hidden"
-            >
-              <div className="absolute inset-0 bg-gradient-to-r from-primary-700 via-purple-700 to-pink-700 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-              <Zap className="w-5 h-5 relative z-10 group-hover:rotate-12 transition-transform" />
-              <span className="relative z-10">Generate Your Brand System</span>
-              <ArrowRight className="w-5 h-5 relative z-10 group-hover:translate-x-1 transition-transform" />
-            </button>
-            <button 
-              onClick={() => {
-                const element = document.getElementById('how-it-works')
-                if (element) {
-                  element.scrollIntoView({ behavior: 'smooth', block: 'start' })
-                }
-              }}
-              className="px-8 sm:px-10 py-4 sm:py-5 bg-white text-gray-900 rounded-2xl font-bold text-base sm:text-lg hover:bg-gradient-to-br hover:from-gray-50 hover:to-purple-50/30 transition-premium shadow-premium border-2 border-gray-200 hover:border-purple-300 hover:shadow-premium-lg w-full sm:w-auto"
-            >
-              See How It Works
-            </button>
-          </motion.div>
-
-          {/* Trust Indicators */}
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.8, delay: 0.6 }}
-            className="flex flex-wrap justify-center items-center gap-4 sm:gap-6 text-sm sm:text-base text-gray-600"
-          >
-            <div className="flex items-center gap-2 px-4 py-2 bg-white/80 backdrop-blur-sm rounded-full shadow-sm">
-              <CheckCircle2 className="w-5 h-5 text-green-600 flex-shrink-0" />
-              <span>No credit card required</span>
+          {/* "or continue with" option */}
+          <p className="text-gray-500 mb-4">or continue with</p>
+          
+          {/* Recent brand dropdown - placeholder */}
+          <div className="max-w-xs mx-auto">
+            <div className="bg-white rounded-xl shadow-md border border-gray-200 p-4 cursor-pointer hover:shadow-lg transition-shadow">
+              <div className="flex items-center justify-between">
+                <span className="text-gray-600">Recent brand</span>
+                <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                </svg>
+              </div>
             </div>
-            <div className="flex items-center gap-2 px-4 py-2 bg-white/80 backdrop-blur-sm rounded-full shadow-sm">
-              <TrendingUp className="w-5 h-5 text-primary-600 flex-shrink-0" />
-              <span>Generate in seconds</span>
-            </div>
-            <div className="flex items-center gap-2 px-4 py-2 bg-white/80 backdrop-blur-sm rounded-full shadow-sm">
-              <Sparkles className="w-5 h-5 text-purple-600 flex-shrink-0" />
-              <span>Professional quality</span>
-            </div>
-            <div className="flex items-center gap-2 px-4 py-2 bg-white/80 backdrop-blur-sm rounded-full shadow-sm">
-              <Infinity className="w-5 h-5 text-pink-600 flex-shrink-0" />
-              <span>Infinite regeneration</span>
-            </div>
-            <div className="flex items-center gap-2 px-4 py-2 bg-white/80 backdrop-blur-sm rounded-full shadow-sm">
-              <TargetIcon className="w-5 h-5 text-primary-600 flex-shrink-0" />
-              <span>100% accurate extraction</span>
-            </div>
-          </motion.div>
+          </div>
         </motion.div>
       </div>
     </div>

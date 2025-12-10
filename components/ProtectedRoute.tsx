@@ -8,9 +8,16 @@ import { supabaseClient } from '@/lib/auth/supabaseAuth'
 interface ProtectedRouteProps {
   children: React.ReactNode
   requireAdmin?: boolean
+  requireTier?: 'free' | 'pro' | 'enterprise'
+  requireFeature?: 'allowLogoGeneration' | 'allowSocialTemplates' | 'allowPDFExport' | 'allowAPI'
 }
 
-export default function ProtectedRoute({ children, requireAdmin = false }: ProtectedRouteProps) {
+export default function ProtectedRoute({ 
+  children, 
+  requireAdmin = false,
+  requireTier,
+  requireFeature 
+}: ProtectedRouteProps) {
   const router = useRouter()
   const [loading, setLoading] = useState(true)
   const [authorized, setAuthorized] = useState(false)
@@ -72,6 +79,51 @@ export default function ProtectedRoute({ children, requireAdmin = false }: Prote
         } catch (adminError) {
           // If admin check fails, allow access (for development)
           console.warn('Admin check failed:', adminError)
+        }
+      }
+
+      // Check subscription tier if required
+      if (requireTier || requireFeature) {
+        try {
+          const tierResponse = await fetch('/api/subscription/check', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              userId: session.user.id,
+              action: requireFeature || 'maxBrandSystems',
+            }),
+          })
+          
+          if (tierResponse.ok) {
+            const tierData = await tierResponse.json()
+            
+            // Check tier requirement
+            if (requireTier) {
+              const tierOrder = { free: 0, pro: 1, enterprise: 2 }
+              const userTierOrder = tierOrder[tierData.tier as keyof typeof tierOrder] || 0
+              const requiredTierOrder = tierOrder[requireTier]
+              
+              if (userTierOrder < requiredTierOrder) {
+                router.push('/#pricing')
+                return
+              }
+            }
+            
+            // Check feature requirement
+            if (requireFeature && !tierData.allowed) {
+              router.push('/#pricing')
+              return
+            }
+          }
+        } catch (tierError) {
+          console.warn('Tier check failed:', tierError)
+          // Allow access in development mode
+          if (process.env.NEXT_PUBLIC_SUPABASE_URL) {
+            router.push('/#pricing')
+            return
+          }
         }
       }
 

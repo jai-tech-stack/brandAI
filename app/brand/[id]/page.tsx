@@ -14,26 +14,42 @@ export default function BrandViewerPage() {
   const [error, setError] = useState('')
 
   useEffect(() => {
-    // Try to load from sessionStorage first (for temp projects)
-    const stored = sessionStorage.getItem('brandSystem')
-    if (stored) {
-      try {
-        setBrandSystem(JSON.parse(stored))
-        setLoading(false)
-        return
-      } catch (e) {
-        console.warn('Failed to parse stored brand system')
+    const loadBrandSystem = async () => {
+      // Try to load from sessionStorage first (for temp projects)
+      const stored = sessionStorage.getItem('brandSystem')
+      if (stored) {
+        try {
+          setBrandSystem(JSON.parse(stored))
+          setLoading(false)
+          return
+        } catch (e) {
+          console.warn('Failed to parse stored brand system')
+        }
       }
+
+      // Otherwise, fetch from API (if projectId exists)
+      if (params.id && params.id !== 'temp') {
+        try {
+          const response = await fetch(`/api/projects?projectId=${params.id}`)
+          if (response.ok) {
+            const result = await response.json()
+            if (result.data && result.data.brand_system) {
+              setBrandSystem(result.data.brand_system)
+            } else {
+              setError('Brand system not found')
+            }
+          } else {
+            setError('Failed to load brand system')
+          }
+        } catch (err) {
+          console.error('Error loading brand system:', err)
+          setError('Failed to load brand system')
+        }
+      }
+      setLoading(false)
     }
 
-    // Otherwise, fetch from API (if projectId exists)
-    if (params.id && params.id !== 'temp') {
-      // Fetch project from API
-      // For now, we'll use the stored version
-      setLoading(false)
-    } else {
-      setLoading(false)
-    }
+    loadBrandSystem()
   }, [params.id])
 
   const handleExportPDF = async () => {

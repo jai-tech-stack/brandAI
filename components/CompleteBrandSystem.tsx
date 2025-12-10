@@ -179,10 +179,35 @@ export default function CompleteBrandSystem() {
     }
 
     // Check feature access for non-logged-in users (1 free generation)
+    // Also check server-side rate limiting
     if (!styleOverride && !isAuthenticated) {
       const ANONYMOUS_LIMIT = 1
+      
+      // Check server-side rate limit
+      try {
+        const rateLimitResponse = await fetch('/api/rate-limit', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ action: 'check' }),
+        })
+        
+        if (rateLimitResponse.ok) {
+          const rateLimitData = await rateLimitResponse.json()
+          if (!rateLimitData.allowed) {
+            setError(`You've reached your free limit of ${ANONYMOUS_LIMIT} brand system. Sign up for free to get 3 more, or upgrade to Pro for unlimited generations!`)
+            setLoading(false)
+            return
+          }
+        }
+      } catch (rateLimitError) {
+        console.warn('Rate limit check failed:', rateLimitError)
+        // Continue with client-side check as fallback
+      }
+      
+      // Client-side check as backup
       if (anonymousUsageCount >= ANONYMOUS_LIMIT) {
         setError(`You've reached your free limit of ${ANONYMOUS_LIMIT} brand system. Sign up for free to get 3 more, or upgrade to Pro for unlimited generations!`)
+        setLoading(false)
         return
       }
     }
@@ -331,6 +356,9 @@ export default function CompleteBrandSystem() {
             <label className="block text-sm sm:text-base font-bold text-high-contrast mb-3 sm:mb-4">
               Enter Your Website URL
             </label>
+            <p className="text-xs sm:text-sm text-gray-500 mb-3">
+              We'll analyze your site and generate a complete brand system instantly
+            </p>
             <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
               <input
                 type="url"

@@ -18,7 +18,7 @@ export async function POST(request: NextRequest) {
   try {
     // Dynamic imports to prevent build-time execution
     const { z } = await import('zod')
-    const { buildBrandKitPDF } = await import('@/lib/pdf/buildPDF')
+    const { buildCompleteBrandKitPDF } = await import('@/lib/pdf/buildPDF')
     
     const exportKitSchema = z.object({
       brandSystem: z.any(),
@@ -28,8 +28,8 @@ export async function POST(request: NextRequest) {
     const body = await request.json()
     const { brandSystem, brandName } = exportKitSchema.parse(body)
 
-    // Build PDF
-    const pdfBytes = await buildBrandKitPDF(brandSystem, brandName)
+    // Build PDF with actual assets
+    const pdfBytes = await buildCompleteBrandKitPDF(brandSystem, brandName)
 
     // Convert to base64 for response
     const base64 = Buffer.from(pdfBytes).toString('base64')

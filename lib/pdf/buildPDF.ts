@@ -8,6 +8,28 @@ import { addVoiceSection } from './sections/voice'
 export async function buildCompleteBrandKitPDF(brandSystem: any, brandName: string): Promise<Uint8Array> {
   const doc = await PDFDocument.create()
 
+  // Helper function to embed images (handles both PNG and JPG)
+  const embedImage = async (imageUrl: string): Promise<any> => {
+    try {
+      const response = await fetch(imageUrl)
+      if (!response.ok) throw new Error(`Failed to fetch image: ${response.statusText}`)
+      
+      const imageBytes = await response.arrayBuffer()
+      const contentType = response.headers.get('content-type') || ''
+      
+      // Try to determine image type from URL or content type
+      if (imageUrl.toLowerCase().includes('.jpg') || imageUrl.toLowerCase().includes('.jpeg') || contentType.includes('jpeg')) {
+        return await doc.embedJpg(Buffer.from(imageBytes))
+      } else {
+        // Default to PNG
+        return await doc.embedPng(Buffer.from(imageBytes))
+      }
+    } catch (error) {
+      console.warn('Failed to embed image:', imageUrl, error)
+      return null
+    }
+  }
+
   // Cover Page
   const coverPage = doc.addPage([612, 792])
   const { width, height } = coverPage.getSize()
@@ -21,19 +43,15 @@ export async function buildCompleteBrandKitPDF(brandSystem: any, brandName: stri
 
   // Add actual logo if available
   if (brandSystem.logo) {
-    try {
-      const logoResponse = await fetch(brandSystem.logo)
-      const logoBytes = await logoResponse.arrayBuffer()
-      const logoImage = await doc.embedPng(Buffer.from(logoBytes))
-      
+    const logoImage = await embedImage(brandSystem.logo)
+    if (logoImage) {
+      const logoDims = logoImage.scale(0.3) // Scale to fit
       coverPage.drawImage(logoImage, {
-        x: 50,
+        x: (width - logoDims.width) / 2,
         y: height - 400,
-        width: 200,
-        height: 200,
+        width: Math.min(logoDims.width, 200),
+        height: Math.min(logoDims.height, 200),
       })
-    } catch (error) {
-      console.warn('Failed to embed logo:', error)
     }
   }
 
@@ -66,31 +84,129 @@ export async function buildCompleteBrandKitPDF(brandSystem: any, brandName: stri
     }
   })
 
-  // Assets Pages
+  // Assets Pages - Embed actual generated assets
   if (brandSystem.assets && brandSystem.assets.length > 0) {
     for (const asset of brandSystem.assets) {
-      try {
-        const assetPage = doc.addPage([612, 792])
-        const assetResponse = await fetch(asset.imageUrl)
-        if (!assetResponse.ok) throw new Error('Failed to fetch asset')
-        const assetBytes = await assetResponse.arrayBuffer()
-        const assetImage = await doc.embedPng(Buffer.from(assetBytes))
-        
-        assetPage.drawText(asset.name, {
+      if (!asset.imageUrl) continue
+      
+      const assetImage = await embedImage(asset.imageUrl)
+      if (!assetImage) continue
+      
+      const assetPage = doc.addPage([612, 792])
+      const assetHeight = assetPage.getSize().height
+      
+      // Draw asset title
+      assetPage.drawText(asset.name || asset.type || 'Brand Asset', {
+        x: 50,
+        y: assetHeight - 80,
+        size: 24,
+        color: rgb(0, 0, 0),
+      })
+      
+      // Scale image to fit page
+      const imageDims = assetImage.scale(0.8)
+      const maxWidth = 500
+      const maxHeight = 500
+      const scale = Math.min(maxWidth / imageDims.width, maxHeight / imageDims.height, 1)
+      
+      assetPage.drawImage(assetImage, {
+        x: (width - imageDims.width * scale) / 2,
+        y: assetHeight - 200 - (imageDims.height * scale),
+        width: imageDims.width * scale,
+        height: imageDims.height * scale,
+      })
+    }
+  }
+  
+  // Add Typography Page
+  if (brandSystem.primaryFont || brandSystem.secondaryFont) {
+    const typographyPage = doc.addPage([612, 792])
+    const typoHeight = typographyPage.getSize().height
+    
+    typographyPage.drawText('Typography', {
+      x: 50,
+      y: typoHeight - 100,
+      size: 32,
+      color: rgb(0, 0, 0),
+    })
+    
+    let yPos = typoHeight - 180
+    if (brandSystem.primaryFont) {
+      typographyPage.drawText('Primary Font', {
+        x: 50,
+        y: yPos,
+        size: 18,
+        color: rgb(0.2, 0.2, 0.2),
+      })
+      typographyPage.drawText(brandSystem.primaryFont, {
+        x: 50,
+        y: yPos - 30,
+        size: 24,
+        color: rgb(0, 0, 0),
+      })
+      yPos -= 100
+    }
+    
+    if (brandSystem.secondaryFont) {
+      typographyPage.drawText('Secondary Font', {
+        x: 50,
+        y: yPos,
+        size: 18,
+        color: rgb(0.2, 0.2, 0.2),
+      })
+      typographyPage.drawText(brandSystem.secondaryFont, {
+        x: 50,
+        y: yPos - 30,
+        size: 24,
+        color: rgb(0, 0, 0),
+      })
+    }
+  }
+  
+  // Add Brand Voice/Personality Page
+  if (brandSystem.brandPersonality || brandSystem.messaging) {
+    const voicePage = doc.addPage([612, 792])
+    const voiceHeight = voicePage.getSize().height
+    
+    voicePage.drawText('Brand Voice & Personality', {
+      x: 50,
+      y: voiceHeight - 100,
+      size: 32,
+      color: rgb(0, 0, 0),
+    })
+    
+    let yPos = voiceHeight - 180
+    if (brandSystem.brandPersonality) {
+      voicePage.drawText('Personality', {
+        x: 50,
+        y: yPos,
+        size: 18,
+        color: rgb(0.2, 0.2, 0.2),
+      })
+      voicePage.drawText(brandSystem.brandPersonality, {
+        x: 50,
+        y: yPos - 30,
+        size: 14,
+        color: rgb(0, 0, 0),
+      })
+      yPos -= 100
+    }
+    
+    if (brandSystem.messaging && brandSystem.messaging.length > 0) {
+      voicePage.drawText('Key Messages', {
+        x: 50,
+        y: yPos,
+        size: 18,
+        color: rgb(0.2, 0.2, 0.2),
+      })
+      brandSystem.messaging.slice(0, 5).forEach((msg: string, idx: number) => {
+        voicePage.drawText(`• ${msg}`, {
           x: 50,
-          y: height - 100,
-          size: 24,
+          y: yPos - 30 - (idx * 25),
+          size: 12,
+          color: rgb(0, 0, 0),
         })
-
-        assetPage.drawImage(assetImage, {
-          x: 50,
-          y: height - 600,
-          width: 500,
-          height: 400,
-        })
-      } catch (error) {
-        console.warn('Failed to embed asset:', error)
-      }
+      })
     }
   }
 

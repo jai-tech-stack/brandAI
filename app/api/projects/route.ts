@@ -9,7 +9,7 @@ export const dynamic = 'force-dynamic'
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || ''
 const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || ''
 
-// Get all projects for user
+// Get all projects for user or single project by ID
 export async function GET(request: NextRequest) {
   try {
     const supabase = supabaseUrl && supabaseKey ? createClient(supabaseUrl, supabaseKey) : null
@@ -17,10 +17,37 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Storage not configured' }, { status: 503 })
     }
 
-    // Get user from auth header
+    // Get user from auth header (optional for public projects)
     const authHeader = request.headers.get('authorization')
     const token = authHeader?.replace('Bearer ', '')
     
+    const { searchParams } = new URL(request.url)
+    const projectId = searchParams.get('projectId')
+    
+    // If requesting a specific project, fetch it
+    if (projectId) {
+      const { data: project, error } = await supabase
+        .from('projects')
+        .select('*')
+        .eq('id', projectId)
+        .single()
+      
+      if (error) {
+        return NextResponse.json({ error: 'Project not found' }, { status: 404 })
+      }
+      
+      // If project has user_id, verify user owns it (if token provided)
+      if (project.user_id && token) {
+        const { data: { user }, error: authError } = await supabase.auth.getUser(token)
+        if (authError || !user || user.id !== project.user_id) {
+          return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+        }
+      }
+      
+      return NextResponse.json({ success: true, data: project })
+    }
+    
+    // Otherwise, get all projects for authenticated user
     if (!token) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }

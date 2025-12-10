@@ -812,6 +812,22 @@ export async function POST(request: NextRequest) {
     // Feature gate: Check subscription if user is authenticated
     if (userId) {
       try {
+        // Get actual usage count from database
+        const { createClient } = await import('@supabase/supabase-js')
+        const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || ''
+        const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || ''
+        const supabase = supabaseUrl && supabaseKey ? createClient(supabaseUrl, supabaseKey) : null
+        
+        let currentUsage = 0
+        if (supabase) {
+          const { count } = await supabase
+            .from('projects')
+            .select('*', { count: 'exact', head: true })
+            .eq('user_id', userId)
+          
+          currentUsage = count || 0
+        }
+        
         // Check subscription via API
         const checkResponse = await fetch(`${request.nextUrl.origin}/api/subscription/check`, {
           method: 'POST',
@@ -821,7 +837,7 @@ export async function POST(request: NextRequest) {
           body: JSON.stringify({
             userId,
             action: 'maxBrandSystems',
-            currentUsage: 0, // TODO: Get actual usage from database
+            currentUsage,
           }),
         })
         

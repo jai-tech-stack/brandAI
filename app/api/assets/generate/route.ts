@@ -29,19 +29,51 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    if (!brandId) {
+    let brandKit
+    
+    // Handle different brand ID types
+    if (brandId === 'session') {
+      // Try to get from request body or use a default
+      // This would ideally come from session storage on client side
       return NextResponse.json(
-        { error: 'Brand ID is required' },
+        { error: 'Session brand not available. Please select a saved brand project.' },
         { status: 400 }
       )
+    } else if (brandId) {
+      // Try to get from database (project ID)
+      const { createClient } = await import('@supabase/supabase-js')
+      const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || ''
+      const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || ''
+      const supabase = supabaseUrl && supabaseKey ? createClient(supabaseUrl, supabaseKey) : null
+      
+      if (supabase) {
+        const { data: project, error: projectError } = await supabase
+          .from('projects')
+          .select('brand_system')
+          .eq('id', brandId)
+          .single()
+        
+        if (!projectError && project?.brand_system) {
+          // Convert brand system to brand kit format
+          const bs = project.brand_system
+          brandKit = {
+            name: bs.brandName || bs.sourceUrl || 'Brand',
+            colors: [...(bs.primaryColors || []), ...(bs.secondaryColors || [])],
+            typography: [bs.primaryFont, bs.secondaryFont].filter(Boolean),
+            style: bs.style || bs.brandPersonality || 'modern',
+          }
+        }
+      }
+      
+      // Fallback to brandKitsStorage
+      if (!brandKit) {
+        brandKit = getBrandKitById(brandId)
+      }
     }
-
-    // Fetch brand kit data from shared storage
-    const brandKit = getBrandKitById(brandId)
     
     if (!brandKit) {
       return NextResponse.json(
-        { error: `Brand kit with ID "${brandId}" not found. Please extract and save a brand first, or select a valid brand from Brand Kits.` },
+        { error: `Brand with ID "${brandId}" not found. Please extract and save a brand first, or select a valid brand project.` },
         { status: 404 }
       )
     }

@@ -32,9 +32,65 @@ const examplePrompts = [
 export default function AssetGenerator() {
   const [prompt, setPrompt] = useState('')
   const [selectedBrand, setSelectedBrand] = useState('')
+  const [availableBrands, setAvailableBrands] = useState<Array<{ id: string; name: string }>>([])
   const [loading, setLoading] = useState(false)
   const [generatedAssets, setGeneratedAssets] = useState<GeneratedAsset[]>([])
   const [error, setError] = useState('')
+  
+  // Auto-load most recent brand from session or database
+  useEffect(() => {
+    const loadBrands = async () => {
+      // First, try to get from sessionStorage (most recent generation)
+      const stored = sessionStorage.getItem('brandSystem')
+      if (stored) {
+        try {
+          const brandSystem = JSON.parse(stored)
+          const brandName = brandSystem.brandName || brandSystem.sourceUrl || 'Current Brand'
+          setAvailableBrands([{ id: 'session', name: brandName }])
+          setSelectedBrand('session')
+          return
+        } catch (e) {
+          console.warn('Failed to parse stored brand system')
+        }
+      }
+      
+      // Otherwise, try to load from user's projects
+      try {
+        const { supabaseClient } = await import('@/lib/auth/supabaseAuth')
+        if (supabaseClient) {
+          const { data: { session } } = await supabaseClient.auth.getSession()
+          if (session) {
+            const response = await fetch('/api/projects', {
+              headers: {
+                'Authorization': `Bearer ${session.access_token}`
+              }
+            })
+            
+            if (response.ok) {
+              const result = await response.json()
+              if (result.data && result.data.length > 0) {
+                const brands = result.data
+                  .filter((p: any) => p.brand_system)
+                  .map((p: any) => ({
+                    id: p.id,
+                    name: p.name || p.url || 'Brand Project'
+                  }))
+                
+                if (brands.length > 0) {
+                  setAvailableBrands(brands)
+                  setSelectedBrand(brands[0].id) // Auto-select most recent
+                }
+              }
+            }
+          }
+        }
+      } catch (err) {
+        console.warn('Failed to load brands:', err)
+      }
+    }
+    
+    loadBrands()
+  }, [])
 
   const handleGenerate = async () => {
     if (!prompt.trim()) {
@@ -114,10 +170,17 @@ export default function AssetGenerator() {
               className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
             >
               <option value="">Choose a brand...</option>
-              <option value="1">Gumroad</option>
-              <option value="2">Ulysses</option>
-              <option value="3">HFØ</option>
+              {availableBrands.map((brand) => (
+                <option key={brand.id} value={brand.id}>
+                  {brand.name}
+                </option>
+              ))}
             </select>
+            {availableBrands.length === 0 && (
+              <p className="text-sm text-gray-500 mt-2">
+                No brands found. Generate a brand system first to create assets.
+              </p>
+            )}
           </div>
 
           <div>

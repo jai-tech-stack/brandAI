@@ -42,12 +42,12 @@ export default function Home() {
               className="text-center mb-12 sm:mb-16 md:mb-20"
             >
               <h2 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-bold text-high-contrast mb-4 sm:mb-6 leading-tight">
-                Generate Your Complete
+                Brand Assets
                 <br className="hidden sm:block" />
-                <span className="gradient-text-enhanced">Brand System</span>
+                <span className="gradient-text-enhanced">Made Effortless</span>
               </h2>
               <p className="text-base sm:text-lg md:text-xl lg:text-2xl text-readable max-w-3xl mx-auto px-4 sm:px-0">
-                Enter your website URL and get everything you need—colors, logos, typography, templates, and more.
+                Distill your website into a living brand system. Generate brand assets in seconds.
               </p>
             </motion.div>
             <CompleteBrandSystem />

@@ -133,13 +133,13 @@ export default function DashboardPage() {
 
                 {/* Actions */}
                 <div className="flex gap-2">
-                  <button className="flex-1 px-3 py-2 bg-primary-50 text-primary-700 rounded hover:bg-primary-100 flex items-center justify-center gap-2">
+                  <a
+                    href={`/brand/${project.id}`}
+                    className="flex-1 px-3 py-2 bg-primary-50 text-primary-700 rounded hover:bg-primary-100 flex items-center justify-center gap-2"
+                  >
                     <Eye className="w-4 h-4" />
                     View
-                  </button>
-                  <button className="px-3 py-2 bg-gray-50 text-gray-700 rounded hover:bg-gray-100">
-                    <Download className="w-4 h-4" />
-                  </button>
+                  </a>
                   <button 
                     onClick={() => deleteProject(project.id)}
                     className="px-3 py-2 bg-red-50 text-red-700 rounded hover:bg-red-100"

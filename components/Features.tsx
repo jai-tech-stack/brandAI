@@ -69,7 +69,7 @@ export default function Features() {
             Everything You Need in One Brand System
           </h2>
           <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-            From colors to templates—your complete brand identity, generated instantly.
+            Transform your website into a living brand system with colors, logos, typography, and templates—all generated in seconds.
           </p>
         </motion.div>
 
