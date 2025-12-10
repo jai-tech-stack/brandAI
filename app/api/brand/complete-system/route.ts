@@ -177,7 +177,11 @@ function extractFontsFromHTML(html: string, fontFrequency: Map<string, number>) 
     if (fontMatch) {
       const fontFamilies = fontMatch[1].split(',').map(f => f.trim().replace(/['"]/g, ''))
       fontFamilies.forEach(font => {
-        if (font && !font.match(/^(sans-serif|serif|monospace|system-ui|-apple-system|BlinkMacSystemFont|Segoe UI|Roboto|Arial|Helvetica|Times|Courier|inherit)$/i)) {
+        // Filter out URL-encoded strings and invalid fonts
+        if (font && 
+            !font.includes('%') && // Not URL-encoded strings
+            !font.match(/^https?:\/\//i) && // Not URLs
+            !font.match(/^(sans-serif|serif|monospace|system-ui|-apple-system|BlinkMacSystemFont|Segoe UI|Roboto|Arial|Helvetica|Times|Courier|inherit|initial|unset)$/i)) {
           const cleanFont = font.trim()
           if (cleanFont && cleanFont.length > 1) {
             fontFrequency.set(cleanFont, (fontFrequency.get(cleanFont) || 0) + 2)
@@ -187,18 +191,38 @@ function extractFontsFromHTML(html: string, fontFrequency: Map<string, number>) 
     }
   })
   
-  // 3. Google Fonts
-  const googleFontRegex = /fonts\.googleapis\.com\/css\?family=([^&"']+)/gi
+  // 3. Google Fonts URL decoding - extract font names from URL-encoded strings
+  const googleFontsUrlRegex = /fonts\.googleapis\.com\/css[^"'>]*family=([^"'>]+)/gi
   let googleFontMatch
-  while ((googleFontMatch = googleFontRegex.exec(html)) !== null) {
-    const fontParam = googleFontMatch[1]
-    const fonts = fontParam.split('|')
-    fonts.forEach(font => {
-      const fontName = font.split(':')[0].replace(/\+/g, ' ').trim()
-      if (fontName) {
-        fontFrequency.set(fontName, (fontFrequency.get(fontName) || 0) + 8)
-      }
-    })
+  while ((googleFontMatch = googleFontsUrlRegex.exec(html)) !== null) {
+    try {
+      const encodedFonts = googleFontMatch[1]
+      // Decode URL-encoded string
+      const decodedFonts = decodeURIComponent(encodedFonts)
+      // Parse font names from format: "FontName:400,400i,500|AnotherFont:400"
+      const fontNames = decodedFonts.split('|').map(f => {
+        // Extract font name before colon (if any)
+        const fontName = f.split(':')[0].trim()
+        return fontName
+      }).filter(f => f && f.length > 0)
+      
+      fontNames.forEach(fontName => {
+        if (fontName && 
+            !fontName.match(/^\d+px?$/i) &&
+            !fontName.match(/^\d+rem$/i) &&
+            !fontName.match(/^\d+em$/i) &&
+            !fontName.match(/^var\(/i) &&
+            !fontName.match(/^--[\w-]+$/i) &&
+            !fontName.match(/^(sans-serif|serif|monospace|system-ui|-apple-system|BlinkMacSystemFont|Segoe UI|Roboto|Arial|Helvetica|Times|Courier|inherit|initial|unset)$/i) &&
+            fontName.length > 2 &&
+            !fontName.includes('%')) { // Exclude any remaining URL-encoded strings
+          fontFrequency.set(fontName, (fontFrequency.get(fontName) || 0) + 20) // High weight for Google Fonts
+        }
+      })
+    } catch (decodeError) {
+      // Skip if decoding fails
+      console.warn('Failed to decode Google Fonts URL:', decodeError)
+    }
   }
   
   // 4. Adobe Fonts / Typekit
@@ -396,13 +420,15 @@ async function extractCompleteBrandSystem(url: string, styleVariation?: string) 
             if (fontFamily) {
               const fontList = fontFamily.split(',').map(f => f.trim().replace(/['"]/g, ''))
               fontList.forEach((font, fontIndex) => {
-                // CRITICAL: Filter out font-size values, CSS variables, and generic fonts
+                // CRITICAL: Filter out font-size values, CSS variables, URL-encoded strings, and generic fonts
                 if (font && 
                     !font.match(/^\d+px?$/i) && // Not "13px" or "0"
                     !font.match(/^\d+rem$/i) && // Not "1rem"
                     !font.match(/^\d+em$/i) && // Not "1em"
                     !font.match(/^var\(/i) && // Not CSS variable references like "var(--wp--preset--font-size--medium)"
                     !font.match(/^--[\w-]+$/i) && // Not CSS variable names
+                    !font.includes('%') && // Not URL-encoded strings (like Oswald%3A400)
+                    !font.match(/^https?:\/\//i) && // Not URLs
                     !font.match(/^(sans-serif|serif|monospace|system-ui|-apple-system|BlinkMacSystemFont|Segoe UI|Roboto|Arial|Helvetica|Times|Courier|inherit|initial|unset)$/i) &&
                     font.length > 2) {
                   const fontWeight = fontIndex === 0 ? (isBrand ? 10 : 5) : (isBrand ? 5 : 2)
@@ -554,14 +580,29 @@ async function extractCompleteBrandSystem(url: string, styleVariation?: string) 
     return !isGeneric || uniqueColors.length <= 2 // Only include generic if we have very few colors
   })
   
-  // Use non-generic colors first (these are the REAL brand colors)
-  const primaryColors = nonGenericColors.length >= 2 
-    ? nonGenericColors.slice(0, 2)
+  // Filter out pink colors (#FF69B4, #FFC0CB, #FF1493, etc.) unless it's clearly a brand color
+  // Pink is often used in UI elements but rarely a primary brand color
+  const pinkColors = ['#FF69B4', '#FFC0CB', '#FF1493', '#FFB6C1', '#DC143C', '#FF69B4', '#FF1493']
+  const brandColors = nonGenericColors.filter(c => {
+    // Only exclude pink if we have other non-pink colors available
+    const isPink = pinkColors.includes(c.toUpperCase())
+    return !isPink || nonGenericColors.length <= 3 // Keep pink only if we have very few colors
+  })
+  
+  // Use brand colors first (these are the REAL brand colors)
+  const primaryColors = brandColors.length >= 2 
+    ? brandColors.slice(0, 2)
+    : nonGenericColors.length >= 2
+    ? nonGenericColors.slice(0, 2) // Use what we have (even if generic)
     : uniqueColors.length >= 2
     ? uniqueColors.slice(0, 2) // Use what we have (even if generic)
     : [] // Don't use fake colors - throw error if no colors found
   
-  const secondaryColors = nonGenericColors.length >= 4
+  const secondaryColors = brandColors.length >= 4
+    ? brandColors.slice(2, 4)
+    : brandColors.length >= 2
+    ? brandColors.slice(0, 2) // Reuse primary if not enough
+    : nonGenericColors.length >= 4
     ? nonGenericColors.slice(2, 4)
     : nonGenericColors.length >= 2
     ? nonGenericColors.slice(0, 2) // Reuse primary if not enough
@@ -856,6 +897,24 @@ export async function POST(request: NextRequest) {
       aiPowered: true,
       autonomous: true,
       note: assets.length === 0 ? 'Brand system extracted successfully. Assets can be generated on-demand via the asset generator.' : undefined,
+    }
+
+    // Save to database if user is logged in
+    if (userId) {
+      try {
+        const { saveProject } = await import('@/lib/storage/supabase')
+        const projectId = await saveProject({
+          url,
+          userId,
+          brandSystem: completeSystem,
+        })
+        if (projectId) {
+          console.log('Brand system saved to database:', projectId)
+        }
+      } catch (saveError: unknown) {
+        console.warn('Failed to save brand system to database:', saveError)
+        // Continue anyway - don't fail the request if save fails
+      }
     }
 
     return NextResponse.json({ success: true, data: completeSystem })

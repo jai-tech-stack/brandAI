@@ -55,6 +55,7 @@ export async function uploadToStorage(
  */
 export async function saveProject(data: {
   url: string
+  userId?: string
   analysis?: any
   brandSystem?: any
   templates?: any
@@ -69,6 +70,7 @@ export async function saveProject(data: {
     const { data: project, error } = await supabase
       .from('projects')
       .insert({
+        user_id: data.userId || null,
         url: data.url,
         analysis: data.analysis || null,
         brand_system: data.brandSystem || null,

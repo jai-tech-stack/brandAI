@@ -271,6 +271,17 @@ ${brandSystem.secondaryColors.map((c, i) => `  --color-secondary-${i + 1}: ${c};
           // Continue anyway for backward compatibility
         }
       }
+      // Get user ID if authenticated
+      let userId: string | undefined
+      if (isAuthenticated && supabaseClient) {
+        try {
+          const { data: { session } } = await supabaseClient.auth.getSession()
+          userId = session?.user?.id
+        } catch (err) {
+          console.warn('Failed to get user session:', err)
+        }
+      }
+
       const response = await fetch('/api/brand/complete-system', {
         method: 'POST',
         headers: {
@@ -278,6 +289,7 @@ ${brandSystem.secondaryColors.map((c, i) => `  --color-secondary-${i + 1}: ${c};
         },
         body: JSON.stringify({ 
           url: trimmedUrl,
+          userId: userId, // Pass userId to save to database
           styleVariation: styleOverride || selectedStyle || undefined
         }),
       })
