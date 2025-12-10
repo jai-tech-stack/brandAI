@@ -6,6 +6,7 @@ import { motion } from 'framer-motion'
 import { Globe, Loader2, CheckCircle2, Palette, Type, Image as ImageIcon, Download, Sparkles, Layers, FileText, Instagram, Presentation, ArrowRight, Lock, Crown, RefreshCw, Zap, Heart, Target, Users, Eye, Monitor } from 'lucide-react'
 import { supabaseClient } from '@/lib/auth/supabaseAuth'
 import Link from 'next/link'
+import BrandEditor from '@/components/BrandEditor'
 
 interface BrandSystem {
   logo?: string
@@ -29,11 +30,35 @@ interface BrandSystem {
   }>
 }
 
-export default function CompleteBrandSystem() {
+interface CompleteBrandSystemProps {
+  initialBrandSystem?: BrandSystem | null
+}
+
+export default function CompleteBrandSystem({ initialBrandSystem }: CompleteBrandSystemProps = {}) {
   const router = useRouter()
-  const [url, setUrl] = useState('')
+  const [url, setUrl] = useState(() => {
+    // Initialize URL from sessionStorage if available
+    if (typeof window !== 'undefined') {
+      return sessionStorage.getItem('brandUrl') || ''
+    }
+    return ''
+  })
   const [loading, setLoading] = useState(false)
-  const [brandSystem, setBrandSystem] = useState<BrandSystem | null>(null)
+  const [brandSystem, setBrandSystem] = useState<BrandSystem | null>(() => {
+    // Initialize from prop or sessionStorage
+    if (initialBrandSystem) return initialBrandSystem
+    if (typeof window !== 'undefined') {
+      const stored = sessionStorage.getItem('brandSystem')
+      if (stored) {
+        try {
+          return JSON.parse(stored)
+        } catch (e) {
+          console.warn('Failed to parse stored brand system')
+        }
+      }
+    }
+    return null
+  })
   const [error, setError] = useState('')
   const [userTier, setUserTier] = useState<'free' | 'pro' | 'enterprise'>('free')
   const [usageCount, setUsageCount] = useState(0)
@@ -392,16 +417,29 @@ export default function CompleteBrandSystem() {
             </div>
             {error && (
               <div className="mt-3 p-4 rounded-lg border-2 border-red-200 bg-red-50">
-                <p className="text-sm text-red-600 font-medium mb-2">{error}</p>
-                {error.includes('limit') || error.includes('Upgrade') ? (
-                  <Link
-                    href="/#pricing"
-                    className="inline-flex items-center gap-2 text-sm font-semibold text-primary-600 hover:text-primary-700"
-                  >
-                    <Crown className="w-4 h-4" />
-                    Upgrade to Pro for Unlimited Access
-                  </Link>
-                ) : null}
+                <div className="flex items-start gap-3">
+                  <div className="flex-shrink-0">
+                    <svg className="w-5 h-5 text-red-600" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                    </svg>
+                  </div>
+                  <div className="flex-1">
+                    <p className="text-sm text-red-800 font-medium mb-1">{error}</p>
+                    {error.includes('limit') || error.includes('Upgrade') ? (
+                      <Link
+                        href="/#pricing"
+                        className="inline-flex items-center gap-2 text-sm font-semibold text-primary-600 hover:text-primary-700 mt-2"
+                      >
+                        <Crown className="w-4 h-4" />
+                        Upgrade to Pro for Unlimited Access
+                      </Link>
+                    ) : (
+                      <p className="text-xs text-red-600 mt-1">
+                        💡 Tip: Make sure the URL is correct and the website is publicly accessible. Try a simpler page if the site is complex.
+                      </p>
+                    )}
+                  </div>
+                </div>
               </div>
             )}
             
@@ -563,65 +601,25 @@ export default function CompleteBrandSystem() {
               </div>
             </div>
 
-            {/* Brand Colors */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="p-6 bg-gray-50 rounded-xl">
-                <h4 className="font-bold text-gray-900 mb-4 flex items-center gap-2">
-                  <Palette className="w-5 h-5 text-primary-600" />
-                  Brand Primary Colors
-                </h4>
-                <div className="flex flex-wrap gap-3">
-                  {brandSystem.primaryColors.map((color, index) => (
-                    <div key={index} className="flex flex-col items-center">
-                      <div
-                        className="w-16 h-16 rounded-lg border-2 border-gray-300 shadow-md"
-                        style={{ backgroundColor: color }}
-                      />
-                      <span className="text-xs font-mono text-gray-700 mt-1">{color}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              <div className="p-6 bg-gray-50 rounded-xl">
-                <h4 className="font-bold text-gray-900 mb-4 flex items-center gap-2">
-                  <Palette className="w-5 h-5 text-purple-600" />
-                  Brand Secondary Colors
-                </h4>
-                <div className="flex flex-wrap gap-3">
-                  {brandSystem.secondaryColors.map((color, index) => (
-                    <div key={index} className="flex flex-col items-center">
-                      <div
-                        className="w-16 h-16 rounded-lg border-2 border-gray-300 shadow-md"
-                        style={{ backgroundColor: color }}
-                      />
-                      <span className="text-xs font-mono text-gray-700 mt-1">{color}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-
-            {/* Typography Pairings */}
-            <div className="p-6 bg-gray-50 rounded-xl">
-              <h4 className="font-bold text-gray-900 mb-4 flex items-center gap-2">
-                <Type className="w-5 h-5 text-blue-600" />
-                Typography Pairings
-              </h4>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <p className="text-sm text-gray-600 mb-2">Primary Font</p>
-                  <p className="text-2xl font-bold" style={{ fontFamily: brandSystem.primaryFont }}>
-                    {brandSystem.primaryFont}
-                  </p>
-                </div>
-                <div>
-                  <p className="text-sm text-gray-600 mb-2">Secondary Font</p>
-                  <p className="text-xl" style={{ fontFamily: brandSystem.secondaryFont }}>
-                    {brandSystem.secondaryFont}
-                  </p>
-                </div>
-              </div>
+            {/* Brand Editor - Editable Colors & Fonts */}
+            <div className="mb-8">
+              <BrandEditor
+                brandSystem={{
+                  primaryColors: brandSystem.primaryColors,
+                  secondaryColors: brandSystem.secondaryColors,
+                  primaryFont: brandSystem.primaryFont,
+                  secondaryFont: brandSystem.secondaryFont,
+                }}
+                onUpdate={(updates) => {
+                  setBrandSystem({
+                    ...brandSystem,
+                    ...updates,
+                  })
+                  // Update sessionStorage
+                  const updated = { ...brandSystem, ...updates }
+                  sessionStorage.setItem('brandSystem', JSON.stringify(updated))
+                }}
+              />
             </div>
 
             {/* Brand Tone & Messaging */}

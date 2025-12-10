@@ -25,6 +25,11 @@ export async function POST(request: NextRequest) {
     const { generateTwitterTemplate } = await import('@/lib/templates/twitter')
     const { generateYouTubeTemplate } = await import('@/lib/templates/youtube')
     const { generateHeroBannerTemplate } = await import('@/lib/templates/heroBanner')
+    const { generateTikTokTemplate } = await import('@/lib/templates/tiktok')
+    const { generateInstagramStoryTemplate } = await import('@/lib/templates/instagramStory')
+    const { generateInstagramReelTemplate } = await import('@/lib/templates/instagramReel')
+    const { generatePinterestTemplate } = await import('@/lib/templates/pinterest')
+    const { generateFacebookTemplate } = await import('@/lib/templates/facebook')
 
     const generateTemplatesSchema = z.object({
       brandSystem: z.object({
@@ -37,20 +42,24 @@ export async function POST(request: NextRequest) {
         }),
       }),
       logoUrl: z.string().optional(),
-      types: z.array(z.enum(['instagram', 'linkedin', 'twitter', 'youtube', 'heroBanner'])).optional(),
+      types: z.array(z.enum(['instagram', 'linkedin', 'twitter', 'youtube', 'heroBanner', 'tiktok', 'instagramStory', 'instagramReel', 'pinterest', 'facebook'])).optional(),
     })
 
     const body = await request.json()
     const { brandSystem, logoUrl, types } = generateTemplatesSchema.parse(body)
 
-    const templateTypes = types || ['instagram', 'linkedin', 'twitter', 'youtube', 'heroBanner']
+    const templateTypes = types || ['instagram', 'linkedin', 'twitter', 'youtube', 'heroBanner', 'tiktok', 'instagramStory', 'instagramReel', 'pinterest', 'facebook']
     const templates: any[] = []
 
     // Generate each template type
     for (const type of templateTypes) {
       try {
         // Get template size for this type
-        const size = TEMPLATE_SIZES[type]
+        const size = TEMPLATE_SIZES[type as keyof typeof TEMPLATE_SIZES]
+        if (!size) {
+          console.warn(`Unknown template type: ${type}`)
+          continue
+        }
         
         // Create config with required width and height
         const config: TemplateConfig = {
@@ -80,6 +89,24 @@ export async function POST(request: NextRequest) {
           case 'heroBanner':
             result = await generateHeroBannerTemplate(config)
             break
+          case 'tiktok':
+            result = await generateTikTokTemplate(config)
+            break
+          case 'instagramStory':
+            result = await generateInstagramStoryTemplate(config)
+            break
+          case 'instagramReel':
+            result = await generateInstagramReelTemplate(config)
+            break
+          case 'pinterest':
+            result = await generatePinterestTemplate(config)
+            break
+          case 'facebook':
+            result = await generateFacebookTemplate(config)
+            break
+          default:
+            console.warn(`Unhandled template type: ${type}`)
+            continue
         }
         templates.push(result)
       } catch (error: unknown) {

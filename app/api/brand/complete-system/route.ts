@@ -876,10 +876,35 @@ export async function POST(request: NextRequest) {
       if (errorMsg.includes('timeout') || errorMsg.includes('Timeout')) {
         return NextResponse.json(
           { 
-            error: 'Brand extraction timed out. The website may be too complex or slow. Please try a simpler website or try again.',
-            code: 'TIMEOUT'
+            error: 'The website took too long to analyze. This might happen with very complex sites. Try a simpler page or check if the site is accessible.',
+            code: 'TIMEOUT',
+            suggestion: 'Try using a specific page URL (e.g., /about) instead of the homepage, or check if the website is publicly accessible.'
           },
           { status: 504 }
+        )
+      }
+      
+      // Network errors
+      if (errorMsg.includes('fetch') || errorMsg.includes('network') || errorMsg.includes('ECONNREFUSED')) {
+        return NextResponse.json(
+          {
+            error: 'Unable to access this website. Please check if the URL is correct and the site is publicly accessible.',
+            code: 'NETWORK_ERROR',
+            suggestion: 'Make sure the website doesn\'t require authentication and is accessible from the internet.'
+          },
+          { status: 503 }
+        )
+      }
+      
+      // Invalid URL errors
+      if (errorMsg.includes('Invalid URL') || errorMsg.includes('ENOTFOUND')) {
+        return NextResponse.json(
+          {
+            error: 'Invalid website URL. Please enter a valid URL (e.g., example.com or https://example.com).',
+            code: 'INVALID_URL',
+            suggestion: 'Try entering just the domain name (e.g., "example.com") or a full URL with https://'
+          },
+          { status: 400 }
         )
       }
       throw extractError // Re-throw to be caught by outer catch
