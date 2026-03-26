@@ -33,6 +33,29 @@ interface BrandSystem {
     name: string
     imageUrl: string
   }>
+  blueprint?: {
+    meta: {
+      mode: 'url' | 'social' | 'logo'
+      tier: 'free' | 'pro' | 'enterprise'
+      generatedAt: string
+    }
+    pillars: Array<{
+      key: string
+      title: string
+      items: Array<{
+        id: string
+        title: string
+        availability: 'available' | 'locked'
+        status: 'ready' | 'draft' | 'needs_input' | 'locked'
+        confidence: {
+          score: number
+          level: 'high' | 'medium' | 'low'
+          rationale: string
+        }
+        needsReview: boolean
+      }>
+    }>
+  }
 }
 
 interface CompleteBrandSystemProps {
@@ -76,6 +99,49 @@ export default function CompleteBrandSystem({ initialBrandSystem }: CompleteBran
   const [assetPrompt, setAssetPrompt] = useState('')
   const [generatingAsset, setGeneratingAsset] = useState(false)
   const [generatedAssets, setGeneratedAssets] = useState<any[]>([])
+
+  const normalizeFlowiseBrandResult = (payload: any): BrandSystem => {
+    const flowBrandSystem = payload?.brandSystem || {}
+    const strategy = payload?.strategy || {}
+    const blueprint = payload?.blueprint
+
+    const primaryColors = flowBrandSystem?.primaryColors || flowBrandSystem?.colors?.primary || []
+    const secondaryColors = flowBrandSystem?.secondaryColors || flowBrandSystem?.colors?.secondary || []
+    const allColors = flowBrandSystem?.allColors || [
+      ...(flowBrandSystem?.colors?.primary || []),
+      ...(flowBrandSystem?.colors?.secondary || []),
+      ...(flowBrandSystem?.colors?.accent || []),
+      ...(flowBrandSystem?.colors?.neutral || []),
+    ]
+
+    const primaryFont =
+      flowBrandSystem?.primaryFont || flowBrandSystem?.typography?.primary?.name || 'Inter'
+    const secondaryFont =
+      flowBrandSystem?.secondaryFont || flowBrandSystem?.typography?.secondary?.name || 'Poppins'
+
+    const messaging =
+      flowBrandSystem?.messaging ||
+      strategy?.messaging?.pillars?.map((p: any) => p?.message).filter(Boolean) ||
+      flowBrandSystem?.voice?.valueProps ||
+      []
+
+    return {
+      ...flowBrandSystem,
+      primaryColors,
+      secondaryColors,
+      allColors,
+      primaryFont,
+      secondaryFont,
+      typographyPairings: flowBrandSystem?.typographyPairings || [primaryFont, secondaryFont],
+      style: flowBrandSystem?.style || strategy?.positioning?.category || 'Modern',
+      brandPersonality:
+        flowBrandSystem?.brandPersonality || strategy?.brandCore?.oneLiner || 'Professional',
+      brandTone: flowBrandSystem?.brandTone || flowBrandSystem?.voice?.tone || 'Professional',
+      messaging,
+      starterAssets: flowBrandSystem?.starterAssets || flowBrandSystem?.assets || [],
+      blueprint,
+    }
+  }
   
   // Export functions
   const handleExportPDF = async () => {
@@ -302,15 +368,21 @@ export default function CompleteBrandSystem({ initialBrandSystem }: CompleteBran
         }
       }
 
-      const response = await fetch('/api/brand/complete-system', {
+      const response = await fetch('/api/flowise/run', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({ 
+          mode: 'url',
           url: trimmedUrl,
-          userId: userId, // Pass userId to save to database
-          styleVariation: styleOverride || selectedStyle || undefined
+          tier: userTier,
+          userId,
+          saveToProject: Boolean(userId),
+          includeProcess: false,
+          businessContext: {
+            goals: ['Build a complete brand system', 'Create usable brand guidelines'],
+          },
         }),
       })
 
@@ -327,7 +399,8 @@ export default function CompleteBrandSystem({ initialBrandSystem }: CompleteBran
         throw new Error(result.error || 'Failed to generate brand system')
       }
 
-      setBrandSystem(result.data)
+      const normalized = normalizeFlowiseBrandResult(result.data)
+      setBrandSystem(normalized)
       
       // Update usage count for non-logged-in users
       if (!isAuthenticated && !styleOverride) {
@@ -342,7 +415,7 @@ export default function CompleteBrandSystem({ initialBrandSystem }: CompleteBran
       }
       
       // Store in sessionStorage for navigation (optional)
-      sessionStorage.setItem('brandSystem', JSON.stringify(result.data))
+      sessionStorage.setItem('brandSystem', JSON.stringify(normalized))
       
       // Scroll to results (results display on same page)
       setTimeout(() => {
@@ -447,32 +520,72 @@ export default function CompleteBrandSystem({ initialBrandSystem }: CompleteBran
 
   // Use initial brand system if provided, otherwise use state
   const displayBrandSystem = initialBrandSystem || brandSystem
+  const brandTitle = url.split('//')[1]?.split('/')[0]?.replace('www.', '') || 'Brand'
 
   return (
-    <div className="w-full max-w-6xl mx-auto">
-      {/* Starter Assets - Show first like trybloom.ai */}
-      {displayBrandSystem?.starterAssets && displayBrandSystem.starterAssets.length > 0 && (
+    <div className="w-full max-w-6xl mx-auto space-y-10">
+      {displayBrandSystem && (
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="mb-12"
+          className="rounded-2xl border border-gray-200 bg-gradient-to-br from-white to-gray-50 p-6 md:p-8 shadow-sm"
         >
-          <h2 className="text-2xl font-light text-gray-900 mb-6">Starter assets</h2>
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+            <div>
+              <p className="text-xs uppercase tracking-[0.2em] text-gray-500 mb-2">Brand Intelligence Suite</p>
+              <h2 className="text-3xl md:text-4xl font-semibold text-gray-900">{brandTitle}</h2>
+              <p className="text-sm text-gray-600 mt-2">
+                Strategy + identity system generated with confidence scoring and tier-aware coverage.
+              </p>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              <span className="px-3 py-1 rounded-full text-xs border border-indigo-200 bg-indigo-50 text-indigo-700">
+                Tier: {displayBrandSystem.blueprint?.meta?.tier || userTier}
+              </span>
+              <span className="px-3 py-1 rounded-full text-xs border border-purple-200 bg-purple-50 text-purple-700">
+                Mode: {displayBrandSystem.blueprint?.meta?.mode || 'url'}
+              </span>
+            </div>
+          </div>
+          <div className="mt-6 flex flex-wrap gap-3">
+            <button
+              onClick={handleExportPDF}
+              disabled={exporting}
+              className="px-4 py-2 rounded-lg bg-gray-900 text-white text-sm font-medium hover:bg-black transition-colors disabled:opacity-60"
+            >
+              {exporting ? 'Exporting PDF...' : 'Export Brand Book'}
+            </button>
+            <button
+              onClick={handleExportFigma}
+              className="px-4 py-2 rounded-lg border border-gray-300 text-gray-700 text-sm font-medium hover:bg-gray-50 transition-colors"
+            >
+              Export Figma Tokens
+            </button>
+          </div>
+        </motion.div>
+      )}
+
+      {displayBrandSystem?.starterAssets && displayBrandSystem.starterAssets.length > 0 && (
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="space-y-4">
+          <div className="flex items-center justify-between">
+            <h3 className="text-2xl font-semibold text-gray-900">Starter Assets</h3>
+            <span className="text-sm text-gray-500">{displayBrandSystem.starterAssets.length} generated</span>
+          </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {displayBrandSystem.starterAssets.map((asset: any, index: number) => (
               <motion.div
                 key={asset.id || index}
-                initial={{ opacity: 0, y: 20 }}
+                initial={{ opacity: 0, y: 18 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: index * 0.1 }}
-                className="group cursor-pointer"
+                transition={{ delay: index * 0.08 }}
+                className="group rounded-2xl overflow-hidden border border-gray-200 bg-white shadow-sm hover:shadow-lg transition-all"
               >
-                <div className="aspect-square bg-gray-50 rounded-lg overflow-hidden border border-gray-200 hover:border-gray-300 transition-colors">
+                <div className="aspect-square bg-gray-50 overflow-hidden">
                   {asset.imageUrl ? (
                     <img
                       src={asset.imageUrl}
                       alt={asset.name || 'Starter asset'}
-                      className="w-full h-full object-cover"
+                      className="w-full h-full object-cover group-hover:scale-[1.03] transition-transform duration-300"
                     />
                   ) : (
                     <div className="w-full h-full flex items-center justify-center text-gray-400">
@@ -480,96 +593,145 @@ export default function CompleteBrandSystem({ initialBrandSystem }: CompleteBran
                     </div>
                   )}
                 </div>
-                <p className="mt-2 text-sm text-gray-600">{asset.name || 'Asset'}</p>
+                <div className="p-4">
+                  <p className="text-sm font-medium text-gray-800">{asset.name || 'Asset'}</p>
+                </div>
               </motion.div>
             ))}
           </div>
         </motion.div>
       )}
 
-      {/* Brand System Display - Minimal like trybloom.ai */}
       {displayBrandSystem && (
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="mb-12"
+          className="grid grid-cols-1 lg:grid-cols-2 gap-6"
         >
-          <h2 className="text-2xl font-light text-gray-900 mb-6">Brand system</h2>
-          
-          {/* Colors */}
-          <div className="mb-8">
-            <h3 className="text-sm font-medium text-gray-700 mb-3">Colors</h3>
-            <div className="flex flex-wrap gap-3">
-              {displayBrandSystem.primaryColors?.map((color: string, index: number) => (
-                <div key={index} className="flex items-center gap-2">
-                  <div 
-                    className="w-12 h-12 rounded border border-gray-200"
-                    style={{ backgroundColor: color }}
-                  />
-                  <span className="text-sm text-gray-600">{color}</span>
-                </div>
-              ))}
-              {displayBrandSystem.secondaryColors?.map((color: string, index: number) => (
-                <div key={index} className="flex items-center gap-2">
-                  <div 
-                    className="w-12 h-12 rounded border border-gray-200"
-                    style={{ backgroundColor: color }}
-                  />
-                  <span className="text-sm text-gray-600">{color}</span>
-                </div>
-              ))}
+          <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">Color System</h3>
+            <div className="space-y-4">
+              {[...(displayBrandSystem.primaryColors || []), ...(displayBrandSystem.secondaryColors || [])]
+                .slice(0, 8)
+                .map((color: string, index: number) => (
+                  <div key={index} className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-lg border border-gray-200" style={{ backgroundColor: color }} />
+                    <span className="text-sm font-mono text-gray-700">{color}</span>
+                  </div>
+                ))}
             </div>
           </div>
 
-          {/* Fonts */}
-          <div className="mb-8">
-            <h3 className="text-sm font-medium text-gray-700 mb-3">Fonts</h3>
-            <div className="space-y-2">
-              {displayBrandSystem.primaryFont && (
-                <div>
-                  <span className="text-sm text-gray-600">Primary: </span>
-                  <span className="text-sm font-medium" style={{ fontFamily: displayBrandSystem.primaryFont }}>
-                    {displayBrandSystem.primaryFont}
-                  </span>
-                </div>
-              )}
-              {displayBrandSystem.secondaryFont && (
-                <div>
-                  <span className="text-sm text-gray-600">Secondary: </span>
-                  <span className="text-sm font-medium" style={{ fontFamily: displayBrandSystem.secondaryFont }}>
-                    {displayBrandSystem.secondaryFont}
-                  </span>
-                </div>
-              )}
+          <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">Typography</h3>
+            <div className="space-y-5">
+              <div>
+                <p className="text-xs uppercase tracking-wide text-gray-500 mb-1">Primary</p>
+                <p className="text-2xl font-semibold text-gray-900" style={{ fontFamily: displayBrandSystem.primaryFont }}>
+                  {displayBrandSystem.primaryFont}
+                </p>
+              </div>
+              <div>
+                <p className="text-xs uppercase tracking-wide text-gray-500 mb-1">Secondary</p>
+                <p className="text-xl text-gray-900" style={{ fontFamily: displayBrandSystem.secondaryFont }}>
+                  {displayBrandSystem.secondaryFont}
+                </p>
+              </div>
             </div>
           </div>
         </motion.div>
       )}
 
-      {/* Generate More Assets - Simple like trybloom.ai */}
+      {displayBrandSystem && (
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="space-y-4">
+          <h3 className="text-2xl font-semibold text-gray-900">Brand Blueprint</h3>
+          <p className="text-sm text-gray-500">Availability, confidence, and review state for every branding deliverable.</p>
+
+          {displayBrandSystem.blueprint?.pillars?.length ? (
+            <div className="space-y-6">
+              {displayBrandSystem.blueprint.pillars.map((pillar) => (
+                <div key={pillar.key} className="rounded-2xl border border-gray-200 bg-white overflow-hidden shadow-sm">
+                  <div className="px-5 py-4 border-b border-gray-100 bg-gray-50/80">
+                    <h4 className="text-base font-semibold text-gray-800">{pillar.title}</h4>
+                  </div>
+                  <div className="p-4 grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {pillar.items.map((item) => {
+                      const pct = Math.max(0, Math.min(100, item.confidence.score))
+                      return (
+                        <div key={item.id} className="rounded-xl border border-gray-200 p-4">
+                          <div className="flex items-center justify-between gap-2 mb-2">
+                            <p className="text-sm font-semibold text-gray-900">{item.title}</p>
+                            <span
+                              className={`text-[11px] px-2 py-0.5 rounded-full ${
+                                item.availability === 'available'
+                                  ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                                  : 'bg-gray-100 text-gray-700 border border-gray-300'
+                              }`}
+                            >
+                              {item.availability}
+                            </span>
+                          </div>
+                          <div className="flex flex-wrap gap-2 mb-3">
+                            <span className="text-[11px] px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 border border-blue-200">
+                              {item.status.replace('_', ' ')}
+                            </span>
+                            {item.needsReview && (
+                              <span className="text-[11px] px-2 py-0.5 rounded-full bg-orange-50 text-orange-700 border border-orange-200">
+                                needs review
+                              </span>
+                            )}
+                          </div>
+                          <div className="w-full h-2 rounded-full bg-gray-100 overflow-hidden mb-2">
+                            <div
+                              className={`h-full ${
+                                item.confidence.level === 'high'
+                                  ? 'bg-green-500'
+                                  : item.confidence.level === 'medium'
+                                  ? 'bg-yellow-500'
+                                  : 'bg-red-500'
+                              }`}
+                              style={{ width: `${pct}%` }}
+                            />
+                          </div>
+                          <p className="text-xs text-gray-600">Confidence {pct}% • {item.confidence.rationale}</p>
+                        </div>
+                      )
+                    })}
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="rounded-2xl border border-dashed border-gray-300 p-6 text-sm text-gray-600 bg-white">
+              Blueprint data is not available for this brand yet. Run generation again to get full strategy and guideline coverage.
+            </div>
+          )}
+        </motion.div>
+      )}
+
       {displayBrandSystem && (
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="border-t border-gray-200 pt-12"
+          className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm"
         >
-          <h2 className="text-2xl font-light text-gray-900 mb-4">Generate more assets</h2>
-          <p className="text-sm text-gray-500 mb-6">Describe what you need and we'll create it on-brand</p>
-          
-          <div className="flex gap-3 mb-6">
+          <h3 className="text-2xl font-semibold text-gray-900 mb-2">Generate More Assets</h3>
+          <p className="text-sm text-gray-500 mb-5">Describe any creative and generate it instantly in your brand style.</p>
+
+          <div className="flex flex-col md:flex-row gap-3 mb-6">
             <input
               type="text"
               value={assetPrompt}
               onChange={(e) => setAssetPrompt(e.target.value)}
               onKeyPress={(e) => e.key === 'Enter' && !generatingAsset && handleGenerateAsset()}
-              placeholder="e.g., social media post, email header, product mockup"
-              className="flex-1 px-4 py-3 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-gray-900"
+              placeholder="e.g., launch campaign carousel, event booth backdrop, app onboarding banner"
+              className="flex-1 px-4 py-3 border border-gray-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
               disabled={generatingAsset}
             />
-            <button 
+            <button
               onClick={handleGenerateAsset}
               disabled={generatingAsset || !assetPrompt.trim()}
-              className="px-6 py-3 bg-gray-900 text-white rounded-md text-sm font-medium hover:bg-gray-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+              className="px-6 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-xl text-sm font-medium hover:from-indigo-700 hover:to-purple-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
             >
               {generatingAsset ? (
                 <>
@@ -577,12 +739,11 @@ export default function CompleteBrandSystem({ initialBrandSystem }: CompleteBran
                   Generating...
                 </>
               ) : (
-                'Generate'
+                'Generate Asset'
               )}
             </button>
           </div>
 
-          {/* Generated Assets Display */}
           {generatedAssets.length > 0 && (
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               {generatedAssets.map((asset, index) => (
@@ -590,15 +751,15 @@ export default function CompleteBrandSystem({ initialBrandSystem }: CompleteBran
                   key={asset.id || index}
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: index * 0.1 }}
-                  className="group"
+                  transition={{ delay: index * 0.08 }}
+                  className="group rounded-2xl overflow-hidden border border-gray-200 bg-gray-50 hover:bg-white hover:shadow-md transition-all"
                 >
-                  <div className="aspect-square bg-gray-50 rounded-lg overflow-hidden border border-gray-200 hover:border-gray-300 transition-colors">
+                  <div className="aspect-square overflow-hidden">
                     {asset.imageUrl ? (
                       <img
                         src={asset.imageUrl}
                         alt={asset.prompt || 'Generated asset'}
-                        className="w-full h-full object-cover"
+                        className="w-full h-full object-cover group-hover:scale-[1.03] transition-transform duration-300"
                       />
                     ) : (
                       <div className="w-full h-full flex items-center justify-center text-gray-400">
@@ -606,7 +767,9 @@ export default function CompleteBrandSystem({ initialBrandSystem }: CompleteBran
                       </div>
                     )}
                   </div>
-                  <p className="mt-2 text-sm text-gray-600">{asset.prompt || 'Asset'}</p>
+                  <div className="p-4">
+                    <p className="text-sm text-gray-700 line-clamp-2">{asset.prompt || 'Asset'}</p>
+                  </div>
                 </motion.div>
               ))}
             </div>
