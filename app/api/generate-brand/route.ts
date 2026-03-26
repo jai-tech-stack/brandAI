@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
 import { WebsiteAnalysis } from '@/lib/analyzer/extractorTypes'
-import { generateBrandSystem } from '@/lib/generators/generateBrandSystem'
+import { generateBrandSystemAgentic } from '@/lib/agents/brandStrategyAgenticPipeline'
 
 const generateBrandSchema = z.object({
   analysis: z.object({
@@ -14,19 +14,21 @@ const generateBrandSchema = z.object({
     analyzedAt: z.string(),
     metadata: z.any(),
   }),
+  includeProcess: z.boolean().optional().default(false),
 })
 
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
-    const { analysis } = generateBrandSchema.parse(body)
+    const { analysis, includeProcess } = generateBrandSchema.parse(body)
 
-    // Generate brand system
-    const brandSystem = await generateBrandSystem(analysis as WebsiteAnalysis)
+    // Generate brand system through the agentic orchestration pipeline
+    const result = await generateBrandSystemAgentic(analysis as WebsiteAnalysis)
 
     return NextResponse.json({
       success: true,
-      data: brandSystem,
+      data: result.brandSystem,
+      ...(includeProcess ? { process: result.process } : {}),
     })
   } catch (err: unknown) {
     console.error('Brand system generation error:', err)
