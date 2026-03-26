@@ -326,7 +326,8 @@ export async function PATCH(request: NextRequest) {
 }
 
 // app/api/approvals/route.ts
-export async function approvalPOST(request: NextRequest) {
+// Kept as internal helper here; route handlers must only export HTTP methods.
+async function approvalPOST(request: NextRequest) {
   try {
     const supabase = supabaseUrl && supabaseKey ? createClient(supabaseUrl, supabaseKey) : null
     if (!supabase) {

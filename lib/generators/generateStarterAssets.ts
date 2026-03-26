@@ -65,7 +65,7 @@ export async function generateStarterAssets(brandSystem: BrandSystem): Promise<S
         prompt: enhancedPrompt,
         brandColors: brandKit.colors,
         style: brandStyle,
-        size: getAssetSize(assetType),
+        size: getAssetSize(assetType.type),
       })
       
       return {
@@ -157,14 +157,16 @@ function createIntelligentPrompt(
 /**
  * Get appropriate size for asset type
  */
-function getAssetSize(type: 'social' | 'banner' | 'card'): string {
+function getAssetSize(
+  type: 'social' | 'banner' | 'card'
+): '1024x1024' | '1024x1792' | '1792x1024' {
   switch (type) {
     case 'social':
       return '1024x1024' // Square for social
     case 'banner':
-      return '1920x600' // Wide banner
+      return '1792x1024' // Wide banner (supported by providers)
     case 'card':
-      return '1050x600' // Business card ratio
+      return '1792x1024' // Horizontal card layout (supported)
     default:
       return '1024x1024'
   }

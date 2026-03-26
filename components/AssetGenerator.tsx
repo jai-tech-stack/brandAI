@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { motion } from 'framer-motion'
 import { Wand2, Loader2, Download, Image as ImageIcon, Sparkles } from 'lucide-react'
 

@@ -1,6 +1,33 @@
 // Type definitions for brand system generator
 
 export interface BrandSystem {
+  // Legacy/extended shape fields used by several UI screens.
+  primaryColors?: string[]
+  secondaryColors?: string[]
+  allColors?: string[]
+  primaryFont?: string
+  secondaryFont?: string
+  typographyPairings?: string[]
+  sourceUrl?: string
+  brandPersonality?: string
+  brandTone?: string
+  messaging?: string[]
+  recommendations?: string[]
+  emotions?: string[]
+  values?: string[]
+  targetAudience?: string
+  assets?: Array<{
+    type: string
+    name: string
+    imageUrl: string
+    prompt?: string
+  }>
+  starterAssets?: Array<{
+    type: string
+    name: string
+    imageUrl: string
+    prompt?: string
+  }>
   colors: {
     primary: string[]
     secondary: string[]

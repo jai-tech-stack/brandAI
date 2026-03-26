@@ -28,6 +28,11 @@ interface BrandSystem {
     name: string
     imageUrl: string
   }>
+  starterAssets?: Array<{
+    type: string
+    name: string
+    imageUrl: string
+  }>
 }
 
 interface CompleteBrandSystemProps {

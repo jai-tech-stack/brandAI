@@ -4,12 +4,11 @@ import { useState, useEffect } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
 import { Palette, Type, Image as ImageIcon, Download, ArrowRight, Sparkles } from 'lucide-react'
-import { BrandSystem } from '@/lib/generators/generatorTypes'
 
 export default function BrandViewerPage() {
   const params = useParams()
   const router = useRouter()
-  const [brandSystem, setBrandSystem] = useState<BrandSystem | null>(null)
+  const [brandSystem, setBrandSystem] = useState<any | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
 

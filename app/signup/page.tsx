@@ -39,41 +39,31 @@ export default function SignUpPage() {
     setLoading(true)
     setError('')
 
-    if (!supabaseClient) {
-      // Demo mode - show message but allow testing
-      setError('Supabase not configured. For full functionality, please set up Supabase environment variables. You can still test the brand generation feature.')
-      setLoading(false)
-      // Allow user to continue to dashboard in demo mode
-      setTimeout(() => {
-        router.push('/dashboard')
-      }, 2000)
-      return
-    }
-
     try {
-      const { data, error: signUpError } = await supabaseClient.auth.signUp({
-        email,
-        password,
-        options: {
-          data: {
-            name: name || email.split('@')[0],
-          },
+      const response = await fetch('/api/auth/signup', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
         },
+        body: JSON.stringify({
+          email,
+          password,
+          name: name || email.split('@')[0],
+        }),
       })
 
-      if (signUpError) {
-        // Handle rate limiting
-        if (signUpError.status === 429 || signUpError.message?.includes('rate limit')) {
-          throw new Error('Too many signup attempts. Please wait a few minutes and try again.')
-        }
-        // Handle email already exists
-        if (signUpError.message?.includes('already registered') || signUpError.message?.includes('already exists')) {
-          throw new Error('An account with this email already exists. Please sign in instead.')
-        }
-        throw new Error(signUpError.message || 'Failed to sign up')
+      let payload: any = null
+      try {
+        payload = await response.json()
+      } catch {
+        payload = null
       }
 
-      if (data.session) {
+      if (!response.ok) {
+        throw new Error(payload?.error || 'Failed to sign up. Please try again.')
+      }
+
+      if (payload?.session) {
         // Redirect to dashboard
         router.push('/dashboard')
         router.refresh()

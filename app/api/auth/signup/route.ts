@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { signUp } from '@/lib/auth/supabaseAuth'
+import { createClient } from '@supabase/supabase-js'
 import { z } from 'zod'
 
 const signupSchema = z.object({
@@ -13,7 +13,30 @@ export async function POST(request: NextRequest) {
     const body = await request.json()
     const { email, password, name } = signupSchema.parse(body)
 
-    const data = await signUp(email, password, name)
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || ''
+    const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ''
+
+    if (!supabaseUrl || !supabaseAnonKey) {
+      return NextResponse.json(
+        { error: 'Supabase is not configured on the server.', code: 'SUPABASE_NOT_CONFIGURED' },
+        { status: 503 }
+      )
+    }
+
+    const supabase = createClient(supabaseUrl, supabaseAnonKey)
+    const { data, error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        data: {
+          name: name || email.split('@')[0],
+        },
+      },
+    })
+
+    if (error) {
+      throw error
+    }
 
     return NextResponse.json({
       success: true,

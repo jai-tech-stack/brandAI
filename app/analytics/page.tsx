@@ -44,6 +44,12 @@ export default function AnalyticsPage() {
     setLoading(true)
     setError('')
     try {
+      if (!supabaseClient) {
+        setError('Authentication is not configured. Please set Supabase environment variables.')
+        setLoading(false)
+        return
+      }
+
       // Get session token
       const { data: { session } } = await supabaseClient.auth.getSession()
       if (!session) {
